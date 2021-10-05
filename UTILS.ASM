@@ -51,6 +51,7 @@ proc print_str
     ret
 endp print_str
 
+;; Prints an integer to STDOUT
 proc print_int
     arg @@value:dword
     uses eax
@@ -59,6 +60,7 @@ proc print_int
     ret
 endp print_int
 
+;; Prints an integer to STDOUT in hexadecimal notation (prefixed with 0x)
 proc print_hex
     arg @@value:dword
     uses eax
@@ -69,7 +71,6 @@ proc print_hex
 endp print_hex
 
 ;; Exits the program with the given statuscode 
-;; NOT_TESTED
 proc exit
     arg @@exitcode:dword
     uses eax, ebx

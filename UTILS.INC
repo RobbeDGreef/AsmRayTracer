@@ -23,9 +23,9 @@ GLOBAL write_file:PROC          ;; void write_file(dword file_handle, char* buff
 GLOBAL read_file:PROC           ;; dword read_file(dword file_handle, char* buffer, dword byte_count)
 GLOBAL write_str:PROC           ;; void write_str(dword file_handle, char* str)
 
-GLOBAL gettime_millis:PROC
-GLOBAL gettime_secs:PROC
-GLOBAL sleep_millis:PROC
+GLOBAL gettime_millis:PROC      ;; dword gettime_millis()
+GLOBAL gettime_secs:PROC        ;; dword gettime_secs()
+GLOBAL sleep_millis:PROC        ;; void sleep_millis(dword millis)
 
 ;; Standard library fakes
 GLOBAL strlen:PROC              ;; dword strlen(char* str)
