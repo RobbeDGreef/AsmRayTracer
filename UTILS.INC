@@ -42,3 +42,5 @@ GLOBAL itoa:PROC                ;; void itoa(dword value, char* buffer, dword ba
 GLOBAL strrev:PROC              ;; void strrev(char* str)
 GLOBAL strcmp:PROC              ;; dword strcmp(char* s1, char* s2)
 GLOBAL memcmp:PROC              ;; dword memcmp(void *d1, void *d2, dword length)
+GLOBAL memset:PROC              ;; void* memset(void *d, dword val, dword length)
+
