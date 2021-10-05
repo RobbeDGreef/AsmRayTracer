@@ -446,6 +446,20 @@ proc sleep_millis
     ret
 endp sleep_millis
 
+;; =============================================================================
+;; Video functions
+;; =============================================================================
+
+proc set_video_mode
+    arg @@mode:dword
+    uses eax
+    ;; 58h
+    mov ah, 00h
+    mov al, [byte ptr @@mode]
+    int 10h
+    ret
+endp set_video_mode
+
 DATASEG
     itoa_lookup db "0123456789ABCDEF"
     print_int_buffer db 16 dup (?)

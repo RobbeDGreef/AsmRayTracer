@@ -44,3 +44,5 @@ GLOBAL strcmp:PROC              ;; dword strcmp(char* s1, char* s2)
 GLOBAL memcmp:PROC              ;; dword memcmp(void *d1, void *d2, dword length)
 GLOBAL memset:PROC              ;; void* memset(void *d, dword val, dword length)
 
+;; Video functions
+GLOBAL set_video_mode:PROC      ;; void set_video_mode(dword mode)
