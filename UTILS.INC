@@ -6,6 +6,10 @@ GLOBAL print_space:PROC         ;; void print_space(void)
 GLOBAL print_int:PROC           ;; void print_int(dword value)
 GLOBAL print_hex:PROC           ;; void pint_hex(dword value)
 
+GLOBAL log_str:PROC
+GLOBAL log_int:PROC
+GLOBAL log_hex:PROC
+
 ;; General 
 GLOBAL exit:PROC                ;; void exit(dword exit_code)
 

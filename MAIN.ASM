@@ -17,12 +17,10 @@ proc main
     sti
     cld
 
-    call print_str, offset teststr
-    call print_space
-    call print_hex, 0deadbeefh
-    call print_space
-    call print_int, -123
-    call print_newline
+    call log_str, offset teststr
+    call log_int, -123
+    call log_hex, 0DEADBEEFh
+
     call exit, 0
 endp main
 

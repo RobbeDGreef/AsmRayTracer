@@ -7,6 +7,10 @@ include "utils.inc"
 
 CODESEG
 
+;; =============================================================================
+;; stdout functions
+;; =============================================================================
+
 ;; Prints a singular character to STDOUT
 ;; NOT_TESTED
 proc print_char
@@ -70,6 +74,42 @@ proc print_hex
     ret
 endp print_hex
 
+proc log_prefix
+    uses eax
+    call print_char, '['
+    call print_space
+    call gettime_millis
+    call print_int, eax
+    call print_space
+    call print_char, ']'
+    call print_space
+    ret
+endp log_prefix
+
+proc log_str
+    arg @@str:dword
+    call log_prefix
+    call print_str, [@@str]
+    call print_newline
+    ret
+endp log_str
+
+proc log_int
+    arg @@value:dword
+    call log_prefix
+    call print_int, [@@value]
+    call print_newline
+    ret
+endp log_int
+
+proc log_hex
+    arg @@value:dword
+    call log_prefix
+    call print_hex, [@@value]
+    call print_newline
+    ret
+endp log_hex
+
 ;; Exits the program with the given statuscode 
 proc exit
     arg @@exitcode:dword
@@ -80,6 +120,10 @@ proc exit
     int 21h
     ret
 endp exit
+
+;; =============================================================================
+;; file io functions
+;; =============================================================================
 
 ;; Creates a file, returns the file handle. If the file already exists
 ;; it will trunctate the file.
@@ -172,6 +216,10 @@ proc lseek_file
 
     ret
 endp lseek_file
+
+;; =============================================================================
+;; C standard library functions
+;; =============================================================================
 
 ;; ASM version of C's strlen() function. Returns the length of a null
 ;; terminated string. 
@@ -334,6 +382,10 @@ proc strrev
 @@end:
     ret
 endp strrev
+
+;; =============================================================================
+;; time functions
+;; =============================================================================
 
 ;; Returns the current time in milliseconds
 proc gettime_millis
