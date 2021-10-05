@@ -22,6 +22,11 @@ GLOBAL close_file:PROC          ;; void close_file(dword file_handle)
 GLOBAL write_file:PROC          ;; void write_file(dword file_handle, char* buffer, dword byte_count)
 GLOBAL read_file:PROC           ;; dword read_file(dword file_handle, char* buffer, dword byte_count)
 GLOBAL write_str:PROC           ;; void write_str(dword file_handle, char* str)
+GLOBAL lseek_file:PROC         ;; dword write_lseek(dword file_handle, dword origin, dword offset)
+
+LSEEK_ORIGIN_START      equ 0
+LSEEK_ORIGIN_CUR        equ 1
+LSEEK_ORIGIN_END        equ 2
 
 GLOBAL gettime_millis:PROC      ;; dword gettime_millis()
 GLOBAL gettime_secs:PROC        ;; dword gettime_secs()

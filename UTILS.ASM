@@ -146,6 +146,33 @@ proc write_str
     ret
 endp write_str
 
+proc lseek_file
+    arg @@file_handle:dword, @@origin:dword, @@offset:dword
+    uses ebx, ecx, edx
+
+    ;; offset is passed via CX:DX
+    ;; so here we make sure DX holds the lower half of origin
+    mov edx, [@@offset]
+
+    ;; And here we shift so CX holds the upper half of origin
+    mov ecx, [@@offset]
+    shr ecx, 16
+
+    mov ebx, [@@file_handle]
+    mov al, [byte ptr @@origin]
+    mov ah, 42h
+    int 21h
+    
+    ;; Stitch dx:ax together to eax
+    xor ecx, ecx 
+    mov cx, ax
+    shl edx, 16
+    or ecx, edx
+    mov eax, ecx
+
+    ret
+endp lseek_file
+
 ;; ASM version of C's strlen() function. Returns the length of a null
 ;; terminated string. 
 proc strlen
