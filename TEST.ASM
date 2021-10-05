@@ -187,6 +187,7 @@ test_begin file_io
 
 @@success2:
     call write_str, ebx, offset test_file_io_str
+    call lseek_file, ebx, LSEEK_ORIGIN_START, 0
     call read_file, ebx, offset test_buffer, 512
     call strcmp, offset test_buffer, offset test_file_io_str
     cmp eax, 0
