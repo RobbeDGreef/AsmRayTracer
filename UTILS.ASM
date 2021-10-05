@@ -386,7 +386,7 @@ endp strrev
 ;; ASM version of C's memset() function
 proc memset
     arg @@data:dword, @@value:dword, @@count:dword returns eax
-    uses ecx, edi, 
+    uses ecx, edi
 
     mov ecx, [@@count]
     mov edi, [@@data]
