@@ -172,9 +172,8 @@ test_begin strrev
 test_end strrev
 
 ;; -----------------------------------------------------------------------------
-;; test_file_io
+;; test_memset
 ;; -----------------------------------------------------------------------------
-
 test_begin memset
     ;; TODO: test memset
 test_end memset
@@ -308,6 +307,8 @@ DATASEG
     test_file_io_create_failed db "file_io - create file", 0
     test_file_io_nullread_failed db "file_io - nullread", 0
     test_file_io_writeread_failed db "file_io - writeread", 0
+
+    test_memset_name db "memset", 0
 
     test_feq_name db "feq", 0
     test_feq_v1 dd 123.12345
