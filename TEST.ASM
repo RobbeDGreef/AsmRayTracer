@@ -13,7 +13,8 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-INCLUDE "utils.inc"
+include "utils.inc"
+include "vec.inc"
 
 CODESEG
     jmp main
@@ -226,6 +227,25 @@ test_begin feq
     call test_failed, offset test_feq_different_failed, eax
 test_end feq
 
+;; -----------------------------------------------------------------------------
+;; test_vec_dot
+;; -----------------------------------------------------------------------------
+test_begin vec_dot
+    local @@v1:Vec, @@v2:Vec
+
+    lea eax, [@@v1]
+    lea ebx, [@@v2]
+    call vec_set, eax, [test_vec_dot_value], [test_vec_dot_value], \
+                  [test_vec_dot_value]
+    call vec_set, ebx, [test_vec_dot_value], [test_vec_dot_value], \
+                  [test_vec_dot_value]
+    call vec_dot, eax, ebx
+    call feq, eax, [test_vec_dot_output]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_dot_simple_failed, eax
+test_end vec_dot
+
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -238,6 +258,7 @@ proc main
     call test_memset
     call test_file_io
     call test_feq
+    call test_vec_dot
 
     call exit, 0
     ret
@@ -295,6 +316,12 @@ DATASEG
     test_feq_same_failed db "feq - same", 0
     test_feq_near_failed db "feq - near", 0
     test_feq_different_failed db "feq - different", 0
+
+    test_vec_dot_name db "vec_dot", 0
+    test_vec_dot_value dd 123.123
+    test_vec_dot_output dd 45477.819387
+    test_vec_dot_simple_failed db "vec_dot - simple", 0
+
 STACK 1000h
 
 END
