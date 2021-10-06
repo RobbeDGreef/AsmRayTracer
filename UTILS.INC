@@ -46,3 +46,6 @@ GLOBAL memset:PROC              ;; void* memset(void *d, dword val, dword length
 
 ;; Video functions
 GLOBAL set_video_mode:PROC      ;; void set_video_mode(dword mode)
+
+;; Float functions
+GLOBAL feq:PROC                 ;; dword feq(float arg)

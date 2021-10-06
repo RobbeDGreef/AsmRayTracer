@@ -204,6 +204,28 @@ test_begin file_io
 
 test_end file_io
 
+;; -----------------------------------------------------------------------------
+;; test_feq
+;; -----------------------------------------------------------------------------
+test_begin feq
+    call feq, [test_feq_v1], [test_feq_v1]
+    cmp al, 1
+    je @@success1
+    call test_failed, offset test_feq_same_failed, eax
+
+@@success1:
+    call feq, [test_feq_v1], [test_feq_v2]
+    cmp al, 1
+    je @@success2
+    call test_failed, offset test_feq_near_failed, eax
+
+@@success2:
+    call feq, [test_feq_v1], [test_feq_v3]
+    cmp al, 0
+    je @@completed
+    call test_failed, offset test_feq_different_failed, eax
+test_end feq
+
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -215,6 +237,7 @@ proc main
     call test_strrev
     call test_memset
     call test_file_io
+    call test_feq
 
     call exit, 0
     ret
@@ -265,6 +288,13 @@ DATASEG
     test_file_io_nullread_failed db "file_io - nullread", 0
     test_file_io_writeread_failed db "file_io - writeread", 0
 
+    test_feq_name db "feq", 0
+    test_feq_v1 dd 123.12345
+    test_feq_v2 dd 123.12351
+    test_feq_v3 dd 321.123
+    test_feq_same_failed db "feq - same", 0
+    test_feq_near_failed db "feq - near", 0
+    test_feq_different_failed db "feq - different", 0
 STACK 1000h
 
 END

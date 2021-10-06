@@ -449,7 +449,6 @@ endp sleep_millis
 ;; =============================================================================
 ;; Video functions
 ;; =============================================================================
-
 proc set_video_mode
     arg @@mode:dword
     uses eax
@@ -460,9 +459,33 @@ proc set_video_mode
     ret
 endp set_video_mode
 
+;; =============================================================================
+;; floating point helpers
+;; =============================================================================
+
+;; Float eq. Returns 1 in eax if the floats are equal.
+proc feq
+    arg @@arg1:dword, @@arg2:dword returns eax
+    ;; diff = arg1 - arg2;
+    ;; return (diff < elipson) && (-diff < elipson) 
+    xor eax, eax
+    fld [@@arg2]
+    fld [@@arg1]
+    fsubp
+    fabs
+    fcom [float_epsilon]
+    fnstsw ax
+    shr eax, 8
+    and eax, 111B
+    cmp eax, 1
+    sete al
+    ret
+endp feq
+
 DATASEG
     itoa_lookup db "0123456789ABCDEF"
     print_int_buffer db 16 dup (?)
     hex_prefix db "0x", 0
 
+    float_epsilon dd 0.0001
 END
