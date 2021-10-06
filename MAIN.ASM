@@ -3,7 +3,8 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-INCLUDE "utils.inc"
+include "utils.inc"
+include "vec.inc"
 
 CODESEG
     jmp main
@@ -12,8 +13,11 @@ proc main
     sti
     cld
 
-    call log_str, offset start_str
+    ;; Initialize the FPU for floating point operations
+    finit
 
+    call log_str, offset start_str
+    
     call exit, 0
 endp main
 
