@@ -6,6 +6,10 @@ GLOBAL print_space:PROC         ;; void print_space(void)
 GLOBAL print_int:PROC           ;; void print_int(dword value)
 GLOBAL print_hex:PROC           ;; void pint_hex(dword value)
 
+GLOBAL log_str:PROC
+GLOBAL log_int:PROC
+GLOBAL log_hex:PROC
+
 ;; General 
 GLOBAL exit:PROC                ;; void exit(dword exit_code)
 
@@ -38,3 +42,7 @@ GLOBAL itoa:PROC                ;; void itoa(dword value, char* buffer, dword ba
 GLOBAL strrev:PROC              ;; void strrev(char* str)
 GLOBAL strcmp:PROC              ;; dword strcmp(char* s1, char* s2)
 GLOBAL memcmp:PROC              ;; dword memcmp(void *d1, void *d2, dword length)
+GLOBAL memset:PROC              ;; void* memset(void *d, dword val, dword length)
+
+;; Video functions
+GLOBAL set_video_mode:PROC      ;; void set_video_mode(dword mode)

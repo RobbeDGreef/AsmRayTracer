@@ -173,6 +173,14 @@ test_end strrev
 ;; -----------------------------------------------------------------------------
 ;; test_file_io
 ;; -----------------------------------------------------------------------------
+
+test_begin memset
+    ;; TODO: test memset
+test_end memset
+
+;; -----------------------------------------------------------------------------
+;; test_file_io
+;; -----------------------------------------------------------------------------
 test_begin file_io
     call create_file, offset test_file_io_file, 0
     mov ebx, eax
@@ -205,6 +213,7 @@ proc main
     call test_strcmp
     call test_itoa
     call test_strrev
+    call test_memset
     call test_file_io
 
     call exit, 0
