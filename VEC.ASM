@@ -46,4 +46,32 @@ proc vec_dot
     ret
 endp vec_dot
 
+proc vec_mul_float
+    arg @@v:PTR Vec, @@f:dword 
+    local @@temp:dword
+    uses eax, ebx
+
+    mov eax, [@@v]
+
+    fld [eax+Vec.x]
+    fmul [@@f]
+    fstp [@@temp]
+    mov ebx, [@@temp]
+    mov [eax+Vec.x], ebx
+
+    fld [eax+Vec.y]
+    fmul [@@f]
+    fstp [@@temp]
+    mov ebx, [@@temp]
+    mov [eax+Vec.y], ebx
+
+    fld [eax+Vec.z]
+    fmul [@@f]
+    fstp [@@temp]
+    mov ebx, [@@temp]
+    mov [eax+Vec.z], ebx
+    ret
+endp vec_mul_float
+
+
 END
