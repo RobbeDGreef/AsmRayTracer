@@ -14,16 +14,16 @@ proc main
     sti
     cld
 
-    ;; Set the extra segment to be the same as the 
-    ;; data segment
-    push ds
-    pop es
+    ;; Set the extra segment to be the same as the data segment
+    ;; This is probably not necessary because everytime we use ES we probably
+    ;; explicitly set it to some value but better safe than sorry
+    mov ax, ds
+    mov es, ax
 
     ;; Initialize the FPU for floating point operations
     finit
 
     call log_str, offset start_str
-    
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
     call sleep_millis, 500
@@ -36,7 +36,5 @@ STACK 5000h
 
 DATASEG
     start_str db "Ray tracer started", 0
-
-STACK 1000h
 
 END
