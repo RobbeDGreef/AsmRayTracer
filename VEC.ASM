@@ -54,22 +54,19 @@ proc vec_mul_float
     mov eax, [@@v]
 
     fld [eax+Vec.x]
-    fld [@@f]
-    fmul
+    fmul [@@f]
     fstp [@@temp]
     mov ebx, [@@temp]
     mov [eax+Vec.x], ebx
 
     fld [eax+Vec.y]
-    fld [@@f]
-    fmul
+    fmul [@@f]
     fstp [@@temp]
     mov ebx, [@@temp]
     mov [eax+Vec.y], ebx
 
     fld [eax+Vec.z]
-    fld [@@f]
-    fmul
+    fmul [@@f]
     fstp [@@temp]
     mov ebx, [@@temp]
     mov [eax+Vec.z], ebx
