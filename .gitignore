@@ -3,3 +3,4 @@ DELETED/
 *.OBJ
 *.EXE
 debug.log
+OUTPUT.LOG
