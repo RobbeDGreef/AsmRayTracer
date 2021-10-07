@@ -451,10 +451,10 @@ endp sleep_millis
 ;; =============================================================================
 proc set_video_mode
     arg @@mode:dword
-    uses eax
-    ;; 58h
-    mov ah, 00h
-    mov al, [byte ptr @@mode]
+    uses eax, ebx
+    ;; We use the bios to set the video mode
+    mov eax, 4f02h
+    mov ebx, [@@mode]
     int 10h
     ret
 endp set_video_mode
