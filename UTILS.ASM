@@ -447,19 +447,6 @@ proc sleep_millis
 endp sleep_millis
 
 ;; =============================================================================
-;; Video functions
-;; =============================================================================
-proc set_video_mode
-    arg @@mode:dword
-    uses eax, ebx
-    ;; We use the bios to set the video mode
-    mov eax, 4f02h
-    mov ebx, [@@mode]
-    int 10h
-    ret
-endp set_video_mode
-
-;; =============================================================================
 ;; floating point helpers
 ;; =============================================================================
 

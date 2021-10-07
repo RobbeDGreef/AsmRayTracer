@@ -5,6 +5,7 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "utils.inc"
 include "vec.inc"
+include "renderer.inc"
 
 CODESEG
     jmp main
