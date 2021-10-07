@@ -245,6 +245,36 @@ test_begin vec_dot
     call test_failed, offset test_vec_dot_simple_failed, eax
 test_end vec_dot
 
+;; -----------------------------------------------------------------------------
+;; test_vec_mul_float
+;; -----------------------------------------------------------------------------
+test_begin vec_mul_float
+    local @@v:Vec
+
+    lea ebx, [@@v]
+    call vec_set, ebx, [test_vec_mul_float_value], [test_vec_mul_float_value], \
+                  [test_vec_mul_float_value]
+    call vec_mul_float, ebx, [test_vec_mul_float_fvalue]
+    call feq, [ebx+Vec.x], [test_vec_mul_float_output]
+    cmp eax, 1
+    je @@success1
+    call test_failed, offset test_vec_mul_float_x_failed, eax
+
+@@success1:
+    call feq, [ebx+Vec.y], [test_vec_mul_float_output]
+    cmp eax, 1
+    je @@success2
+    call test_failed, offset test_vec_mul_float_y_failed, eax
+
+@@success2:
+    call feq, [ebx+Vec.z], [test_vec_mul_float_output]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_mul_float_z_failed, eax
+test_end vec_mul_float
+
+
+
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -258,6 +288,7 @@ proc main
     call test_file_io
     call test_feq
     call test_vec_dot
+    call test_vec_mul_float
 
     call exit, 0
     ret
@@ -322,6 +353,14 @@ DATASEG
     test_vec_dot_value dd 123.123
     test_vec_dot_output dd 45477.819387
     test_vec_dot_simple_failed db "vec_dot - simple", 0
+
+    test_vec_mul_float_name db "vec_mul_float", 0
+    test_vec_mul_float_value dd 123.123
+    test_vec_mul_float_fvalue dd 2.15
+    test_vec_mul_float_output dd 264.71445
+    test_vec_mul_float_x_failed db "vec_mul_float - x", 0
+    test_vec_mul_float_y_failed db "vec_mul_float - y", 0
+    test_vec_mul_float_z_failed db "vec_mul_float - z", 0
 
 STACK 1000h
 
