@@ -27,7 +27,7 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [ ] print_float
 - [ ] Implement the vec class
   - [x] struct implementation
-  - [ ] getters and setters
+  - [x] getters and setters
   - [x] vec-vec
   - [x] vec+vec
   - [x] vec*float
