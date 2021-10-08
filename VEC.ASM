@@ -146,4 +146,18 @@ proc vec_length
     mov eax, [@@temp]
     ret
 endp vec_length
+
+proc vec_length_squared
+    arg @@v:PTR Vec returns eax
+    local @@temp:dword
+
+    call vec_length, [@@v]
+    mov [@@temp], eax
+    
+    fld [@@temp]
+    fmul [@@temp]
+    fstp [@@temp]
+    mov eax, [@@temp]
+    ret
+endp vec_length_squared
 END

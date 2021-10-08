@@ -32,8 +32,8 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [x] vec+vec
   - [x] vec*float
   - [x] vec/float
-  - [ ] length()
-  - [ ] length_squared()
+  - [x] length()
+  - [x] length_squared()
   - [x] dot product
   - [ ] vector cross
   - [ ] unit vector (vec / vec_length)

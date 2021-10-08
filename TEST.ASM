@@ -381,6 +381,22 @@ test_begin vec_length
     call test_failed, offset test_vec_length_failed, eax
 test_end vec_length
 
+;; -----------------------------------------------------------------------------
+;; test_vec_length_squared
+;; -----------------------------------------------------------------------------
+test_begin vec_length_squared
+    local @@v1:Vec
+
+    lea eax, [@@v1]
+    call vec_set, eax, [test_vec_length_squared_xvalue], \
+        [test_vec_length_squared_yvalue], [test_vec_length_squared_zvalue]
+    call vec_length_squared, eax
+    call feq, eax, [test_vec_length_squared_output]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_length_squared_failed, eax
+test_end vec_length_squared
+
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -399,6 +415,7 @@ proc main
     call test_vec_mul_float
     call test_vec_div_float
     call test_vec_length
+    call test_vec_length_squared
 
     call exit, 0
     ret
@@ -522,6 +539,13 @@ DATASEG
     test_vec_length_zvalue dd 333.333
     test_vec_length_output dd 415.7392939
     test_vec_length_failed db "vec_length"
+
+    test_vec_length_squared_name db "vec_length_squared", 0
+    test_vec_length_squared_xvalue dd 111.111
+    test_vec_length_squared_yvalue dd 222.222
+    test_vec_length_squared_zvalue dd 333.333
+    test_vec_length_squared_output dd 172839.1605
+    test_vec_length_squared_failed db "vec_length_squared"
 
 STACK 1000h
 
