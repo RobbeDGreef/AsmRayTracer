@@ -28,8 +28,8 @@ Assembly language is case insensitive but try to leave everything lowercase.
 - [ ] Implement the vec class
   - [x] struct implementation
   - [ ] getters and setters
-  - [ ] vec-vec
-  - [ ] vec+vec
+  - [x] vec-vec
+  - [x] vec+vec
   - [x] vec*float
   - [x] vec/float
   - [ ] length()

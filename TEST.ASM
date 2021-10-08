@@ -259,6 +259,38 @@ test_begin vec_add
 test_end vec_add
 
 ;; -----------------------------------------------------------------------------
+;; test_vec_sub
+;; -----------------------------------------------------------------------------
+test_begin vec_sub
+    local @@dest:Vec, @@v1:Vec, @@v2:Vec
+
+    lea ebx, [@@dest]
+    lea ecx, [@@v1]
+    lea edx, [@@v2]
+    call vec_set, ecx, [test_vec_sub_xvalue1], [test_vec_sub_yvalue1], \
+                  [test_vec_sub_zvalue1]
+    call vec_set, edx, [test_vec_sub_xvalue2], [test_vec_sub_yvalue2], \
+                  [test_vec_sub_zvalue2]
+    call vec_sub, ebx, ecx, edx
+    call feq, [ebx+Vec.x], [test_vec_sub_xoutput]
+    cmp eax, 1
+    je @@success1
+    call test_failed, offset test_vec_sub_x_failed, eax
+
+@@success1:
+    call feq, [ebx+Vec.y], [test_vec_sub_youtput]
+    cmp eax, 1
+    je @@success2
+    call test_failed, offset test_vec_sub_y_failed, eax
+
+@@success2:
+    call feq, [ebx+Vec.z], [test_vec_sub_zoutput]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_sub_z_failed, eax
+test_end vec_sub
+
+;; -----------------------------------------------------------------------------
 ;; test_vec_dot
 ;; -----------------------------------------------------------------------------
 test_begin vec_dot
@@ -346,6 +378,7 @@ proc main
     call test_file_io
     call test_feq
     call test_vec_add
+    call test_vec_sub
     call test_vec_dot
     call test_vec_mul_float
     call test_vec_div_float
@@ -451,6 +484,20 @@ DATASEG
     test_vec_add_x_failed db "vec_add - x", 0
     test_vec_add_y_failed db "vec_add - y", 0
     test_vec_add_z_failed db "vec_add - z", 0
+
+    test_vec_sub_name db "vec_sub", 0
+    test_vec_sub_xvalue1 dd 999.999
+    test_vec_sub_yvalue1 dd 555.555
+    test_vec_sub_zvalue1 dd 333.444
+    test_vec_sub_xvalue2 dd 333.333
+    test_vec_sub_yvalue2 dd 222.222
+    test_vec_sub_zvalue2 dd 111.111
+    test_vec_sub_xoutput dd 666.666
+    test_vec_sub_youtput dd 333.333
+    test_vec_sub_zoutput dd 222.333
+    test_vec_sub_x_failed db "vec_sub - x", 0
+    test_vec_sub_y_failed db "vec_sub - y", 0
+    test_vec_sub_z_failed db "vec_sub - z", 0
 
 STACK 1000h
 

@@ -46,7 +46,22 @@ proc vec_add
     mov edx, [@@temp]
     mov [eax+Vec.z], edx
     ret
-endp vec_add    
+endp vec_add  
+
+proc vec_sub
+    arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
+    local @@temp:dword
+
+    fldz
+    fld1
+    fsub
+    fstp [@@temp]
+
+    call vec_mul_float, [@@v2], [@@temp]
+    
+    call vec_add, [@@dest], [@@v1], [@@v2]
+    ret
+endp vec_sub
 
 proc vec_dot
     arg @@v1:PTR Vec, @@v2:PTR Vec returns eax
