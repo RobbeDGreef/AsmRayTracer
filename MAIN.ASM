@@ -51,7 +51,7 @@ proc main
         fdiv [image_height]
         fstp [dword ptr ecx+4]
 
-        mov edx, [fl_0_25]
+        mov edx, [float_0_25]
         mov [ecx], edx
 
         add ecx, VEC_SIZE
