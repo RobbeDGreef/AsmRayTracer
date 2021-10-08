@@ -67,6 +67,105 @@ proc vec_eq
     ret
 endp vec_eq
 
+proc vec_get_x
+    arg @@v:PTR Vec returns eax
+    uses ebx
+
+    mov ebx, [@@v]
+    mov eax, [ebx+Vec.x]
+    ret
+endp vec_get_x
+
+proc vec_get_y
+    arg @@v:PTR Vec returns eax
+    uses ebx
+
+    mov ebx, [@@v]
+    mov eax, [ebx+Vec.y]
+    ret
+endp vec_get_y
+
+proc vec_get_z
+    arg @@v:PTR Vec returns eax
+    uses ebx
+
+    mov ebx, [@@v]
+    mov eax, [ebx+Vec.z]
+    ret
+endp vec_get_z
+
+proc vec_set_x
+    arg @@v:PTR Vec, @@f:dword
+    uses eax, ebx
+
+    mov eax, [@@v]
+    mov ebx, [@@f]
+    mov [eax+Vec.x], ebx
+    ret
+endp vec_set_x
+
+proc vec_set_y
+    arg @@v:PTR Vec, @@f:dword
+    uses eax, ebx
+
+    mov eax, [@@v]
+    mov ebx, [@@f]
+    mov [eax+Vec.y], ebx
+    ret
+endp vec_set_y
+
+proc vec_set_z
+    arg @@v:PTR Vec, @@f:dword
+    uses eax, ebx
+
+    mov eax, [@@v]
+    mov ebx, [@@f]
+    mov [eax+Vec.z], ebx
+    ret
+endp vec_set_z
+
+proc vec_add
+    arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
+    local @@temp:dword
+    uses eax, ebx, ecx, edx
+    mov eax, [@@dest]
+    mov ebx, [@@v1]
+    mov ecx, [@@v2]
+
+    fld [ebx+Vec.x]
+    fadd [ecx+Vec.x]
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.x], edx
+
+    fld [ebx+Vec.y]
+    fadd [ecx+Vec.y]
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.y], edx
+
+    fld [ebx+Vec.z]
+    fadd [ecx+Vec.z]
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.z], edx
+    ret
+endp vec_add  
+
+proc vec_sub
+    arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
+    local @@temp:dword
+
+    fld1
+    fchs
+    fstp [@@temp]
+
+    call vec_mul_float, [@@v2], [@@temp]
+
+    call vec_add, [@@dest], [@@v1], [@@v2]
+    ret
+endp vec_sub
+
 proc vec_dot
     arg @@v1:PTR Vec, @@v2:PTR Vec returns eax
     local @@temp:dword
@@ -120,5 +219,49 @@ proc vec_mul_float
     ret
 endp vec_mul_float
 
+proc vec_div_float
+    arg @@v:PTR Vec, @@f:dword 
+    local @@temp:dword
 
+    fld1
+    fdiv [@@f]
+    fstp [@@temp]
+    call vec_mul_float, [@@v], [@@temp]
+    ret
+endp vec_div_float
+
+proc vec_length
+    arg @@v:PTR Vec returns eax
+    local @@temp:dword
+
+    mov eax, [@@v]
+
+    fld [eax+Vec.x]
+    fmul [eax+Vec.x]
+    fld [eax+Vec.y]
+    fmul [eax+Vec.y]
+    fadd
+    fld [eax+Vec.z]
+    fmul [eax+Vec.z]
+    fadd
+    fsqrt
+
+    fstp [@@temp]
+    mov eax, [@@temp]
+    ret
+endp vec_length
+
+proc vec_length_squared
+    arg @@v:PTR Vec returns eax
+    local @@temp:dword
+
+    call vec_length, [@@v]
+    mov [@@temp], eax
+    
+    fld [@@temp]
+    fmul [@@temp]
+    fstp [@@temp]
+    mov eax, [@@temp]
+    ret
+endp vec_length_squared
 END

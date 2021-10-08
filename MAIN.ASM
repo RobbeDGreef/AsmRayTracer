@@ -25,6 +25,7 @@ proc main
     ;; Initialize the FPU for floating point operations
     finit
 
+    call log_str, offset start_str
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
     mov eax, VIDEO_GFX_HEIGHT

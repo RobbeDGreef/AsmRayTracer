@@ -263,6 +263,166 @@ test_begin vec_cpy
 test_end vec_cpy
 
 ;; -----------------------------------------------------------------------------
+;; test_vec_get_x
+;; -----------------------------------------------------------------------------
+test_begin vec_get_x
+    local @@v:Vec
+
+    lea ebx, [@@v]
+    call vec_set, ebx, [test_vec_get_x_xvalue], [test_vec_get_x_yvalue], \
+                  [test_vec_get_x_zvalue]
+    call vec_get_x, ebx
+    call feq, eax, [test_vec_get_x_xvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_get_x_failed, eax
+test_end vec_get_x
+
+;; -----------------------------------------------------------------------------
+;; test_vec_get_y
+;; -----------------------------------------------------------------------------
+test_begin vec_get_y
+    local @@v:Vec
+
+    lea ebx, [@@v]
+    call vec_set, ebx, [test_vec_get_y_xvalue], [test_vec_get_y_yvalue], \
+                  [test_vec_get_y_zvalue]
+    call vec_get_y, ebx
+    call feq, eax, [test_vec_get_y_yvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_get_y_failed, eax
+test_end vec_get_y
+
+;; -----------------------------------------------------------------------------
+;; test_vec_get_z
+;; -----------------------------------------------------------------------------
+test_begin vec_get_z
+    local @@v:Vec
+
+    lea ebx, [@@v]
+    call vec_set, ebx, [test_vec_get_z_xvalue], [test_vec_get_z_yvalue], \
+                  [test_vec_get_z_zvalue]
+    call vec_get_z, ebx
+    call feq, eax, [test_vec_get_z_zvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_get_z_failed, eax
+test_end vec_get_z
+
+;; -----------------------------------------------------------------------------
+;; test_vec_set_x
+;; -----------------------------------------------------------------------------
+test_begin vec_set_x
+    local @@v:Vec
+
+    lea eax, [@@v]
+    call vec_set, eax, [test_vec_set_x_xvalue], [test_vec_set_x_yvalue], \
+                  [test_vec_set_x_zvalue]
+    call vec_set_x, eax, [test_vec_set_x_fvalue]
+    call feq, [eax+Vec.x], [test_vec_set_x_fvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_set_x_failed, eax
+test_end vec_set_x
+
+;; -----------------------------------------------------------------------------
+;; test_vec_set_y
+;; -----------------------------------------------------------------------------
+test_begin vec_set_y
+    local @@v:Vec
+
+    lea eax, [@@v]
+    call vec_set, eax, [test_vec_set_y_xvalue], [test_vec_set_y_yvalue], \
+                  [test_vec_set_y_zvalue]
+    call vec_set_y, eax, [test_vec_set_y_fvalue]
+    call feq, [eax+Vec.y], [test_vec_set_y_fvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_set_y_failed, eax
+test_end vec_set_y
+
+;; -----------------------------------------------------------------------------
+;; test_vec_set_z
+;; -----------------------------------------------------------------------------
+test_begin vec_set_z
+    local @@v:Vec
+
+    lea eax, [@@v]
+    call vec_set, eax, [test_vec_set_z_xvalue], [test_vec_set_z_yvalue], \
+                  [test_vec_set_z_zvalue]
+    call vec_set_z, eax, [test_vec_set_z_fvalue]
+    call feq, [eax+Vec.z], [test_vec_set_z_fvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_set_z_failed, eax
+test_end vec_set_z
+
+;; -----------------------------------------------------------------------------
+;; test_vec_add
+;; -----------------------------------------------------------------------------
+test_begin vec_add
+    local @@dest:Vec, @@v1:Vec, @@v2:Vec
+
+    lea ebx, [@@dest]
+    lea ecx, [@@v1]
+    lea edx, [@@v2]
+    call vec_set, ecx, [test_vec_add_xvalue1], [test_vec_add_yvalue1], \
+                  [test_vec_add_zvalue1]
+    call vec_set, edx, [test_vec_add_xvalue2], [test_vec_add_yvalue2], \
+                  [test_vec_add_zvalue2]
+    call vec_add, ebx, ecx, edx
+    call feq, [ebx+Vec.x], [test_vec_add_xoutput]
+    cmp eax, 1
+    je @@success1
+    call test_failed, offset test_vec_add_x_failed, eax
+
+@@success1:
+    call feq, [ebx+Vec.y], [test_vec_add_youtput]
+    cmp eax, 1
+    je @@success2
+    call test_failed, offset test_vec_add_y_failed, eax
+
+@@success2:
+    call feq, [ebx+Vec.z], [test_vec_add_zoutput]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_add_z_failed, eax
+test_end vec_add
+
+;; -----------------------------------------------------------------------------
+;; test_vec_sub
+;; -----------------------------------------------------------------------------
+test_begin vec_sub
+    local @@dest:Vec, @@v1:Vec, @@v2:Vec
+
+    lea ebx, [@@dest]
+    lea ecx, [@@v1]
+    lea edx, [@@v2]
+    call vec_set, ecx, [test_vec_sub_xvalue1], [test_vec_sub_yvalue1], \
+                  [test_vec_sub_zvalue1]
+    call vec_set, edx, [test_vec_sub_xvalue2], [test_vec_sub_yvalue2], \
+                  [test_vec_sub_zvalue2]
+    call vec_sub, ebx, ecx, edx
+    call feq, [ebx+Vec.x], [test_vec_sub_xoutput]
+    cmp eax, 1
+    je @@success1
+    call test_failed, offset test_vec_sub_x_failed, eax
+
+@@success1:
+    call feq, [ebx+Vec.y], [test_vec_sub_youtput]
+    cmp eax, 1
+    je @@success2
+    call test_failed, offset test_vec_sub_y_failed, eax
+
+@@success2:
+    call feq, [ebx+Vec.z], [test_vec_sub_zoutput]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_sub_z_failed, eax
+test_end vec_sub
+
+;; -----------------------------------------------------------------------------
 ;; test_vec_dot
 ;; -----------------------------------------------------------------------------
 test_begin vec_dot
@@ -309,7 +469,65 @@ test_begin vec_mul_float
     call test_failed, offset test_vec_mul_float_z_failed, eax
 test_end vec_mul_float
 
+;; -----------------------------------------------------------------------------
+;; test_vec_div_float
+;; -----------------------------------------------------------------------------
+test_begin vec_div_float
+    local @@v:Vec
 
+    lea ebx, [@@v]
+    call vec_set, ebx, [test_vec_div_float_xvalue], [test_vec_div_float_yvalue], \
+                  [test_vec_div_float_zvalue]
+    call vec_div_float, ebx, [test_vec_div_float_fvalue]
+    call feq, [ebx+Vec.x], [test_vec_div_float_xoutput]
+    cmp eax, 1
+    je @@success1
+    call test_failed, offset test_vec_div_float_x_failed, eax
+
+@@success1:
+    call feq, [ebx+Vec.y], [test_vec_div_float_youtput]
+    cmp eax, 1
+    je @@success2
+    call test_failed, offset test_vec_div_float_y_failed, eax
+
+@@success2:
+    call feq, [ebx+Vec.z], [test_vec_div_float_zoutput]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_div_float_z_failed, eax
+test_end vec_div_float
+
+;; -----------------------------------------------------------------------------
+;; test_vec_length
+;; -----------------------------------------------------------------------------
+test_begin vec_length
+    local @@v1:Vec
+
+    lea eax, [@@v1]
+    call vec_set, eax, [test_vec_length_xvalue], [test_vec_length_yvalue], \
+                  [test_vec_length_zvalue]
+    call vec_length, eax
+    call feq, eax, [test_vec_length_output]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_length_failed, eax
+test_end vec_length
+
+;; -----------------------------------------------------------------------------
+;; test_vec_length_squared
+;; -----------------------------------------------------------------------------
+test_begin vec_length_squared
+    local @@v1:Vec
+
+    lea eax, [@@v1]
+    call vec_set, eax, [test_vec_length_squared_xvalue], \
+        [test_vec_length_squared_yvalue], [test_vec_length_squared_zvalue]
+    call vec_length_squared, eax
+    call feq, eax, [test_vec_length_squared_output]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_length_squared_failed, eax
+test_end vec_length_squared
 
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
@@ -323,10 +541,21 @@ proc main
     call test_memset
     call test_file_io
     call test_feq
+    call test_vec_add
+    call test_vec_sub
     call test_vec_dot
     call test_vec_mul_float
     call test_vec_eq
     call test_vec_cpy
+    call test_vec_div_float
+    call test_vec_length
+    call test_vec_length_squared
+    call test_vec_get_x
+    call test_vec_get_y
+    call test_vec_get_z
+    call test_vec_set_x
+    call test_vec_set_y 
+    call test_vec_set_z
 
     call exit, 0
     ret
@@ -410,6 +639,99 @@ DATASEG
 
     test_vec_cpy_name db "vec_cpy", 0
     test_vec_cpy_simple_failed db  "vec_cpy - simple", 0
+    
+    test_vec_div_float_name db "vec_div_float", 0
+    test_vec_div_float_xvalue dd 123.123
+    test_vec_div_float_yvalue dd 321.321
+    test_vec_div_float_zvalue dd 123.321
+    test_vec_div_float_fvalue dd 2.15
+    test_vec_div_float_xoutput dd 57.2665116279
+    test_vec_div_float_youtput dd 149.451627907
+    test_vec_div_float_zoutput dd 57.3586046512
+    test_vec_div_float_x_failed db "vec_div_float - x", 0
+    test_vec_div_float_y_failed db "vec_div_float - y", 0
+    test_vec_div_float_z_failed db "vec_div_float - z", 0
+
+    test_vec_add_name db "vec_add", 0
+    test_vec_add_xvalue1 dd 111.111
+    test_vec_add_yvalue1 dd 222.222
+    test_vec_add_zvalue1 dd 333.444
+    test_vec_add_xvalue2 dd 333.333
+    test_vec_add_yvalue2 dd 123.123
+    test_vec_add_zvalue2 dd 111.111
+    test_vec_add_xoutput dd 444.444
+    test_vec_add_youtput dd 345.345
+    test_vec_add_zoutput dd 444.555
+    test_vec_add_x_failed db "vec_add - x", 0
+    test_vec_add_y_failed db "vec_add - y", 0
+    test_vec_add_z_failed db "vec_add - z", 0
+
+    test_vec_sub_name db "vec_sub", 0
+    test_vec_sub_xvalue1 dd 999.999
+    test_vec_sub_yvalue1 dd 555.555
+    test_vec_sub_zvalue1 dd 333.444
+    test_vec_sub_xvalue2 dd 333.333
+    test_vec_sub_yvalue2 dd 222.222
+    test_vec_sub_zvalue2 dd 111.111
+    test_vec_sub_xoutput dd 666.666
+    test_vec_sub_youtput dd 333.333
+    test_vec_sub_zoutput dd 222.333
+    test_vec_sub_x_failed db "vec_sub - x", 0
+    test_vec_sub_y_failed db "vec_sub - y", 0
+    test_vec_sub_z_failed db "vec_sub - z", 0
+
+    test_vec_length_name db "vec_length", 0
+    test_vec_length_xvalue dd 111.111
+    test_vec_length_yvalue dd 222.222
+    test_vec_length_zvalue dd 333.333
+    test_vec_length_output dd 415.7392939
+    test_vec_length_failed db "vec_length"
+
+    test_vec_length_squared_name db "vec_length_squared", 0
+    test_vec_length_squared_xvalue dd 111.111
+    test_vec_length_squared_yvalue dd 222.222
+    test_vec_length_squared_zvalue dd 333.333
+    test_vec_length_squared_output dd 172839.1605
+    test_vec_length_squared_failed db "vec_length_squared", 0
+
+    test_vec_get_x_name db "vec_get_x", 0
+    test_vec_get_x_xvalue dd 111.111
+    test_vec_get_x_yvalue dd 222.222
+    test_vec_get_x_zvalue dd 333.333
+    test_vec_get_x_failed db "vec_get_x", 0
+
+    test_vec_get_y_name db "vec_get_y", 0
+    test_vec_get_y_xvalue dd 111.111
+    test_vec_get_y_yvalue dd 222.222
+    test_vec_get_y_zvalue dd 333.333
+    test_vec_get_y_failed db "vec_get_y", 0
+
+    test_vec_get_z_name db "vec_get_z", 0
+    test_vec_get_z_xvalue dd 111.111
+    test_vec_get_z_yvalue dd 222.222
+    test_vec_get_z_zvalue dd 333.333
+    test_vec_get_z_failed db "vec_get_z", 0
+
+    test_vec_set_x_name db "vec_set_x", 0
+    test_vec_set_x_xvalue dd 111.111
+    test_vec_set_x_yvalue dd 222.222
+    test_vec_set_x_zvalue dd 333.333
+    test_vec_set_x_fvalue dd 444.444
+    test_vec_set_x_failed db "vec_set_x", 0
+
+    test_vec_set_y_name db "vec_set_y", 0
+    test_vec_set_y_xvalue dd 111.111
+    test_vec_set_y_yvalue dd 222.222
+    test_vec_set_y_zvalue dd 333.333
+    test_vec_set_y_fvalue dd 444.444
+    test_vec_set_y_failed db "vec_set_y", 0
+
+    test_vec_set_z_name db "vec_set_z", 0
+    test_vec_set_z_xvalue dd 111.111
+    test_vec_set_z_yvalue dd 222.222
+    test_vec_set_z_zvalue dd 333.333
+    test_vec_set_z_fvalue dd 444.444
+    test_vec_set_z_failed db "vec_set_z", 0
 
 STACK 1000h
 
