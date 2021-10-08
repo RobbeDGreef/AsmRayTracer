@@ -226,6 +226,42 @@ test_begin feq
     call test_failed, offset test_feq_different_failed, eax
 test_end feq
 
+test_begin vec_eq
+    local @@v1:Vec, @@v2:Vec
+
+    lea ebx, [@@v1]
+    lea ecx, [@@v2]
+    call vec_set, ebx, [float_0_25], [float_0_50], [float_0_75]
+    call vec_set, ecx, [float_0_25], [float_0_50], [float_0_75]
+    call vec_eq, ebx, ecx
+    cmp eax, 1
+    je @@success1
+    call test_failed, offset test_vec_eq_same_failed, eax
+
+@@success1:
+    call vec_set, ebx, [float_0_25], [float_0_75], [float_0_75]
+    call vec_set, ecx, [float_0_25], [float_0_50], [float_0_75]
+    call vec_eq, ebx, ecx
+    cmp eax, 0
+    je @@completed
+    call test_failed, offset test_vec_eq_different_failed, eax
+test_end vec_eq
+
+test_begin vec_cpy
+    local @@src:Vec, @@dest:Vec
+    
+    lea ebx, [@@src]
+    lea ecx, [@@dest]
+    
+    call vec_set, ebx, [float_0_25], [float_0_50], [float_0_75]
+    call vec_cpy, ecx, ebx
+    call vec_eq, ecx, ebx
+    cmp eax, 1
+    je @@completed 
+    call test_failed, offset test_vec_cpy_simple_failed, eax
+
+test_end vec_cpy
+
 ;; -----------------------------------------------------------------------------
 ;; test_vec_dot
 ;; -----------------------------------------------------------------------------
@@ -289,6 +325,8 @@ proc main
     call test_feq
     call test_vec_dot
     call test_vec_mul_float
+    call test_vec_eq
+    call test_vec_cpy
 
     call exit, 0
     ret
@@ -365,6 +403,13 @@ DATASEG
     test_vec_mul_float_x_failed db "vec_mul_float - x", 0
     test_vec_mul_float_y_failed db "vec_mul_float - y", 0
     test_vec_mul_float_z_failed db "vec_mul_float - z", 0
+
+    test_vec_eq_name db "vec_eq", 0
+    test_vec_eq_same_failed db "vec_eq - same", 0
+    test_vec_eq_different_failed db "vec_eq - different", 0
+
+    test_vec_cpy_name db "vec_cpy", 0
+    test_vec_cpy_simple_failed db  "vec_cpy - simple", 0
 
 STACK 1000h
 
