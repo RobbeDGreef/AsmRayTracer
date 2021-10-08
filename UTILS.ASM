@@ -403,7 +403,7 @@ endp memset
 ;; Returns the current time in milliseconds
 proc gettime_millis
     arg returns eax
-    uses ebx, ecx, edx
+    uses ebx, ecx, edx, esi
     mov ah, 2Ch
     int 21h
     movzx eax, ch
