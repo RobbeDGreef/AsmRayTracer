@@ -227,28 +227,28 @@ proc vec_cross
     mov ebx, [@@v1]
     mov ecx, [@@v2]
 
-    fld [ebx+Vec.y]
-    fmul [ecx+Vec.z]
     fld [ebx+Vec.z]
     fmul [ecx+Vec.y]
+    fld [ebx+Vec.y]
+    fmul [ecx+Vec.z]
     fsub
     fstp [@@temp]
     mov edx, [@@temp]
     mov [eax+Vec.x], edx
 
-    fld [ebx+Vec.z]
-    fmul [ecx+Vec.x]
     fld [ebx+Vec.x]
     fmul [ecx+Vec.z]
+    fld [ebx+Vec.z]
+    fmul [ecx+Vec.x]
     fsub
     fstp [@@temp]
     mov edx, [@@temp]
     mov [eax+Vec.y], edx
 
-    fld [ebx+Vec.x]
-    fmul [ecx+Vec.y]
     fld [ebx+Vec.y]
     fmul [ecx+Vec.x]
+    fld [ebx+Vec.x]
+    fmul [ecx+Vec.y]
     fsub
     fstp [@@temp]
     mov edx, [@@temp]

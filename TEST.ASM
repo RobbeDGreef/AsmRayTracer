@@ -719,15 +719,15 @@ DATASEG
     test_vec_set_z_failed db "vec_set_z", 0
 
     test_vec_cross_name db "vec_cross", 0
-    test_vec_cross_xvalue1 dd 111.111
-    test_vec_cross_yvalue1 dd 222.222
-    test_vec_cross_zvalue1 dd 333.333
-    test_vec_cross_xvalue2 dd 444.444
-    test_vec_cross_yvalue2 dd 555.555
-    test_vec_cross_zvalue2 dd 666.666
-    test_vec_cross_xoutput dd -37036.96296
-    test_vec_cross_youtput dd 74073.92593
-    test_vec_cross_zoutput dd -37036.96296
+    test_vec_cross_xvalue1 dd 10.11
+    test_vec_cross_yvalue1 dd 20.21
+    test_vec_cross_zvalue1 dd 30.31
+    test_vec_cross_xvalue2 dd 40.41
+    test_vec_cross_yvalue2 dd 50.51
+    test_vec_cross_zvalue2 dd 60.61
+    test_vec_cross_xoutput dd -306.03
+    test_vec_cross_youtput dd 612.06
+    test_vec_cross_zoutput dd -306.03
     test_vec_cross_failed_x db "vec_cross - x", 0
     test_vec_cross_failed_y db "vec_cross - y", 0
     test_vec_cross_failed_z db "vec_cross - z", 0
