@@ -8,6 +8,7 @@ endm def_vec
 
 def_vec Vec
 def_vec Color
+def_vec Point
 
 VEC_SIZE    equ (4*3)
 
