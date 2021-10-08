@@ -43,14 +43,12 @@ proc main
         
         mov [@@temp], ebx
         fild [@@temp]
-        fld [image_width]
-        fdiv
+        fdiv [image_width]
         fstp [dword ptr ecx+8]
 
         mov [@@temp], eax
         fild [@@temp]
-        fld [image_height]
-        fdiv
+        fdiv [image_height]
         fstp [dword ptr ecx+4]
 
         mov edx, [fl_0_25]
