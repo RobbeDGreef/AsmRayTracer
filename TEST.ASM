@@ -338,7 +338,7 @@ test_begin vec_mul_float
 test_end vec_mul_float
 
 ;; -----------------------------------------------------------------------------
-;; test_vec_div_div
+;; test_vec_div_float
 ;; -----------------------------------------------------------------------------
 test_begin vec_div_float
     local @@v:Vec
@@ -365,6 +365,22 @@ test_begin vec_div_float
     call test_failed, offset test_vec_div_float_z_failed, eax
 test_end vec_div_float
 
+;; -----------------------------------------------------------------------------
+;; test_vec_length
+;; -----------------------------------------------------------------------------
+test_begin vec_length
+    local @@v1:Vec
+
+    lea eax, [@@v1]
+    call vec_set, eax, [test_vec_length_xvalue], [test_vec_length_yvalue], \
+                  [test_vec_length_zvalue]
+    call vec_length, eax
+    call feq, eax, [test_vec_length_output]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_length_failed, eax
+test_end vec_length
+
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -382,6 +398,7 @@ proc main
     call test_vec_dot
     call test_vec_mul_float
     call test_vec_div_float
+    call test_vec_length
 
     call exit, 0
     ret
@@ -498,6 +515,13 @@ DATASEG
     test_vec_sub_x_failed db "vec_sub - x", 0
     test_vec_sub_y_failed db "vec_sub - y", 0
     test_vec_sub_z_failed db "vec_sub - z", 0
+
+    test_vec_length_name db "vec_length", 0
+    test_vec_length_xvalue dd 111.111
+    test_vec_length_yvalue dd 222.222
+    test_vec_length_zvalue dd 333.333
+    test_vec_length_output dd 415.7392939
+    test_vec_length_failed db "vec_length"
 
 STACK 1000h
 

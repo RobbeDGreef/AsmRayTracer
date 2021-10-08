@@ -126,4 +126,24 @@ proc vec_div_float
     ret
 endp vec_div_float
 
+proc vec_length
+    arg @@v:PTR Vec returns eax
+    local @@temp:dword
+
+    mov eax, [@@v]
+
+    fld [eax+Vec.x]
+    fmul [eax+Vec.x]
+    fld [eax+Vec.y]
+    fmul [eax+Vec.y]
+    fadd
+    fld [eax+Vec.z]
+    fmul [eax+Vec.z]
+    fadd
+    fsqrt
+
+    fstp [@@temp]
+    mov eax, [@@temp]
+    ret
+endp vec_length
 END
