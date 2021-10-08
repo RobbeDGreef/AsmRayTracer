@@ -403,7 +403,7 @@ endp memset
 ;; Returns the current time in milliseconds
 proc gettime_millis
     arg returns eax
-    uses ebx, ecx, edx
+    uses ebx, ecx, edx, esi
     mov ah, 2Ch
     int 21h
     movzx eax, ch
@@ -445,19 +445,6 @@ proc sleep_millis
     jl @@waiting
     ret
 endp sleep_millis
-
-;; =============================================================================
-;; Video functions
-;; =============================================================================
-proc set_video_mode
-    arg @@mode:dword
-    uses eax, ebx
-    ;; We use the bios to set the video mode
-    mov eax, 4f02h
-    mov ebx, [@@mode]
-    int 10h
-    ret
-endp set_video_mode
 
 ;; =============================================================================
 ;; floating point helpers

@@ -245,8 +245,11 @@ test_begin vec_dot
     call test_failed, offset test_vec_dot_simple_failed, eax
 test_end vec_dot
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
+=======
+>>>>>>> b49b0fb94ffdd06bc6b28772786103b38494ce73
 ;; -----------------------------------------------------------------------------
 ;; test_vec_mul_float
 ;; -----------------------------------------------------------------------------
@@ -275,6 +278,7 @@ test_begin vec_mul_float
     call test_failed, offset test_vec_mul_float_z_failed, eax
 test_end vec_mul_float
 
+<<<<<<< HEAD
 ;; -----------------------------------------------------------------------------
 ;; test_vec_div_float
 ;; -----------------------------------------------------------------------------
@@ -306,6 +310,10 @@ test_end vec_div_float
 
 
 >>>>>>> Stashed changes
+=======
+
+
+>>>>>>> b49b0fb94ffdd06bc6b28772786103b38494ce73
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -319,11 +327,15 @@ proc main
     call test_file_io
     call test_feq
     call test_vec_dot
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
     call test_vec_mul_float
     call test_vec_div_float
 >>>>>>> Stashed changes
+=======
+    call test_vec_mul_float
+>>>>>>> b49b0fb94ffdd06bc6b28772786103b38494ce73
 
     call exit, 0
     ret
@@ -389,8 +401,11 @@ DATASEG
     test_vec_dot_output dd 45477.819387
     test_vec_dot_simple_failed db "vec_dot - simple", 0
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
+=======
+>>>>>>> b49b0fb94ffdd06bc6b28772786103b38494ce73
     test_vec_mul_float_name db "vec_mul_float", 0
     test_vec_mul_float_xvalue dd 123.123
     test_vec_mul_float_yvalue dd 321.321
@@ -403,6 +418,7 @@ DATASEG
     test_vec_mul_float_y_failed db "vec_mul_float - y", 0
     test_vec_mul_float_z_failed db "vec_mul_float - z", 0
 
+<<<<<<< HEAD
     test_vec_div_float_name db "vec_div_float", 0
     test_vec_div_float_xvalue dd 123.123
     test_vec_div_float_yvalue dd 321.321
@@ -416,6 +432,8 @@ DATASEG
     test_vec_div_float_z_failed db "vec_div_float - z", 0
 
 >>>>>>> Stashed changes
+=======
+>>>>>>> b49b0fb94ffdd06bc6b28772786103b38494ce73
 STACK 1000h
 
 END

@@ -3,8 +3,8 @@
 # =============================================================================
 
 # Settings
-objs = main.obj utils.obj vec.obj ray.obj
-testobjs = test.obj utils.obj vec.obj ray.obj
+objs = main.obj utils.obj vec.obj ray.obj renderer.obj
+testobjs = test.obj utils.obj vec.obj ray.obj renderer.obj
 dest = raytracer.exe
 
 # =============================================================================

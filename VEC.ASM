@@ -46,8 +46,11 @@ proc vec_dot
     ret
 endp vec_dot
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
+=======
+>>>>>>> b49b0fb94ffdd06bc6b28772786103b38494ce73
 proc vec_mul_float
     arg @@v:PTR Vec, @@f:dword 
     local @@temp:dword
@@ -75,6 +78,7 @@ proc vec_mul_float
     ret
 endp vec_mul_float
 
+<<<<<<< HEAD
 proc vec_div_float
     arg @@v:PTR Vec, @@f:dword 
     local @@temp:dword
@@ -88,4 +92,7 @@ endp vec_div_float
 
 
 >>>>>>> Stashed changes
+=======
+
+>>>>>>> b49b0fb94ffdd06bc6b28772786103b38494ce73
 END
