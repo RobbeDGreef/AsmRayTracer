@@ -326,9 +326,8 @@ test_end vec_set_z
 ;; test_vec_add
 ;; -----------------------------------------------------------------------------
 test_begin vec_add
-    local @@dest:Vec, @@v1:Vec, @@v2:Vec
+    local @@v1:Vec, @@v2:Vec
 
-    lea ebx, [@@dest]
     lea ecx, [@@v1]
     lea edx, [@@v2]
     call vec_set, ecx, [test_vec_add_xvalue1], [test_vec_add_yvalue1], \
@@ -358,9 +357,8 @@ test_end vec_add
 ;; test_vec_sub
 ;; -----------------------------------------------------------------------------
 test_begin vec_sub
-    local @@dest:Vec, @@v1:Vec, @@v2:Vec
+    local @@v1:Vec, @@v2:Vec
 
-    lea ebx, [@@dest]
     lea ecx, [@@v1]
     lea edx, [@@v2]
     call vec_set, ecx, [test_vec_sub_xvalue1], [test_vec_sub_yvalue1], \
@@ -493,6 +491,37 @@ test_begin vec_length_squared
     call test_failed, offset test_vec_length_squared_failed, eax
 test_end vec_length_squared
 
+;; -----------------------------------------------------------------------------
+;; test_vec_cross
+;; -----------------------------------------------------------------------------
+test_begin vec_cross
+    local @@dest:Vec, @@v1:Vec, @@v2:Vec
+
+    lea ebx, [@@v1]
+    lea ecx, [@@v2]
+    lea edx, [@@dest]
+
+    call vec_set, ebx, [test_vec_cross_xvalue1], \
+        [test_vec_cross_yvalue1], [test_vec_cross_zvalue1]
+    call vec_set, ecx, [test_vec_cross_xvalue2], \
+        [test_vec_cross_yvalue2], [test_vec_cross_zvalue2]
+    call vec_cross, edx, ebx, ecx
+    call feq, [edx+Vec.x], [test_vec_cross_xoutput]
+    cmp eax, 1
+    je @@success1
+    call test_failed, offset test_vec_cross_failed_x, eax
+
+@@success1:
+    call feq, [edx+Vec.y], [test_vec_cross_youtput]
+    cmp eax, 1
+    je @@success2
+    call test_failed, offset test_vec_cross_failed_y, eax
+@@success2:
+    call feq, [edx+Vec.z], [test_vec_cross_zoutput]
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_cross_failed_z, eax
+test_end vec_cross
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -518,6 +547,7 @@ proc main
     call test_vec_set_x
     call test_vec_set_y 
     call test_vec_set_z
+    call test_vec_cross
 
     call exit, 0
     ret
@@ -687,6 +717,20 @@ DATASEG
     test_vec_set_z_zvalue dd 333.333
     test_vec_set_z_fvalue dd 444.444
     test_vec_set_z_failed db "vec_set_z", 0
+
+    test_vec_cross_name db "vec_cross", 0
+    test_vec_cross_xvalue1 dd 111.111
+    test_vec_cross_yvalue1 dd 222.222
+    test_vec_cross_zvalue1 dd 333.333
+    test_vec_cross_xvalue2 dd 444.444
+    test_vec_cross_yvalue2 dd 555.555
+    test_vec_cross_zvalue2 dd 666.666
+    test_vec_cross_xoutput dd -37036.96296
+    test_vec_cross_youtput dd 74073.92593
+    test_vec_cross_zoutput dd -37036.96296
+    test_vec_cross_failed_x db "vec_cross - x", 0
+    test_vec_cross_failed_y db "vec_cross - y", 0
+    test_vec_cross_failed_z db "vec_cross - z", 0
 
 STACK 1000h
 
