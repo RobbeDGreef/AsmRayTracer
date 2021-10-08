@@ -368,4 +368,4 @@ DATASEG
 
 STACK 1000h
 
-END
+END main
