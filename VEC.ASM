@@ -20,6 +20,34 @@ proc vec_set
     ret
 endp vec_set
 
+proc vec_add
+    arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
+    local @@temp:dword
+    uses eax, ebx, ecx, edx
+    mov eax, [@@dest]
+    mov ebx, [@@v1]
+    mov ecx, [@@v2]
+
+    fld [ebx+Vec.x]
+    fadd [ecx+Vec.x]
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.x], edx
+
+    fld [ebx+Vec.y]
+    fadd [ecx+Vec.y]
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.y], edx
+
+    fld [ebx+Vec.z]
+    fadd [ecx+Vec.z]
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.z], edx
+    ret
+endp vec_add    
+
 proc vec_dot
     arg @@v1:PTR Vec, @@v2:PTR Vec returns eax
     local @@temp:dword

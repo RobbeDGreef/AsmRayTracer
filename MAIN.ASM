@@ -38,4 +38,4 @@ STACK 5000h
 DATASEG
     start_str db "Ray tracer started", 0
 
-END
+END main
