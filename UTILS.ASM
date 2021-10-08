@@ -475,4 +475,10 @@ DATASEG
     hex_prefix db "0x", 0
 
     float_epsilon dd 0.0001
+
+    float_0         dd 0.0
+    float_0_25      dd 0.25
+    float_0_50      dd 0.50
+    float_0_75      dd 0.75
+    float_max_char  dd 255.0
 END
