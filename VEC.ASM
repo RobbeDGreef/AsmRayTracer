@@ -20,6 +20,33 @@ proc vec_set
     ret
 endp vec_set
 
+proc vec_get_x
+    arg @@v:PTR Vec returns eax
+    uses ebx
+
+    mov ebx, [@@v]
+    mov eax, [ebx+Vec.x]
+    ret
+endp vec_get_x
+
+proc vec_get_y
+    arg @@v:PTR Vec returns eax
+    uses ebx
+
+    mov ebx, [@@v]
+    mov eax, [ebx+Vec.y]
+    ret
+endp vec_get_y
+
+proc vec_get_z
+    arg @@v:PTR Vec returns eax
+    uses ebx
+
+    mov ebx, [@@v]
+    mov eax, [ebx+Vec.z]
+    ret
+endp vec_get_z
+
 proc vec_add
     arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
     local @@temp:dword

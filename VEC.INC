@@ -5,6 +5,9 @@ struc Vec
 ends Vec
 
 GLOBAL vec_set:PROC         ;; void vec_set(Vec* v, float x, float y, float z)
+GLOBAL vec_get_x:PROC       ;; float vec_get_x(Vec* v)
+GLOBAL vec_get_y:PROC       ;; float vec_get_y(Vec* v)
+GLOBAL vec_get_z:PROC       ;; float vec_get_z(Vec* v)
 GLOBAL vec_add:PROC         ;; void vec_add(Vec* dest, Vec* v1, Vec* v2)
 GLOBAL vec_sub:PROC         ;; void vec_sub(Vec* dest, Vec* v1, Vec* v2)
 GLOBAL vec_dot:PROC         ;; float vec_dot(Vec* v1, Vec* v2)

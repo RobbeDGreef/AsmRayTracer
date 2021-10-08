@@ -227,6 +227,54 @@ test_begin feq
 test_end feq
 
 ;; -----------------------------------------------------------------------------
+;; test_vec_get_x
+;; -----------------------------------------------------------------------------
+test_begin vec_get_x
+    local @@v:Vec
+
+    lea ebx, [@@v]
+    call vec_set, ebx, [test_vec_get_x_xvalue], [test_vec_get_x_yvalue], \
+                  [test_vec_get_x_zvalue]
+    call vec_get_x, ebx
+    call feq, eax, [test_vec_get_x_xvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_get_x_failed, eax
+test_end vec_get_x
+
+;; -----------------------------------------------------------------------------
+;; test_vec_get_y
+;; -----------------------------------------------------------------------------
+test_begin vec_get_y
+    local @@v:Vec
+
+    lea ebx, [@@v]
+    call vec_set, ebx, [test_vec_get_y_xvalue], [test_vec_get_y_yvalue], \
+                  [test_vec_get_y_zvalue]
+    call vec_get_y, ebx
+    call feq, eax, [test_vec_get_y_yvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_get_y_failed, eax
+test_end vec_get_y
+
+;; -----------------------------------------------------------------------------
+;; test_vec_get_z
+;; -----------------------------------------------------------------------------
+test_begin vec_get_z
+    local @@v:Vec
+
+    lea ebx, [@@v]
+    call vec_set, ebx, [test_vec_get_z_xvalue], [test_vec_get_z_yvalue], \
+                  [test_vec_get_z_zvalue]
+    call vec_get_z, ebx
+    call feq, eax, [test_vec_get_z_zvalue] 
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_get_z_failed, eax
+test_end vec_get_z
+
+;; -----------------------------------------------------------------------------
 ;; test_vec_add
 ;; -----------------------------------------------------------------------------
 test_begin vec_add
@@ -416,6 +464,9 @@ proc main
     call test_vec_div_float
     call test_vec_length
     call test_vec_length_squared
+    call test_vec_get_x
+    call test_vec_get_y
+    call test_vec_get_z
 
     call exit, 0
     ret
@@ -545,7 +596,25 @@ DATASEG
     test_vec_length_squared_yvalue dd 222.222
     test_vec_length_squared_zvalue dd 333.333
     test_vec_length_squared_output dd 172839.1605
-    test_vec_length_squared_failed db "vec_length_squared"
+    test_vec_length_squared_failed db "vec_length_squared", 0
+
+    test_vec_get_x_name db "vec_get_x", 0
+    test_vec_get_x_xvalue dd 111.111
+    test_vec_get_x_yvalue dd 222.222
+    test_vec_get_x_zvalue dd 333.333
+    test_vec_get_x_failed db "vec_get_x", 0
+
+    test_vec_get_y_name db "vec_get_y", 0
+    test_vec_get_y_xvalue dd 111.111
+    test_vec_get_y_yvalue dd 222.222
+    test_vec_get_y_zvalue dd 333.333
+    test_vec_get_y_failed db "vec_get_y", 0
+
+    test_vec_get_z_name db "vec_get_z", 0
+    test_vec_get_z_xvalue dd 111.111
+    test_vec_get_z_yvalue dd 222.222
+    test_vec_get_z_zvalue dd 333.333
+    test_vec_get_z_failed db "vec_get_z", 0
 
 STACK 1000h
 
