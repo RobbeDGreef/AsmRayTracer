@@ -29,3 +29,8 @@ clean: .symbolic
 debug: $(objs) .symbolic
   wlink debug watcom lines option Q,C system pmodew name $(dest) file *.obj
   wd /tr=rsi /li=43 $(dest)
+
+.silent
+debugtests: $(testobjs) .symbolic
+  wlink debug watcom lines option Q,C system pmodew name tests.exe file *.obj
+  wd /tr=rsi /li=43 tests.exe
