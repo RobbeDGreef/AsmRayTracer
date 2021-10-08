@@ -366,9 +366,8 @@ test_end vec_set_z
 ;; test_vec_add
 ;; -----------------------------------------------------------------------------
 test_begin vec_add
-    local @@dest:Vec, @@v1:Vec, @@v2:Vec
+    local @@v1:Vec, @@v2:Vec
 
-    lea ebx, [@@dest]
     lea ecx, [@@v1]
     lea edx, [@@v2]
     call vec_set, ecx, [test_vec_add_xvalue1], [test_vec_add_yvalue1], \
@@ -398,9 +397,8 @@ test_end vec_add
 ;; test_vec_sub
 ;; -----------------------------------------------------------------------------
 test_begin vec_sub
-    local @@dest:Vec, @@v1:Vec, @@v2:Vec
+    local @@v1:Vec, @@v2:Vec
 
-    lea ebx, [@@dest]
     lea ecx, [@@v1]
     lea edx, [@@v2]
     call vec_set, ecx, [test_vec_sub_xvalue1], [test_vec_sub_yvalue1], \
@@ -568,6 +566,33 @@ test_begin ray_at
     call test_failed, offset test_ray_at_simple_failed, eax
 test_end ray_at
 
+;; -----------------------------------------------------------------------------
+;; test_vec_cross
+;; -----------------------------------------------------------------------------
+test_begin vec_cross
+    local @@dest:Vec, @@v1:Vec, @@v2:Vec, @@compare:Vec
+
+    lea ebx, [@@v1]
+    lea ecx, [@@v2]
+    lea edx, [@@dest]
+    lea edi, [@@compare]
+
+    call vec_set, ebx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                       [test_vec_dummy_z]
+    call vec_set, ecx, [test_vec_dummy_x2], [test_vec_dummy_y2], \
+                       [test_vec_dummy_z2]
+    call vec_cross, edx, ebx, ecx
+    
+    call vec_set, edi, [test_vec_cross_xoutput], [test_vec_cross_youtput], \
+                       [test_vec_cross_zoutput]
+
+    call vec_eq, edi, edx
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_vec_cross_simple_failed, eax
+
+test_end vec_cross
+
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -598,6 +623,7 @@ proc main
     call test_vec_set_y 
     call test_vec_set_z
     call test_ray_at
+    call test_vec_cross
 
     call exit, 0
     ret
@@ -661,6 +687,11 @@ DATASEG
     test_vec_dummy_x dd 12.123
     test_vec_dummy_y dd 32.321
     test_vec_dummy_z dd 23.854
+
+    ;; In case we need more dummy values
+    test_vec_dummy_x2 dd 6.854
+    test_vec_dummy_y2 dd 4.521
+    test_vec_dummy_z2 dd 12.445
 
     test_vec_dot_name db "vec_dot", 0
     test_vec_dot_output dd -11.39975
@@ -781,6 +812,12 @@ DATASEG
     test_ray_at_res_x dd -2.24
     test_ray_at_res_y dd 2.68
     test_ray_at_res_z dd 0.81
+
+    test_vec_cross_name db "vec_cross", 0
+    test_vec_cross_xoutput dd 294.390911
+    test_vec_cross_youtput dd 12.624581
+    test_vec_cross_zoutput dd -166.720051
+    test_vec_cross_simple_failed db "vec_cross - simple", 0
 
 STACK 1000h
 

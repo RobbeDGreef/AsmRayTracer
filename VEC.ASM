@@ -279,6 +279,44 @@ proc vec_length_squared
     ret
 endp vec_length_squared
 
+proc vec_cross
+    arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec 
+    local @@temp:dword
+    uses eax, ebx, ecx, edx
+
+    mov eax, [@@dest]
+    mov ebx, [@@v1]
+    mov ecx, [@@v2]
+
+    fld [ebx+Vec.y]
+    fmul [ecx+Vec.z]
+    fld [ebx+Vec.z]
+    fmul [ecx+Vec.y]
+    fsub
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.x], edx
+
+    fld [ebx+Vec.z]
+    fmul [ecx+Vec.x]
+    fld [ebx+Vec.x]
+    fmul [ecx+Vec.z]
+    fsub
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.y], edx
+
+    fld [ebx+Vec.x]
+    fmul [ecx+Vec.y]
+    fld [ebx+Vec.y]
+    fmul [ecx+Vec.x]
+    fsub
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.z], edx
+    ret
+endp vec_cross
+
 DATASEG
     vec_print_x_str db "x: ", 0
     vec_print_y_str db " y: ", 0
