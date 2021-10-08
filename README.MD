@@ -39,6 +39,8 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [x] dot product
   - [ ] vector cross
   - [ ] unit vector (vec / vec_length)
+  - [-] vec_cpy
+  - [-] vec_eq
 - [x] Frame buffer class
   - [x] Essentially a large buffer that has a function to copy itself to memory
 - [ ] Ray class
