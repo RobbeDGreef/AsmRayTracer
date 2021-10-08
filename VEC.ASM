@@ -47,6 +47,36 @@ proc vec_get_z
     ret
 endp vec_get_z
 
+proc vec_set_x
+    arg @@v:PTR Vec, @@f:dword
+    uses eax, ebx
+
+    mov eax, [@@v]
+    mov ebx, [@@f]
+    mov [eax+Vec.x], ebx
+    ret
+endp vec_set_x
+
+proc vec_set_y
+    arg @@v:PTR Vec, @@f:dword
+    uses eax, ebx
+
+    mov eax, [@@v]
+    mov ebx, [@@f]
+    mov [eax+Vec.y], ebx
+    ret
+endp vec_set_y
+
+proc vec_set_z
+    arg @@v:PTR Vec, @@f:dword
+    uses eax, ebx
+
+    mov eax, [@@v]
+    mov ebx, [@@f]
+    mov [eax+Vec.z], ebx
+    ret
+endp vec_set_z
+
 proc vec_add
     arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
     local @@temp:dword
