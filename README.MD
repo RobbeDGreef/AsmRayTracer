@@ -30,10 +30,8 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [ ] getters and setters
   - [ ] vec-vec
   - [ ] vec+vec
-  - [ ] vec*vec
-  - [ ] vec/vec
-  - [ ] vec*float
-  - [ ] vec/float
+  - [x] vec*float
+  - [x] vec/float
   - [ ] length()
   - [ ] length_squared()
   - [x] dot product
