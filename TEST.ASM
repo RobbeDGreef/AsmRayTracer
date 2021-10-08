@@ -245,11 +245,6 @@ test_begin vec_dot
     call test_failed, offset test_vec_dot_simple_failed, eax
 test_end vec_dot
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> b49b0fb94ffdd06bc6b28772786103b38494ce73
 ;; -----------------------------------------------------------------------------
 ;; test_vec_mul_float
 ;; -----------------------------------------------------------------------------
@@ -292,19 +287,6 @@ test_begin vec_div_float
     cmp eax, 1
     je @@success1
     call test_failed, offset test_vec_div_float_x_failed, eax
-
-@@success1:
-    call feq, [ebx+Vec.y], [test_vec_div_float_youtput]
-    cmp eax, 1
-    je @@success2
-    call test_failed, offset test_vec_div_float_y_failed, eax
-
-@@success2:
-    call feq, [ebx+Vec.z], [test_vec_div_float_zoutput]
-    cmp eax, 1
-    je @@completed
-    call test_failed, offset test_vec_div_float_z_failed, eax
-test_end vec_div_float
 
 @@success1:
     call feq, [ebx+Vec.y], [test_vec_div_float_youtput]
