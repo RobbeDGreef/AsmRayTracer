@@ -35,7 +35,7 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [x] length()
   - [x] length_squared()
   - [x] dot product
-  - [ ] vector cross
+  - [x] vector cross
   - [ ] unit vector (vec / vec_length)
 - [ ] Frame buffer class
   - [ ] Essentially a large buffer that has a function to copy itself to memory
