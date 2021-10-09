@@ -480,5 +480,7 @@ DATASEG
     float_0_25      dd 0.25
     float_0_50      dd 0.50
     float_0_75      dd 0.75
+    float_1         dd 1.0
+    float_minus_one dd -1.0
     float_max_char  dd 255.0
 END
