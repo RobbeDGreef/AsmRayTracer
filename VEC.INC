@@ -12,6 +12,7 @@ def_vec Point
 
 VEC_SIZE    equ (4*3)
 
+GLOBAL vec_print:PROC       ;; void vec_print(Vec* v)
 GLOBAL vec_set:PROC         ;; void vec_set(Vec* v, float x, float y, float z)
 GLOBAL vec_cpy:PROC         ;; void vec_cpy(Vec* dest, Vec* src)
 GLOBAL vec_eq:PROC          ;; int vec_eq(Vec* arg1, Vec* arg2)

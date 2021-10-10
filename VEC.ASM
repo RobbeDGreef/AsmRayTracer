@@ -37,6 +37,20 @@ proc vec_cpy
     ret
 endp vec_cpy
 
+proc vec_print
+    arg @@v:PTR Vec
+    uses eax
+    mov eax, [@@v]
+    call print_str, offset vec_print_x_str
+    call print_float, [eax+Vec.x]
+    call print_str, offset vec_print_y_str
+    call print_float, [eax+Vec.y]
+    call print_str, offset vec_print_z_str
+    call print_float, [eax+Vec.z]
+    
+    ret
+endp vec_print
+
 ;; Tests the vectors against each other to check if they
 ;; are equal. If they are 1 will be returned, 0 otherwise.
 proc vec_eq
@@ -264,4 +278,10 @@ proc vec_length_squared
     mov eax, [@@temp]
     ret
 endp vec_length_squared
+
+DATASEG
+    vec_print_x_str db "x: ", 0
+    vec_print_y_str db " y: ", 0
+    vec_print_z_str db " z: ", 0
+
 END
