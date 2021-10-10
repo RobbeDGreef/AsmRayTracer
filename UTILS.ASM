@@ -396,6 +396,21 @@ proc memset
     ret
 endp memset
 
+;; Non optimized memcpy 
+;; TODO: untested
+proc memcpy
+    arg @@dest:PTR byte, @@src:PTR byte, @@count:dword returns eax
+    uses ecx, edi, esi
+    
+    mov edi, [@@dest]
+    mov esi, [@@src]
+    mov ecx, [@@count]
+    rep movsb
+
+    mov eax, [@@dest]
+    ret
+endp memcpy
+
 ;; =============================================================================
 ;; time functions
 ;; =============================================================================
