@@ -5,6 +5,9 @@ GLOBAL print_newline:PROC       ;; void print_newline(void)
 GLOBAL print_space:PROC         ;; void print_space(void)
 GLOBAL print_int:PROC           ;; void print_int(dword value)
 GLOBAL print_hex:PROC           ;; void pint_hex(dword value)
+GLOBAL print_float:PROC         ;; void print_float(float value)
+GLOBAL print_hex_multiple:PROC  ;; void print_hex_multiple(dword amount, ...)
+GLOBAL print_hexdump:PROC       ;; void print_hexdump(char* loc, dword amount)
 
 GLOBAL log_str:PROC
 GLOBAL log_int:PROC
@@ -43,6 +46,8 @@ GLOBAL strrev:PROC              ;; void strrev(char* str)
 GLOBAL strcmp:PROC              ;; dword strcmp(char* s1, char* s2)
 GLOBAL memcmp:PROC              ;; dword memcmp(void *d1, void *d2, dword length)
 GLOBAL memset:PROC              ;; void* memset(void *d, dword val, dword length)
+GLOBAL memcpy:PROC              ;; void* memcpy(void *d, void *s, dword length)
+GLOBAL memmove:PROC             ;; void* memmove(void *d, void *s, dword length)
 
 ;; Float functions
 GLOBAL feq:PROC                 ;; dword feq(float arg)
@@ -52,4 +57,6 @@ GLOBAL float_0:DWORD
 GLOBAL float_0_25:DWORD
 GLOBAL float_0_50:DWORD
 GLOBAL float_0_75:DWORD
+GLOBAL float_1:DWORD
+GLOBAL float_minus_1:DWORD
 GLOBAL float_max_char:DWORD

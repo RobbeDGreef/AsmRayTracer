@@ -27,17 +27,15 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [ ] print_float
 - [ ] Implement the vec class
   - [x] struct implementation
-  - [ ] getters and setters
-  - [ ] vec-vec
-  - [ ] vec+vec
-  - [ ] vec*vec
-  - [ ] vec/vec
-  - [ ] vec*float
-  - [ ] vec/float
-  - [ ] length()
-  - [ ] length_squared()
+  - [x] getters and setters
+  - [x] vec-vec
+  - [x] vec+vec
+  - [x] vec*float
+  - [x] vec/float
+  - [x] length()
+  - [x] length_squared()
   - [x] dot product
-  - [ ] vector cross
+  - [x] vector cross
   - [ ] unit vector (vec / vec_length)
   - [-] vec_cpy
   - [-] vec_eq

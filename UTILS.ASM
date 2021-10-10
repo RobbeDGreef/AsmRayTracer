@@ -64,6 +64,35 @@ proc print_int
     ret
 endp print_int
 
+proc pad_print_buffer
+    arg @@padding:dword
+    uses eax, ebx
+
+    call strlen, offset print_int_buffer
+    cmp eax, [@@padding]
+    jge @@end
+
+    mov ebx, [@@padding]
+    sub ebx, eax
+    mov edx, offset print_int_buffer
+    add edx, ebx
+    inc eax
+    call memmove, edx, offset print_int_buffer, eax
+    call memset, offset print_int_buffer, '0', ebx
+
+@@end:
+    ret
+endp pad_print_buffer
+
+proc print_int_padded
+    arg @@value:dword, @@padding:dword
+    uses eax, ebx
+    call itoa, [@@value], offset print_int_buffer, 10
+    call pad_print_buffer, [@@padding]
+    call print_str, offset print_int_buffer
+    ret
+endp print_int_padded
+
 ;; Prints an integer to STDOUT in hexadecimal notation (prefixed with 0x)
 proc print_hex
     arg @@value:dword
@@ -73,6 +102,112 @@ proc print_hex
     call print_str, offset print_int_buffer
     ret
 endp print_hex
+
+proc print_hex_padded
+    arg @@value:dword, @@padding:dword
+    uses eax
+    call itoa, [@@value], offset print_int_buffer, 16
+    call pad_print_buffer, [@@padding]
+    call print_str, offset print_int_buffer
+    ret
+endp print_hex_padded
+
+proc print_float
+    arg @@fl_value:dword
+    local @@temp:dword
+    uses eax
+    
+    xor eax, eax
+    fldz
+    fld [@@fl_value]
+    fcompp
+    fnstsw ax
+    fld [@@fl_value]
+    shr eax, 8
+    and eax, 111B
+    cmp eax, 1
+    jne @@not_negative
+    call print_char, '-'
+    fld1
+    fchs
+    fmul
+    
+@@not_negative:
+    ;; intpart:
+    fist [@@temp]
+    call print_int, [@@temp]
+    call print_char, '.'
+    fild [@@temp]
+    ;fxch
+    fsub 
+    fld [float_1000000]
+    fmul
+    fistp [@@temp]
+    call print_int_padded, [@@temp], 6
+
+    ret
+endp print_float
+
+proc print_hex_multiple
+    arg @@count:dword
+    uses eax, ebx, ecx, edx
+
+    mov eax, 12
+    mov ecx, 0
+@@print_loop:
+    cmp ecx, [@@count]
+    je @@end
+   
+    call print_hex, [dword ptr ebp+eax]
+    call print_space
+    
+    add eax, 4
+    inc ecx
+    jmp @@print_loop
+
+@@end:
+    ret
+endp print_hex_multiple
+
+proc print_hexdump
+    arg @@addr:PTR byte, @@amount:dword
+    uses eax, ebx, ecx
+
+    ;; iterate through memory, print 16 bytes at a time
+    mov eax, [@@addr]
+    and eax, -10h
+
+    mov ecx, 0
+
+@@print_loop:
+    cmp ecx, [@@amount]
+    jge @@end
+
+    call print_str, offset hex_prefix
+    mov ebx, eax
+    add ebx, ecx
+    call print_hex_padded, ebx, 8
+    call print_char, ':'
+    call print_space
+
+    call print_hex_padded, [dword ptr eax+ecx], 8
+    call print_space
+    add ecx, 4
+    call print_hex_padded, [dword ptr eax+ecx], 8
+    call print_space
+    add ecx, 4
+    call print_hex_padded, [dword ptr eax+ecx], 8
+    call print_space
+    add ecx, 4
+    call print_hex_padded, [dword ptr eax+ecx], 8
+    call print_newline
+
+    add ecx, 4
+    jmp @@print_loop
+
+@@end:
+    ret
+endp print_hexdump
 
 proc log_prefix
     uses eax
@@ -396,6 +531,55 @@ proc memset
     ret
 endp memset
 
+;; Non optimized memcpy 
+;; TODO: untested
+proc memcpy
+    arg @@dest:PTR byte, @@src:PTR byte, @@count:dword returns eax
+    uses ecx, edi, esi
+    
+    mov edi, [@@dest]
+    mov esi, [@@src]
+    mov ecx, [@@count]
+    rep movsb
+
+    mov eax, [@@dest]
+    ret
+endp memcpy
+
+;; Non optimized memmove
+;; TODO: untested (pretty damn sure it works tho)
+proc memmove
+    arg @@dest:PTR byte, @@src:PTR byte, @@count:dword returns eax
+    uses ecx, ebx, edi, esi
+    
+    mov edi, [@@dest]
+    mov esi, [@@src]
+    mov ecx, [@@count]
+    cmp edi, esi
+    je @@end            ;; Obviously we don't need to do anything dest == src
+    js @@regular        ;; We can do a regular memcpy memmove dest < src
+
+@@right_to_left:
+    std                 ;; Set direction flag to right to left
+
+    mov ebx, ecx
+    dec ebx
+    add edi, ebx
+    add esi, ebx
+
+    rep movsb
+
+    cld
+    jmp @@end
+
+@@regular:
+    rep movsb
+
+@@end:
+    mov eax, [@@dest]
+    ret
+endp memmove
+
 ;; =============================================================================
 ;; time functions
 ;; =============================================================================
@@ -474,11 +658,14 @@ DATASEG
     print_int_buffer db 16 dup (?)
     hex_prefix db "0x", 0
 
-    float_epsilon dd 0.0001
+    float_epsilon dd 0.0007
 
     float_0         dd 0.0
     float_0_25      dd 0.25
     float_0_50      dd 0.50
     float_0_75      dd 0.75
+    float_1         dd 1.0
+    float_minus_1   dd -1.0
     float_max_char  dd 255.0
+    float_1000000   dd 1000000.0
 END
