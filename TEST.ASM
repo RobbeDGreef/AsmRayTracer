@@ -15,6 +15,7 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "utils.inc"
 include "vec.inc"
+include "ray.inc"
 include "init.inc"
 
 CODESEG
@@ -530,6 +531,41 @@ test_begin vec_length_squared
     call test_failed, offset test_vec_length_squared_failed, eax
 test_end vec_length_squared
 
+;; -----------------------------------------------------------------------------
+;; test_rey_set
+;; test_ray_at
+;; -----------------------------------------------------------------------------
+test_begin ray_at
+    local @@ray:Ray, @@origin:Point, @@direction:Vec, @@res:Point, \
+          @@compare:Point
+
+    lea eax, [@@origin]
+    lea ebx, [@@direction]
+    lea ecx, [@@ray]
+    lea edx, [@@res]
+
+    call vec_set, eax, [float_1], [float_0_25], [float_0]
+    call vec_set, ebx, [float_minus_1], [float_0_75], [float_0_25]
+    call ray_set, ecx, eax, ebx
+
+    call ray_at, ecx, edx, [test_ray_at_float_t]
+
+    ;; origin:  (1, 0.25, 0)
+    ;; dir:     (-1, 0.75, 0.25)
+    ;; t:       3.24
+    ;; origin + dir*t = (1, 0.25, 0) + (-3.24, 2.43, 0.81)
+    ;;                = (-2.24, 2.68, 0.81)
+
+    lea eax, [@@compare]
+    call vec_set, eax, [test_ray_at_res_x], [test_ray_at_res_y], \
+                       [test_ray_at_res_z]
+
+    call vec_eq, eax, edx
+    cmp eax, 1
+    je @@completed
+    call test_failed, offset test_ray_at_simple_failed, eax
+test_end ray_at
+
 ;; =============================================================================
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
@@ -559,6 +595,7 @@ proc main
     call test_vec_set_x
     call test_vec_set_y 
     call test_vec_set_z
+    call test_ray_at
 
     call exit, 0
     ret
@@ -735,6 +772,13 @@ DATASEG
     test_vec_set_z_zvalue dd 333.333
     test_vec_set_z_fvalue dd 444.444
     test_vec_set_z_failed db "vec_set_z", 0
+
+    test_ray_at_name db "ray_at", 0
+    test_ray_at_simple_failed db "ray_at - simple", 0
+    test_ray_at_float_t dd 3.24
+    test_ray_at_res_x dd -2.24
+    test_ray_at_res_y dd 2.68
+    test_ray_at_res_z dd 0.81
 
 STACK 1000h
 
