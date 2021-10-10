@@ -411,6 +411,40 @@ proc memcpy
     ret
 endp memcpy
 
+;; Non optimized memmove
+;; TODO: untested (pretty damn sure it works tho)
+proc memmove
+    arg @@dest:PTR byte, @@src:PTR byte, @@count:dword returns eax
+    uses ecx, ebx, edi, esi
+    
+    mov edi, [@@dest]
+    mov esi, [@@src]
+    mov ecx, [@@count]
+    cmp edi, esi
+    je @@end            ;; Obviously we don't need to do anything dest == src
+    js @@regular        ;; We can do a regular memcpy memmove dest < src
+
+@@right_to_left:
+    std                 ;; Set direction flag to right to left
+
+    mov ebx, ecx
+    dec ebx
+    add edi, ebx
+    add esi, ebx
+
+    rep movsb
+
+    cld
+    jmp @@end
+
+@@regular:
+    rep movsb
+
+@@end:
+    mov eax, [@@dest]
+    ret
+endp memmove
+
 ;; =============================================================================
 ;; time functions
 ;; =============================================================================

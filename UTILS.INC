@@ -44,6 +44,7 @@ GLOBAL strcmp:PROC              ;; dword strcmp(char* s1, char* s2)
 GLOBAL memcmp:PROC              ;; dword memcmp(void *d1, void *d2, dword length)
 GLOBAL memset:PROC              ;; void* memset(void *d, dword val, dword length)
 GLOBAL memcpy:PROC              ;; void* memcpy(void *d, void *s, dword length)
+GLOBAL memmove:PROC             ;; void* memmove(void *d, void *s, dword length)
 
 ;; Float functions
 GLOBAL feq:PROC                 ;; dword feq(float arg)
