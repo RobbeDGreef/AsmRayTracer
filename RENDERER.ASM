@@ -6,6 +6,7 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 include "utils.inc"
 include "renderer.inc"
 include "vec.inc"
+include "ray.inc"
 
 VESA_VIDEO_ADDR     equ 0A0000h
 VESA_BANK_SIZE      equ (64*1024)
@@ -82,17 +83,64 @@ proc renderer_flip
     ret
 endp renderer_flip
 
+proc cast_ray
+    arg @@ray:PTR Ray, @@dest_color:PTR Color
+
+    call vec_set, [@@dest_color], [float_1], [float_1], [float_1]
+
+    ret
+endp cast_ray
+
 ;; This will render the frame of the current scene.
 ;; Setting up the scene will happen through various other functions in the 
 ;; future. We are in the early stages so we do not need to think about that yet
 ;; (passing a bounding box tree as argument etc)
+;;
+;; This function has a very large callframe but that is not a problem since we
+;; don't run this recursively. And this is better than doing things on the heap.
 proc renderer_render
-    local @@temp:dword
-    uses eax, ecx, ebx, edx
+    local @@temp:dword, @@camera_loc:Point, @@horizontal:Vec, @@vertical:Vec, \
+          @@lower_left_corner:Vec, @@temp_vec:Vec, @@temp_vec2:Vec, \
+          @@ray:Ray, @@u:dword, @@v:dword
+    uses eax, ecx, ebx, edx, edi, esi
 
+    ;; camera_loc = (0, 0, 0)
+    lea eax, [@@camera_loc]
+    call vec_set, eax, [float_0], [float_0], [float_0]
+    
+    ;; horizontal = (viewport_height * aspect_ratio, 0, 0)
+    lea eax, [@@horizontal]
+    fld [viewport_height]
+    fmul [aspect_ratio]
+    fstp [@@temp]
+    call vec_set, eax, [@@temp], [float_0], [float_0]
+
+    ;; vertical = (0, viewport_height, 0)
+    lea eax, [@@vertical]
+    call vec_set, eax, [float_0], [viewport_height], [float_0]
+
+    ;; lower_left_corner = camera_loc - horizontal / 2 - vertical / 2 - (0, 0, focal_length)
+    lea eax, [@@lower_left_corner]
+    lea ebx, [@@camera_loc]
+    call vec_cpy, eax, ebx
+
+    lea ebx, [@@temp_vec]
+    lea ecx, [@@horizontal]
+    call vec_cpy, ebx, ecx
+    call vec_div_float, ebx, [float_2]
+    call vec_sub, eax, eax, ebx
+
+    lea ecx, [@@vertical]
+    call vec_cpy, ebx, ecx
+    call vec_div_float, ebx, [float_2]
+    call vec_sub, eax, eax, ebx
+    
+    call vec_set, ebx, [float_0], [float_0], [focal_length]
+    call vec_sub, eax, eax, ebx
+
+    lea esi, [video_framebuffer]
     mov eax, VIDEO_GFX_HEIGHT
     dec eax
-    lea ecx, [video_framebuffer]
 
 @@height_loop:
     cmp eax, 0
@@ -104,21 +152,41 @@ proc renderer_render
         cmp ebx, VIDEO_GFX_WIDTH
         jge @@end_width_loop
         
+        fld [image_width_minus_1]
         mov [@@temp], ebx
         fild [@@temp]
-        fdiv [image_width]
-        fstp [dword ptr ecx+8]
-
+        fdiv
+        fstp [@@u]
+        fld [image_height_minus_1]
         mov [@@temp], eax
         fild [@@temp]
-        fdiv [image_height]
-        fstp [dword ptr ecx+4]
+        fdiv
+        fstp [@@v]
 
-        mov edx, [float_0_25]
-        mov [ecx], edx
+        lea edi, [@@temp_vec]
+        lea ecx, [@@lower_left_corner]
+        call vec_cpy, edi, ecx
 
-        add ecx, VEC_SIZE
+        lea ecx, [@@temp_vec2]
+        lea edx, [@@horizontal]
+        call vec_cpy, ecx, edx
+        call vec_mul_float, ecx, [@@u]
+        call vec_add, edi, edi, ecx
 
+        lea edx, [@@vertical]
+        call vec_cpy, ecx, edx
+        call vec_mul_float, ecx, [@@v]
+        call vec_add, edi, edi, ecx
+        
+        lea ecx, [@@camera_loc]
+        call vec_sub, edi, edi, ecx
+
+        lea ecx, [@@ray]
+        lea edx, [@@camera_loc]
+        call ray_set, ecx, edx, edi
+        call cast_ray, ecx, esi
+        
+        add esi, VEC_SIZE
         inc ebx
         jmp @@width_loop
 
@@ -133,8 +201,14 @@ proc renderer_render
 endp renderer_render
 
 DATASEG
-    image_width dd 799.0
-    image_height dd 599.0
+    ;; Shouldn't be hard coded but this is faster
+    image_width_minus_1  dd 799.0
+    image_height_minus_1 dd 599.0
+
+    aspect_ratio dd 1.333333    ;; 800/600
+    focal_length dd 1.0
+
+    viewport_height dd 2.0
 
 UDATASEG
     video_framebuffer Color (VIDEO_GFX_FB_SIZE/4) dup (?)

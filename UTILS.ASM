@@ -666,6 +666,7 @@ DATASEG
     float_0_75      dd 0.75
     float_1         dd 1.0
     float_minus_1   dd -1.0
+    float_2         dd 2.0
     float_max_char  dd 255.0
     float_1000000   dd 1000000.0
 END
