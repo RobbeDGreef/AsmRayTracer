@@ -64,6 +64,35 @@ proc print_int
     ret
 endp print_int
 
+proc pad_print_buffer
+    arg @@padding:dword
+    uses eax, ebx
+
+    call strlen, offset print_int_buffer
+    cmp eax, [@@padding]
+    jge @@end
+
+    mov ebx, [@@padding]
+    sub ebx, eax
+    mov edx, offset print_int_buffer
+    add edx, ebx
+    inc eax
+    call memmove, edx, offset print_int_buffer, eax
+    call memset, offset print_int_buffer, '0', ebx
+
+@@end:
+    ret
+endp pad_print_buffer
+
+proc print_int_padded
+    arg @@value:dword, @@padding:dword
+    uses eax, ebx
+    call itoa, [@@value], offset print_int_buffer, 10
+    call pad_print_buffer, [@@padding]
+    call print_str, offset print_int_buffer
+    ret
+endp print_int_padded
+
 ;; Prints an integer to STDOUT in hexadecimal notation (prefixed with 0x)
 proc print_hex
     arg @@value:dword
@@ -74,6 +103,41 @@ proc print_hex
     ret
 endp print_hex
 
+proc print_float
+    arg @@fl_value:dword
+    local @@temp:dword
+    uses eax
+    
+    xor eax, eax
+    fldz
+    fld [@@fl_value]
+    fcompp
+    fnstsw ax
+    fld [@@fl_value]
+    shr eax, 8
+    and eax, 111B
+    cmp eax, 1
+    jne @@not_negative
+    call print_char, '-'
+    fld1
+    fchs
+    fmul
+    
+@@not_negative:
+    ;; intpart:
+    fist [@@temp]
+    call print_int, [@@temp]
+    call print_char, '.'
+    fild [@@temp]
+    ;fxch
+    fsub 
+    fld [float_1000000]
+    fmul
+    fistp [@@temp]
+    call print_int_padded, [@@temp], 6
+
+    ret
+endp print_float
 proc log_prefix
     uses eax
     call print_char, '['
@@ -532,4 +596,5 @@ DATASEG
     float_1         dd 1.0
     float_minus_one dd -1.0
     float_max_char  dd 255.0
+    float_1000000   dd 1000000.0
 END
