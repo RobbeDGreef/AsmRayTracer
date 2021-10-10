@@ -103,6 +103,15 @@ proc print_hex
     ret
 endp print_hex
 
+proc print_hex_padded
+    arg @@value:dword, @@padding:dword
+    uses eax
+    call itoa, [@@value], offset print_int_buffer, 16
+    call pad_print_buffer, [@@padding]
+    call print_str, offset print_int_buffer
+    ret
+endp print_hex_padded
+
 proc print_float
     arg @@fl_value:dword
     local @@temp:dword
@@ -138,6 +147,68 @@ proc print_float
 
     ret
 endp print_float
+
+proc print_hex_multiple
+    arg @@count:dword
+    uses eax, ebx, ecx, edx
+
+    mov eax, 12
+    mov ecx, 0
+@@print_loop:
+    cmp ecx, [@@count]
+    je @@end
+   
+    call print_hex, [dword ptr ebp+eax]
+    call print_space
+    
+    add eax, 4
+    inc ecx
+    jmp @@print_loop
+
+@@end:
+    ret
+endp print_hex_multiple
+
+proc print_hexdump
+    arg @@addr:PTR byte, @@amount:dword
+    uses eax, ebx, ecx
+
+    ;; iterate through memory, print 16 bytes at a time
+    mov eax, [@@addr]
+    and eax, -10h
+
+    mov ecx, 0
+
+@@print_loop:
+    cmp ecx, [@@amount]
+    jge @@end
+
+    call print_str, offset hex_prefix
+    mov ebx, eax
+    add ebx, ecx
+    call print_hex_padded, ebx, 8
+    call print_char, ':'
+    call print_space
+
+    call print_hex_padded, [dword ptr eax+ecx], 8
+    call print_space
+    add ecx, 4
+    call print_hex_padded, [dword ptr eax+ecx], 8
+    call print_space
+    add ecx, 4
+    call print_hex_padded, [dword ptr eax+ecx], 8
+    call print_space
+    add ecx, 4
+    call print_hex_padded, [dword ptr eax+ecx], 8
+    call print_newline
+
+    add ecx, 4
+    jmp @@print_loop
+
+@@end:
+    ret
+endp print_hexdump
+
 proc log_prefix
     uses eax
     call print_char, '['
@@ -587,14 +658,14 @@ DATASEG
     print_int_buffer db 16 dup (?)
     hex_prefix db "0x", 0
 
-    float_epsilon dd 0.0001
+    float_epsilon dd 0.0007
 
     float_0         dd 0.0
     float_0_25      dd 0.25
     float_0_50      dd 0.50
     float_0_75      dd 0.75
     float_1         dd 1.0
-    float_minus_one dd -1.0
+    float_minus_1   dd -1.0
     float_max_char  dd 255.0
     float_1000000   dd 1000000.0
 END
