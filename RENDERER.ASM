@@ -82,6 +82,60 @@ proc renderer_flip
     ret
 endp renderer_flip
 
+;; This will render the frame of the current scene.
+;; Setting up the scene will happen through various other functions in the 
+;; future. We are in the early stages so we do not need to think about that yet
+;; (passing a bounding box tree as argument etc)
+proc renderer_render
+    local @@temp:dword
+    uses eax, ecx, ebx, edx
+
+    mov eax, VIDEO_GFX_HEIGHT
+    dec eax
+    lea ecx, [video_framebuffer]
+
+@@height_loop:
+    cmp eax, 0
+    jl @@end_height_loop
+
+    mov ebx, 0
+
+    @@width_loop:
+        cmp ebx, VIDEO_GFX_WIDTH
+        jge @@end_width_loop
+        
+        mov [@@temp], ebx
+        fild [@@temp]
+        fdiv [image_width]
+        fstp [dword ptr ecx+8]
+
+        mov [@@temp], eax
+        fild [@@temp]
+        fdiv [image_height]
+        fstp [dword ptr ecx+4]
+
+        mov edx, [float_0_25]
+        mov [ecx], edx
+
+        add ecx, VEC_SIZE
+
+        inc ebx
+        jmp @@width_loop
+
+    @@end_width_loop:
+    dec eax
+    jmp @@height_loop
+
+
+@@end_height_loop:
+
+    ret
+endp renderer_render
+
+DATASEG
+    image_width dd 799.0
+    image_height dd 599.0
+
 UDATASEG
     video_framebuffer Color (VIDEO_GFX_FB_SIZE/4) dup (?)
 
