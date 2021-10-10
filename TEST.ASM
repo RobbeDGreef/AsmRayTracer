@@ -39,6 +39,8 @@ proc test_failed
     call print_str, [@@test_name]
     ;; TODO: print the value here as a failure reason
     call print_newline
+    call print_int, [@@value]
+    call print_newline
     call exit, [@@value]
 endp test_failed
 
@@ -432,10 +434,10 @@ test_begin vec_dot
 
     lea eax, [@@v1]
     lea ebx, [@@v2]
-    call vec_set, eax, [test_vec_dot_value], [test_vec_dot_value], \
-                  [test_vec_dot_value]
-    call vec_set, ebx, [test_vec_dot_value], [test_vec_dot_value], \
-                  [test_vec_dot_value]
+    call vec_set, eax, [float_0_25], [float_minus_1], \
+                  [float_0_75]
+    call vec_set, ebx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
     call vec_dot, eax, ebx
     call feq, eax, [test_vec_dot_output]
     cmp eax, 1
@@ -522,8 +524,8 @@ test_begin vec_length_squared
     local @@v1:Vec
 
     lea eax, [@@v1]
-    call vec_set, eax, [test_vec_length_squared_xvalue], \
-        [test_vec_length_squared_yvalue], [test_vec_length_squared_zvalue]
+    call vec_set, eax, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
     call vec_length_squared, eax
     call feq, eax, [test_vec_length_squared_output]
     cmp eax, 1
@@ -656,9 +658,12 @@ DATASEG
     test_feq_near_failed db "feq - near", 0
     test_feq_different_failed db "feq - different", 0
 
+    test_vec_dummy_x dd 12.123
+    test_vec_dummy_y dd 32.321
+    test_vec_dummy_z dd 23.854
+
     test_vec_dot_name db "vec_dot", 0
-    test_vec_dot_value dd 123.123
-    test_vec_dot_output dd 45477.819387
+    test_vec_dot_output dd -11.39975
     test_vec_dot_simple_failed db "vec_dot - simple", 0
 
     test_vec_mul_float_name db "vec_mul_float", 0
@@ -679,7 +684,7 @@ DATASEG
 
     test_vec_cpy_name db "vec_cpy", 0
     test_vec_cpy_simple_failed db  "vec_cpy - simple", 0
-    
+
     test_vec_div_float_name db "vec_div_float", 0
     test_vec_div_float_xvalue dd 123.123
     test_vec_div_float_yvalue dd 321.321
@@ -728,10 +733,7 @@ DATASEG
     test_vec_length_failed db "vec_length"
 
     test_vec_length_squared_name db "vec_length_squared", 0
-    test_vec_length_squared_xvalue dd 111.111
-    test_vec_length_squared_yvalue dd 222.222
-    test_vec_length_squared_zvalue dd 333.333
-    test_vec_length_squared_output dd 172839.1605
+    test_vec_length_squared_output dd 1760.627486
     test_vec_length_squared_failed db "vec_length_squared", 0
 
     test_vec_get_x_name db "vec_get_x", 0
