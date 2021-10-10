@@ -6,24 +6,16 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 include "utils.inc"
 include "vec.inc"
 include "renderer.inc"
+include "init.inc"
 
 CODESEG
-    jmp main
 
 proc main
     uses eax, ebx, ecx, edx, edi, esi
     local @@temp:dword
-    sti
-    cld
 
-    ;; Set the extra segment to be the same as the data segment
-    ;; This is probably not necessary because everytime we use ES we probably
-    ;; explicitly set it to some value but better safe than sorry
-    mov ax, ds
-    mov es, ax
+    call init
 
-    ;; Initialize the FPU for floating point operations
-    finit
 
     call log_str, offset start_str
     call set_video_mode, VIDEO_MODE_GRAPHICS

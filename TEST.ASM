@@ -15,6 +15,7 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "utils.inc"
 include "vec.inc"
+include "init.inc"
 
 CODESEG
     jmp main
@@ -533,6 +534,8 @@ test_end vec_length_squared
 ;; ADD YOUR TESTS TO THE MAIN FUNCTION HERE
 ;; =============================================================================
 proc main
+    call init
+
     call test_strlen
     call test_memcmp
     call test_strcmp

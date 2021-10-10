@@ -1,0 +1,1 @@
+GLOBAL init:PROC ;; void init()
