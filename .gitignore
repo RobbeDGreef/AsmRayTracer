@@ -1,5 +1,6 @@
 debug/
 DELETED/
+compat/
 *.OBJ
 *.EXE
 debug.log

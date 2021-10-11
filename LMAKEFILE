@@ -1,0 +1,26 @@
+# =============================================================================
+# Compatability linux makefile.
+# =============================================================================
+# This makefile will build the project for a linux (non-dos) pc.
+# This way we can profile the code on the real CPU and have a lot more advanced
+# non dos tools at our disposal.
+
+SRCS := $(wildcard *.ASM)
+SRCS := $(filter-out TEST.ASM, $(SRCS))
+OBJS = ${SRCS:.ASM=.o}
+DEST = raytracer
+
+NASM = nasm
+
+all: $(DEST)
+
+$(DEST): ${OBJS}
+	$(LD) -melf_i386 -o $(DEST) $^
+
+%.o: %.ASM
+	python3 converter.py $< compat/$<
+	$(NASM) -t compat/$< -f elf -o compat/$@
+
+clean:
+	#rm -rf ${OBJS} $(DEST)
+	echo ${OBJS}
