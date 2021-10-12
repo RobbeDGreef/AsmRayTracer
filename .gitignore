@@ -5,3 +5,6 @@ compat/
 *.EXE
 debug.log
 OUTPUT.LOG
+raytracer
+perf*
+test.bmp
