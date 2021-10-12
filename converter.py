@@ -137,17 +137,14 @@ class Converter:
                 # after '['. This is hack but this entire script is one big hack
                 # so idc.
                 typespecifier = ""
-                if line[local:local+2] == '@@':
+                if line[local-1] == '[':
                     typespecifier = self.type_lookup(self.localtable[name][0])
 
-                return line[:local] + typespecifier + " ebp"  + loc + line[end:] + NEWLINE
+                return line[:local].replace("ptr ", " ") + typespecifier + " ebp"  + loc + line[end:] + NEWLINE
 
         # Remove the offset keyword since NASM doesn't need that
         if line.find("offset ") != -1:
             return line.replace("offset", "")
-
-        if line.find("ptr ") != -1:
-            return line.replace("ptr ", " ")
 
         if self.current_segment == "data":
             if line.find(" dup ") != -1:
@@ -158,6 +155,9 @@ class Converter:
                 newparts.append('db')
 
                 return " ".join(newparts)
+        
+        if line.find("ptr ") != -1:
+            line = line.replace("ptr ", " ")
 
         # If there is a memory access we need to make sure it is not 
         memaccess = line.find('[')
@@ -267,7 +267,7 @@ class Converter:
                 self.warning("Is the previous function closed? (endp not called)")
 
             self.parsing_function = True
-            return line.split("proc ")[1] + ":" + NEWLINE
+            return lineparts[1] + ":" + NEWLINE + "push ebp" + NEWLINE + "mov ebp, esp" + NEWLINE
 
         # Function end
         if lineparts[0] == "endp":
@@ -296,20 +296,30 @@ class Converter:
                 _, f1 = os.path.split(file_to_parse)
                 _, f2 = os.path.split(self.infile_name)
 
+                g = self.mark_global
                 if f1.split('.')[0].lower() == f2.split('.')[0].lower():
                     self.mark_global = True
+                else:
+                    self.mark_global = False
                 self.mainloop(f)
-                self.mark_global = False
+                self.mark_global = g
             return None
 
         if lineparts[0] == "arg":
+            # strip "returns" directive
+            if "returns" in lineparts:
+                lineparts = lineparts[:lineparts.index("returns")]
+
             args = " ".join(lineparts[1:]).split(',')
             newargs = []
             for i, arg in enumerate(args):
+                arg = arg.strip()
+                if arg == "":
+                    continue
                 name = arg.split(':')[0].strip()
                 size = arg.split(':')[1]
-                self.localtable[name] = (4, -8 - 4*i)
-                # All arguments are dwords from now on.
+                self.localtable[name] = (4, 8 + 4*i)
+                # All arguments are dwords from now on lmao.
 
             return None 
 
@@ -338,7 +348,7 @@ class Converter:
                 self.localtable[name] = (t[0], -(self.stackframesize - t[1]))
             
             # setup the stack frame
-            return "enter " + str(self.stackframesize) + ", 0" + NEWLINE
+            return "sub esp, " + str(self.stackframesize) + NEWLINE
 
         if lineparts[0] == "call":
             args = " ".join(lineparts[1:])
@@ -350,7 +360,7 @@ class Converter:
                 out.append("push dword" + self.parse_inline(arg))
             
             out.append("call " + fname)
-            out.append("sub esp, " + str(len(args) * 4))
+            out.append("add esp, " + str(len(args) * 4))
             out.append("")
 
             return NEWLINE.join(out)

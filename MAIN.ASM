@@ -10,6 +10,8 @@ include "init.inc"
 
 CODESEG
 
+GLOBAL main:PROC
+
 proc main
     uses eax, ebx, ecx, edx, edi, esi
 
@@ -19,9 +21,10 @@ proc main
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
     call renderer_render
-    call renderer_flip
+    call renderer_to_bmp, offset bmpout
+;    call renderer_flip
 
-    call sleep_millis, 1000
+    call log_str, offset finished_str
 
     call set_video_mode, VIDEO_MODE_TEXT
     call exit, 0
@@ -31,5 +34,7 @@ STACK 5000h
 
 DATASEG
     start_str db "Ray tracer started", 0
+    finished_str db "Ray tracer finished", 0
+    bmpout db "test.bmp", 0
 
 END main

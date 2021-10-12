@@ -10,6 +10,8 @@ CODESEG
 proc init
     local @@temp:word
     uses eax
+
+ifndef NASM
     ;; Enable interrupts (lol why are we executing ring 0 instructions, dos is
     ;; weird)
     sti
@@ -23,6 +25,7 @@ proc init
 
     ;; Initialize the FPU for floating point operations
     finit
+endif
 
     ;; Set rounding control to 0
     ;; Don't change this because this was one annoying bug to fix. Thank god I 

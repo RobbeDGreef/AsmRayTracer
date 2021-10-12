@@ -12,5 +12,6 @@ VIDEO_GFX_FB_SIZE       equ (VIDEO_GFX_WIDTH*VIDEO_GFX_HEIGHT*VIDEO_GFX_BPP)
 ;; Renderer functions
 GLOBAL renderer_flip:PROC           ;; void renderer_flip()
 GLOBAL renderer_render:PROC         ;; void renderer_render()
+GLOBAL renderer_to_bmp:PROC         ;; void renderer_to_bmp(char* filename)
 
 GLOBAL video_framebuffer:PTR DWORD

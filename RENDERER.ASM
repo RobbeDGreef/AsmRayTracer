@@ -21,7 +21,10 @@ proc set_video_mode
     ;; We use the bios to set the video mode
     mov eax, 4f02h
     mov ebx, [@@mode]
+
+ifndef NASM
     int 10h
+endif
     ret
 endp set_video_mode
 
@@ -34,15 +37,124 @@ proc set_bank
     xor bx, bx
     mov edx, [@@bank_number]
 
+ifndef NASM
     int 10h
+endif
 
     ret
 endp set_bank
+
+BMP_HDR_ID                  equ 4d42h
+BMP_HDR_SIZE                equ 14
+BMP_DIB_SIZE                equ 40
+BMP_DIB_PLANES              equ 1
+BMP_DIB_BPP                 equ 32
+BMP_DIB_COMPRESSION_TYPE    equ 0
+BMP_DIB_COMPRESSION_SIZE    equ 0
+
+struc bmp_hdr
+    id              dw ?
+    size            dd ?
+    reserved        dd ?
+    img_data_off    dd ?
+ends bmp_hdr
+
+struc bmp_dip_hdr
+    size                    dd ?
+    img_width               dd ?
+    img_height              dd ?
+    places_cnt              dw ?
+    bpp                     dw ?
+    compression_type        dd ?
+    compression_size        dd ?
+    x_ppm                   dd ?
+    y_ppm                   dd ?
+    used_colors_cnt         dd ?
+    important_colors_cnt    dd ? 
+ends bmp_dip_hdr
+
+proc renderer_to_bmp
+    arg @@file_name:PTR byte
+    local @@hdr:bmp_hdr, @@dip_hdr:bmp_dip_hdr
+    uses eax, ebx, ecx
+
+    call renderer_to_rgbbuffer 
+
+    call create_file, [@@file_name], 0
+    mov ebx, eax
+    
+    lea eax, [@@hdr]
+    mov [word ptr eax+bmp_hdr.id], BMP_HDR_ID
+    mov [dword ptr eax+bmp_hdr.size], BMP_HDR_SIZE+BMP_DIB_SIZE+2+VIDEO_GFX_FB_SIZE
+    mov [dword ptr eax+bmp_hdr.img_data_off], BMP_HDR_SIZE+BMP_DIB_SIZE+2
+    
+    call write_file, ebx, eax, 14
+
+    lea eax, [@@dip_hdr]
+    mov [dword ptr eax+bmp_dip_hdr.size], BMP_DIB_SIZE
+    mov [dword ptr eax+bmp_dip_hdr.img_width], VIDEO_GFX_WIDTH
+    mov [dword ptr eax+bmp_dip_hdr.img_height], VIDEO_GFX_HEIGHT
+    mov [word ptr eax+bmp_dip_hdr.places_cnt], BMP_DIB_SIZE
+    mov [word ptr eax+bmp_dip_hdr.bpp], BMP_DIB_BPP
+    mov [dword ptr eax+bmp_dip_hdr.compression_type], BMP_DIB_COMPRESSION_TYPE
+    mov [dword ptr eax+bmp_dip_hdr.compression_size], BMP_DIB_COMPRESSION_SIZE
+    mov [dword ptr eax+bmp_dip_hdr.x_ppm], 0
+    mov [dword ptr eax+bmp_dip_hdr.y_ppm], 0
+    mov [dword ptr eax+bmp_dip_hdr.used_colors_cnt], 0
+    mov [dword ptr eax+bmp_dip_hdr.important_colors_cnt], 0
+
+    call write_file, ebx, eax, BMP_DIB_SIZE
+    ;; 2 pad bytes, reused ebx as address but this might as well have been 
+    ;; something else
+    call write_file, ebx, eax, 2
+
+    call write_file, ebx, offset video_rgbbuf, VIDEO_GFX_FB_SIZE
+    call close_file, ebx
+
+    ret
+endp renderer_to_bmp
+
+proc renderer_to_rgbbuffer
+    uses eax, ebx, ecx
+
+    mov eax, offset video_rgbbuf
+    lea ebx, [video_framebuffer]
+    xor ecx, ecx
+
+@@convert_loop:
+    cmp ecx, VIDEO_GFX_FB_SIZE
+    jge @@end
+    
+    fld [dword ptr ebx]
+    fmul [float_max_char]
+    fistp [word ptr eax]
+    
+    fld [dword ptr ebx+4]
+    fmul [float_max_char]
+    fistp [word ptr eax+1]
+    
+    fld [dword ptr ebx+8]
+    fmul [float_max_char]
+    fistp [word ptr eax+2]
+
+    ;; Set alpha
+    mov [byte ptr eax+3], 0ffh
+
+    add ebx, VEC_SIZE
+    add eax, 4
+    add ecx, 4
+    jmp @@convert_loop
+
+@@end:
+
+    ret
+endp renderer_to_rgbbuffer
 
 ;; Writes the current video framebuffer contents to the screen
 ;; WARNING: This is a slow function becaue it needs to convert all the RGB float
 ;; values to integers.
 proc renderer_flip
+    local @@temp:dword
     uses eax, edi, esi
     xor eax, eax
 
@@ -60,15 +172,28 @@ proc renderer_flip
 
         fld [dword ptr esi]
         fmul [float_max_char]
+
+ifdef NASM
+        fstp [@@temp]
+else
         fistp [word ptr edi]
+endif
 
         fld [dword ptr esi+4]
         fmul [float_max_char]
+ifdef NASM
+        fstp [@@temp]
+else
         fistp [word ptr edi+1]
+endif
 
         fld [dword ptr esi+8]
         fmul [float_max_char]
+ifdef NASM
+        fstp [@@temp]
+else
         fistp [word ptr edi+2]
+endif
 
         add edi, 4
         add esi, VEC_SIZE
@@ -85,8 +210,12 @@ endp renderer_flip
 
 proc cast_ray
     arg @@ray:PTR Ray, @@dest_color:PTR Color
+    local @@temp_vec:Vec
+    uses eax, ebx, ecx
 
-    call vec_set, [@@dest_color], [float_1], [float_1], [float_1]
+    
+
+    call vec_set, [@@dest_color], ecx, eax, [float_0_75]
 
     ret
 endp cast_ray
@@ -141,6 +270,8 @@ proc renderer_render
     lea esi, [video_framebuffer]
     mov eax, VIDEO_GFX_HEIGHT
     dec eax
+
+    call log_str, offset render_start_str
 
 @@height_loop:
     cmp eax, 0
@@ -210,7 +341,17 @@ DATASEG
 
     viewport_height dd 2.0
 
+DATASEG
+    render_start_str db "Render start", 0
+
 UDATASEG
+
+ifdef NASM
+    video_framebuffer resb (VIDEO_GFX_FB_SIZE/4)*16
+    video_rgbbuf resb VIDEO_GFX_FB_SIZE
+else
     video_framebuffer Color (VIDEO_GFX_FB_SIZE/4) dup (?)
+    video_rgbbuf db VIDEO_GFX_FB_SIZE dup (?)
+endif
 
 END 

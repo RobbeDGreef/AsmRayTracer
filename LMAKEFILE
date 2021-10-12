@@ -10,16 +10,19 @@ SRCS := $(filter-out TEST.ASM, $(SRCS))
 OBJS = ${SRCS:.ASM=.o}
 DEST = raytracer
 
+LDFLAGS = -melf_i386
+NASMFLAGS = -f elf -DNASM
+
 NASM = nasm
 
 all: $(DEST)
 
 $(DEST): ${OBJS}
-	$(LD) -melf_i386 -o $(DEST) $^
+	$(LD) -e main $(LDFLAGS) -o $(DEST) $(addprefix compat/, $^)
 
 %.o: %.ASM
 	python3 converter.py $< compat/$<
-	$(NASM) -t compat/$< -f elf -o compat/$@
+	$(NASM) $(NASMFLAGS) -t compat/$< -o compat/$@
 
 clean:
 	#rm -rf ${OBJS} $(DEST)

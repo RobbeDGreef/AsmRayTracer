@@ -26,9 +26,6 @@ proc vec_cpy
     arg @@dest:PTR Vec, @@src:PTR Vec
     uses edi, esi, ecx
 
-    push ds
-    pop es
-
     mov edi, [@@dest]
     mov esi, [@@src]
     mov ecx, 3
