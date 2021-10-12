@@ -16,11 +16,23 @@ CODESEG
 proc print_char
     arg @@char:dword
     uses eax, edx
+ifdef NASM
+    push ebx
+    push ecx
+    mov eax, 4
+    mov ebx, 1
+    lea ecx, [@@char]
+    mov edx, 1
+    int 80h
+    pop ecx
+    pop ebx
+else
     mov ah, 02h 
     mov edx, [@@char]
     ;; dl: the character to print
     int 21h 
     ;; al: last character output
+endif
     ret
 endp print_char
 
@@ -249,11 +261,17 @@ endp log_hex
 proc exit
     arg @@exitcode:dword
     uses eax, ebx
+ifdef NASM
+    mov eax, 1
+    mov ebx, 0
+    int 80h
+else
     mov ebx, [@@exitcode]
     mov ah, 4ch
     mov al, bl
     int 21h
     ret
+endif
 endp exit
 
 ;; =============================================================================
@@ -264,8 +282,9 @@ endp exit
 ;; it will trunctate the file.
 proc create_file
     arg @@file_name:dword, @@access_mode:dword returns eax
-    uses ecx, edx
+    uses ebx, ecx, edx
 
+ifndef NASM
     ;; Since the return value is in ax, we want to make sure the entire
     ;; register is clean
     xor eax, eax
@@ -274,6 +293,19 @@ proc create_file
     mov ecx, [@@access_mode]
     mov ah, 3Ch
     int 21h
+else
+    ;; Delete it if it exists, for some reason this is the only way ????
+    mov eax, 10
+    mov ebx, [@@file_name]
+    int 80h
+
+    ;mov eax, 5                  ;; open syscall
+    mov eax, 8                  ;; creat syscall
+    mov ebx, [@@file_name]
+    mov ecx, [@@access_mode]
+    
+    int 80h
+endif
 
     ret
 endp create_file
@@ -282,10 +314,17 @@ endp create_file
 proc close_file
     arg @@file_handle:dword
     uses eax, ebx
+
+ifndef NASM
     mov ebx, [@@file_handle]
     mov ah, 3Eh
     int 21h
-    
+else
+    mov eax, 6
+    mov ebx, [@@file_handle]
+    int 80h
+endif
+
     ret
 endp close_file
 
@@ -293,11 +332,19 @@ endp close_file
 proc read_file
     arg @@file_handle:dword, @@data:dword, @@count:dword returns eax
     uses ebx, ecx, edx
+ifndef NASM
     mov ah, 3Fh
     mov ebx, [@@file_handle]
     mov ecx, [@@count]
     mov edx, [@@data]
     int 21h
+else
+    mov eax, 3
+    mov ebx, [@@file_handle]
+    mov ecx, [@@data]
+    mov edx, [@@count]
+    int 80h
+endif
     ret
 endp read_file
 
@@ -305,12 +352,20 @@ endp read_file
 proc write_file
     arg @@file_handle:dword, @@data:dword, @@count:dword
     uses eax, ebx, ecx, edx
-    mov ah, 40h
 
+ifndef NASM
+    mov ah, 40h
     mov ebx, [@@file_handle]
     mov ecx, [@@count]
     mov edx, [@@data]
     int 21h
+else
+    mov eax, 4
+    mov ebx, 3
+    mov ecx, [@@data]
+    mov edx, [@@count]
+    int 80h
+endif
     ret
 endp write_file
 
@@ -329,6 +384,7 @@ proc lseek_file
     arg @@file_handle:dword, @@origin:dword, @@offset:dword
     uses ebx, ecx, edx
 
+ifndef NASM
     ;; offset is passed via CX:DX
     ;; so here we make sure DX holds the lower half of origin
     mov edx, [@@offset]
@@ -348,6 +404,13 @@ proc lseek_file
     shl edx, 16
     or ecx, edx
     mov eax, ecx
+else
+    mov eax, 19
+    mov ebx, [@@file_handle]
+    mov ecx, [@@offset]
+    mov edx, [@@origin]
+    int 80h
+endif
 
     ret
 endp lseek_file
@@ -588,6 +651,9 @@ endp memmove
 proc gettime_millis
     arg returns eax
     uses ebx, ecx, edx, esi
+ifdef NASM
+    mov eax, 0
+else
     mov ah, 2Ch
     int 21h
     movzx eax, ch
@@ -611,6 +677,7 @@ proc gettime_millis
     ;; eax holds the hundreds of a second
     mov esi, 10
     mul esi
+endif
     ;; eax holds the milliseconds
     ret
 endp gettime_millis
@@ -619,6 +686,7 @@ endp gettime_millis
 proc sleep_millis
     arg @@millis:dword
     uses eax, ebx
+ifndef NASM
     call gettime_millis
     mov ebx, eax
     add ebx, [@@millis]
@@ -627,6 +695,7 @@ proc sleep_millis
     call gettime_millis
     cmp eax, ebx
     jl @@waiting
+endif
     ret
 endp sleep_millis
 
@@ -666,6 +735,7 @@ DATASEG
     float_0_75      dd 0.75
     float_1         dd 1.0
     float_minus_1   dd -1.0
+    float_2         dd 2.0
     float_max_char  dd 255.0
     float_1000000   dd 1000000.0
 END
