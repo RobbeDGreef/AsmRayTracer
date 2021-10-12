@@ -7,9 +7,6 @@ outfile = sys.argv[2]
 
 NEWLINE = "\n"
 
-def parse_compat_directive(self, directive):
-    return None
-
 class Macro:
     def __init__(self, name, variables):
         self.name = name
@@ -115,6 +112,9 @@ class Converter:
             return table[size]
 
         return ""
+
+    def parse_compat_directive(self, directive):
+        return None
 
     def parse_inline(self, line):
         # replace local references
