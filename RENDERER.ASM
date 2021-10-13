@@ -125,7 +125,7 @@ proc renderer_to_rgbbuffer
     cmp ecx, VIDEO_GFX_FB_SIZE
     jge @@end
     
-    fld [dword ptr ebx]
+    fld [dword ptr ebx+8]
     fmul [float_max_char]
     fistp [word ptr eax]
     
@@ -133,7 +133,7 @@ proc renderer_to_rgbbuffer
     fmul [float_max_char]
     fistp [word ptr eax+1]
     
-    fld [dword ptr ebx+8]
+    fld [dword ptr ebx]
     fmul [float_max_char]
     fistp [word ptr eax+2]
 
@@ -170,7 +170,7 @@ proc renderer_flip
         cmp edi, VESA_VIDEO_ADDR+VESA_BANK_SIZE
         je @@continue
 
-        fld [dword ptr esi]
+        fld [dword ptr esi+8]
         fmul [float_max_char]
 
 ifdef NASM
@@ -187,7 +187,7 @@ else
         fistp [word ptr edi+1]
 endif
 
-        fld [dword ptr esi+8]
+        fld [dword ptr esi]
         fmul [float_max_char]
 ifdef NASM
         fstp [@@temp]
