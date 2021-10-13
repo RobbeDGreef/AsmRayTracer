@@ -7,10 +7,11 @@ include "utils.inc"
 include "renderer.inc"
 include "vec.inc"
 include "ray.inc"
+include "config.inc"
 
 VESA_VIDEO_ADDR     equ 0A0000h
 VESA_BANK_SIZE      equ (64*1024)
-VESA_BANK_SWITCHES  equ (VIDEO_GFX_FB_SIZE/VESA_BANK_SIZE)+1
+VESA_BANK_SWITCHES  equ (VIDEO_FB_SIZE/VESA_BANK_SIZE)+1
 
 CODESEG
 
@@ -85,15 +86,15 @@ proc renderer_to_bmp
 
     lea eax, [@@hdr]
     mov [word ptr eax+bmp_hdr.id], BMP_HDR_ID
-    mov [dword ptr eax+bmp_hdr.size], BMP_HDR_SIZE+BMP_DIB_SIZE+2+VIDEO_GFX_FB_SIZE
+    mov [dword ptr eax+bmp_hdr.size], BMP_HDR_SIZE+BMP_DIB_SIZE+2+VIDEO_FB_SIZE
     mov [dword ptr eax+bmp_hdr.img_data_off], BMP_HDR_SIZE+BMP_DIB_SIZE+2
     
     call write_file, ebx, eax, 14
 
     lea eax, [@@dip_hdr]
     mov [dword ptr eax+bmp_dip_hdr.size], BMP_DIB_SIZE
-    mov [dword ptr eax+bmp_dip_hdr.img_width], VIDEO_GFX_WIDTH
-    mov [dword ptr eax+bmp_dip_hdr.img_height], VIDEO_GFX_HEIGHT
+    mov [dword ptr eax+bmp_dip_hdr.img_width], VIDEO_FB_WIDTH
+    mov [dword ptr eax+bmp_dip_hdr.img_height], VIDEO_FB_HEIGHT
     mov [word ptr eax+bmp_dip_hdr.places_cnt], BMP_DIB_SIZE
     mov [word ptr eax+bmp_dip_hdr.bpp], BMP_DIB_BPP
     mov [dword ptr eax+bmp_dip_hdr.compression_type], BMP_DIB_COMPRESSION_TYPE
@@ -108,7 +109,7 @@ proc renderer_to_bmp
     ;; something else
     call write_file, ebx, eax, 2
 
-    call write_file, ebx, offset video_rgbbuf, VIDEO_GFX_FB_SIZE
+    call write_file, ebx, offset video_rgbbuf, VIDEO_FB_SIZE
     call close_file, ebx
 
     ret
@@ -122,7 +123,7 @@ proc renderer_to_rgbbuffer
     xor ecx, ecx
 
 @@convert_loop:
-    cmp ecx, VIDEO_GFX_FB_SIZE
+    cmp ecx, VIDEO_FB_SIZE
     jge @@end
     
     fld [dword ptr ebx+8]
@@ -358,8 +359,25 @@ endp cast_ray
 proc renderer_render
     local @@temp:dword, @@camera_loc:Point, @@horizontal:Vec, @@vertical:Vec, \
           @@lower_left_corner:Vec, @@temp_vec:Vec, @@temp_vec2:Vec, \
-          @@ray:Ray, @@u:dword, @@v:dword
+          @@ray:Ray, @@u:dword, @@v:dword, @@float_width_minus_1:dword, \
+          @@float_height_minus_1:dword, @@fb_line_align:dword
     uses eax, ecx, ebx, edx, edi, esi
+
+    mov ebx, [config_video_img_width]
+    mov eax, VIDEO_FB_WIDTH
+    sub eax, ebx
+    mov ebx, VEC_SIZE
+    mul ebx
+    mov [@@fb_line_align], eax
+
+    ;; First calculate width and height - 1
+    fild [config_video_img_width]
+    fsub [float_1]
+    fstp [@@float_width_minus_1]
+    
+    fild [config_video_img_height]
+    fsub [float_1]
+    fstp [@@float_height_minus_1]
 
     ;; camera_loc = (0, 0, 0)
     lea eax, [@@camera_loc]
@@ -367,8 +385,12 @@ proc renderer_render
     
     ;; horizontal = (viewport_height * aspect_ratio, 0, 0)
     lea eax, [@@horizontal]
-    fld [viewport_height]
-    fmul [aspect_ratio]
+
+    ;; Calculate aspect ratio and multiply it with the viewport height
+    fild [config_video_img_width]
+    fild [config_video_img_height]
+    fdiv
+    fmul [viewport_height]
     fstp [@@temp]
     call vec_set, eax, [@@temp], [float_0], [float_0]
 
@@ -392,11 +414,11 @@ proc renderer_render
     call vec_div_float, ebx, [float_2]
     call vec_sub, eax, eax, ebx
     
-    call vec_set, ebx, [float_0], [float_0], [focal_length]
+    call vec_set, ebx, [float_0], [float_0], [config_video_img_focal_length]
     call vec_sub, eax, eax, ebx
 
     lea esi, [video_framebuffer]
-    mov eax, VIDEO_GFX_HEIGHT
+    mov eax, [config_video_img_height]
     dec eax
 
     call log_str, offset render_start_str
@@ -408,7 +430,7 @@ proc renderer_render
     mov ebx, 0
 
     @@width_loop:
-        cmp ebx, VIDEO_GFX_WIDTH
+        cmp ebx, [config_video_img_width]
         je @@end_width_loop
         
         ; u = width_iter / width
@@ -416,13 +438,13 @@ proc renderer_render
 
         mov [@@temp], ebx
         fild [@@temp]
-        fld [image_width_minus_1]
+        fld [@@float_width_minus_1]
         fdiv
         fstp [@@u]
 
         mov [@@temp], eax
         fild [@@temp]
-        fld [image_height_minus_1]
+        fld [@@float_height_minus_1]
         fdiv
         fstp [@@v]
 
@@ -459,6 +481,10 @@ proc renderer_render
         jmp @@width_loop
 
     @@end_width_loop:
+    
+    ;; align esi to a new line
+    add esi, [@@fb_line_align]
+
     dec eax
     jmp @@height_loop
 
@@ -469,13 +495,6 @@ proc renderer_render
 endp renderer_render
 
 DATASEG
-    ;; Shouldn't be hard coded but this is faster
-    image_width_minus_1  dd 799.0
-    image_height_minus_1 dd 599.0
-
-    aspect_ratio dd 1.333333    ;; 800/600
-    focal_length dd 1.0
-
     viewport_height dd 2.0
 
 DATASEG
@@ -484,11 +503,11 @@ DATASEG
 UDATASEG
 
 ifdef NASM
-    video_framebuffer resb (VIDEO_GFX_FB_SIZE/4)*16
-    video_rgbbuf resb VIDEO_GFX_FB_SIZE
+    video_framebuffer resb (VIDEO_FB_SIZE/4)*16
+    video_rgbbuf resb VIDEO_FB_SIZE
 else
-    video_framebuffer Color (VIDEO_GFX_FB_SIZE/4) dup (?)
-    video_rgbbuf db VIDEO_GFX_FB_SIZE dup (?)
+    video_framebuffer Color (VIDEO_FB_SIZE/4) dup (?)
+    video_rgbbuf db VIDEO_FB_SIZE dup (?)
 endif
 
 END 
