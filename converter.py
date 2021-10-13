@@ -152,7 +152,7 @@ class Converter:
                 newparts = [parts[0]]
                 newparts.append('times')
                 newparts.append('(' + parts[2] + ")*" + str(self.get_type_size(parts[1])))
-                newparts.append('db')
+                newparts.append('db 0')
 
                 return " ".join(newparts)
         
