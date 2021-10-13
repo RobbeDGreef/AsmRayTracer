@@ -82,7 +82,7 @@ proc renderer_to_bmp
 
     call create_file, [@@file_name], 0
     mov ebx, eax
-    
+
     lea eax, [@@hdr]
     mov [word ptr eax+bmp_hdr.id], BMP_HDR_ID
     mov [dword ptr eax+bmp_hdr.size], BMP_HDR_SIZE+BMP_DIB_SIZE+2+VIDEO_GFX_FB_SIZE
@@ -208,15 +208,103 @@ endif
     ret
 endp renderer_flip
 
+proc hit_sphere
+    arg @@center:PTR Point, @@radius:dword, @@ray:PTR Ray
+    local @@oc:Vec, @@temp:dword, @@b:dword, @@c:dword
+
+    lea ecx, [@@oc]
+    mov ebx, [@@ray]
+    lea ebx, [ebx+Ray.origin]
+    call vec_sub, ecx, ebx, [@@center]
+    
+    mov ebx, [@@ray]
+    lea ebx, [ebx+Ray.direction]
+    call vec_dot, ebx, ebx
+    mov edx, eax
+
+    call vec_dot, ecx, ebx
+    mov [@@b], eax
+    fld [@@b]
+    fmul [float_2]
+    fstp [@@b]
+
+    fld [@@radius]
+    fmul [@@radius]
+
+    call vec_dot, ecx, ecx
+    mov [@@c], eax
+    fld [@@c]
+    fxch
+    fsub
+
+    mov [@@temp], edx
+    fld [@@temp]
+    fmul [float_4]
+    fmul
+
+    fld [@@b]
+    fmul [@@b]
+    fxch
+    fsub
+
+    fst [@@temp]
+
+    xor eax, eax
+    fldz
+    fxch
+    fcompp
+    fnstsw ax
+    shr eax, 8
+    and eax, 111B
+    cmp eax, 0
+    sete al
+    
+    ret
+endp hit_sphere
+
 proc cast_ray
     arg @@ray:PTR Ray, @@dest_color:PTR Color
-    local @@temp_vec:Vec
-    uses eax, ebx, ecx
+    local @@temp_vec:Vec, @@temp:dword
+    uses eax, ebx, ecx, edx
 
+    lea eax, [@@temp_vec]
+    call vec_set, eax, [float_0], [float_0], [float_minus_1]
+    call hit_sphere, eax, [float_0_50], [@@ray]
+    cmp eax, 0
+    je @@background
+
+    call vec_set, [@@dest_color], [float_0_50], [float_0], [float_0]
+    jmp @@end
+
+@@background:
+    mov ebx, [@@ray]
+    lea ebx, [ebx + Ray.direction]
+    call vec_length, ebx
+
+    lea ecx, [@@temp_vec]
+    call vec_cpy, ecx, ebx
+    call vec_div_float, ecx, eax
     
+    call vec_get_y, ecx
+    mov [@@temp], eax
+    fld [@@temp]
+    fadd [float_1]
+    fmul [float_0_50]
+    fst [@@temp]
 
-    call vec_set, [@@dest_color], ecx, eax, [float_0_75]
+    call vec_set, ecx, [float_0_50], [float_0_75], [float_1]
+    call vec_mul_float, ecx, [@@temp]
 
+    mov ebx, [@@dest_color]
+    call vec_set, ebx, [float_1], [float_1], [float_1]
+    fld1
+    fxch
+    fsub
+    fstp [@@temp]
+    call vec_mul_float, ebx, [@@temp]
+    call vec_add, ebx, ecx, ebx
+
+@@end:
     ret
 endp cast_ray
 
@@ -281,16 +369,20 @@ proc renderer_render
 
     @@width_loop:
         cmp ebx, VIDEO_GFX_WIDTH
-        jge @@end_width_loop
+        je @@end_width_loop
         
-        fld [image_width_minus_1]
+        ; u = width_iter / width
+        ; v = height_iter / height
+
         mov [@@temp], ebx
         fild [@@temp]
+        fld [image_width_minus_1]
         fdiv
         fstp [@@u]
-        fld [image_height_minus_1]
+
         mov [@@temp], eax
         fild [@@temp]
+        fld [image_height_minus_1]
         fdiv
         fstp [@@v]
 
