@@ -21,10 +21,19 @@ proc main
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
     call renderer_render
+
+
+ifndef NASM
+    call renderer_flip
+else
     call renderer_to_bmp, offset bmpout
-;    call renderer_flip
+endif
 
     call log_str, offset finished_str
+
+ifndef NASM
+    call sleep_millis, 8000
+endif
 
     call set_video_mode, VIDEO_MODE_TEXT
     call exit, 0
