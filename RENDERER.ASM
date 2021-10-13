@@ -212,6 +212,27 @@ proc hit_sphere
     arg @@center:PTR Point, @@radius:dword, @@ray:PTR Ray
     local @@oc:Vec, @@temp:dword, @@b:dword, @@c:dword
 
+    ;; Yay math. To check if we hit a function we are making use of the good old
+    ;; 
+    ;;      (x - Cx)^2 + (y - Cy)^2 + (z - Cy)^2 = r^2 
+    ;;
+    ;; with C(x,y,z) the center of our sphere and r the radius
+    ;;
+    ;; However this is not in vector format. We want to use our vector functions
+    ;; we worked so hard on. So we can replace this with:
+    ;; 
+    ;;      (P - C) * (P - C) = (x - Cx)^2 + (y - Cy)^2 + (z - Cz)^2
+    ;; 
+    ;; So our equation becomes 
+    ;;
+    ;;      (P - C) * (P - C) = r^2+
+    ;;
+    ;; Now when we substitute P(t) = A + tB, we finally become
+    ;;
+    ;;      (A + tB - C) * (A + tB - C) = r^2 
+    ;;      t^2b * b + 2tb * (A - C) + (A + C) - r^2 = 0
+    ;;
+    ;; With that we can finally calculate the ray intersection points.
     lea ecx, [@@oc]
     mov ebx, [@@ray]
     lea ebx, [ebx+Ray.origin]
@@ -267,6 +288,8 @@ proc cast_ray
     local @@temp_vec:Vec, @@temp:dword
     uses eax, ebx, ecx, edx
 
+    ;; For now we are just setting up the 'scene' here. We check if we hit a 
+    ;; sphere at (0, 0, 0) with a width of 0.5 units.
     lea eax, [@@temp_vec]
     call vec_set, eax, [float_0], [float_0], [float_minus_1]
     call hit_sphere, eax, [float_0_50], [@@ray]
@@ -277,24 +300,40 @@ proc cast_ray
     jmp @@end
 
 @@background:
+    ;; Calculate a lerp from blue to white.
+    ;; Because our direction Y component goes from -1.0 to 1.0 (after 
+    ;; normalisation) we scale it to 0.0 - 1.0. This is easy enough. Just add
+    ;; 1.0 and divide in half
+    ;;
+    ;;      t = (normalize(ray.direction).y + 1.0) / 2
+    ;;
+    ;; then we add blue and white to the mix to scale. When t = 0 we want white,
+    ;; 1.0 means blue. In the middle we will get our lerp.
+    ;;
+    ;;      lerp_value = ((1 - t) * white) + (t * blue)
+
+    ;; TODO: instead of doing it ourselves, implement unit_vector function.
+    ;; Calculate the unit vector
     mov ebx, [@@ray]
     lea ebx, [ebx + Ray.direction]
     call vec_length, ebx
-
     lea ecx, [@@temp_vec]
     call vec_cpy, ecx, ebx
     call vec_div_float, ecx, eax
     
+    ;; Calculate t
     call vec_get_y, ecx
     mov [@@temp], eax
     fld [@@temp]
     fadd [float_1]
-    fmul [float_0_50]
+    fdiv [float_2]
     fst [@@temp]
 
+    ;; Set the blue value 
     call vec_set, ecx, [float_0_50], [float_0_75], [float_1]
     call vec_mul_float, ecx, [@@temp]
 
+    ;; Set the white value and lerp
     mov ebx, [@@dest_color]
     call vec_set, ebx, [float_1], [float_1], [float_1]
     fld1
@@ -302,6 +341,7 @@ proc cast_ray
     fsub
     fstp [@@temp]
     call vec_mul_float, ebx, [@@temp]
+    ;; Finally write it to the dest color by adding both of them together
     call vec_add, ebx, ecx, ebx
 
 @@end:
@@ -386,6 +426,9 @@ proc renderer_render
         fdiv
         fstp [@@v]
 
+        ;; ray = origin, ray_direction
+        ;; ray_direction = lower_left_corner + u*horizontal + v*vertical 
+        ;;                 - origin
         lea edi, [@@temp_vec]
         lea ecx, [@@lower_left_corner]
         call vec_cpy, edi, ecx
@@ -407,6 +450,8 @@ proc renderer_render
         lea ecx, [@@ray]
         lea edx, [@@camera_loc]
         call ray_set, ecx, edx, edi
+
+        ;; Finally cast a ray with ecx:Ray and esi:destination pixel
         call cast_ray, ecx, esi
         
         add esi, VEC_SIZE
