@@ -150,7 +150,6 @@ proc print_float
     call print_int, [@@temp]
     call print_char, '.'
     fild [@@temp]
-    ;fxch
     fsub 
     fld [float_1000000]
     fmul
