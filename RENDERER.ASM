@@ -82,7 +82,7 @@ proc renderer_to_bmp
 
     call create_file, [@@file_name], 0
     mov ebx, eax
-    
+
     lea eax, [@@hdr]
     mov [word ptr eax+bmp_hdr.id], BMP_HDR_ID
     mov [dword ptr eax+bmp_hdr.size], BMP_HDR_SIZE+BMP_DIB_SIZE+2+VIDEO_GFX_FB_SIZE
@@ -125,7 +125,7 @@ proc renderer_to_rgbbuffer
     cmp ecx, VIDEO_GFX_FB_SIZE
     jge @@end
     
-    fld [dword ptr ebx]
+    fld [dword ptr ebx+8]
     fmul [float_max_char]
     fistp [word ptr eax]
     
@@ -133,7 +133,7 @@ proc renderer_to_rgbbuffer
     fmul [float_max_char]
     fistp [word ptr eax+1]
     
-    fld [dword ptr ebx+8]
+    fld [dword ptr ebx]
     fmul [float_max_char]
     fistp [word ptr eax+2]
 
@@ -170,7 +170,7 @@ proc renderer_flip
         cmp edi, VESA_VIDEO_ADDR+VESA_BANK_SIZE
         je @@continue
 
-        fld [dword ptr esi]
+        fld [dword ptr esi+8]
         fmul [float_max_char]
 
 ifdef NASM
@@ -187,7 +187,7 @@ else
         fistp [word ptr edi+1]
 endif
 
-        fld [dword ptr esi+8]
+        fld [dword ptr esi]
         fmul [float_max_char]
 ifdef NASM
         fstp [@@temp]
@@ -208,15 +208,143 @@ endif
     ret
 endp renderer_flip
 
+proc hit_sphere
+    arg @@center:PTR Point, @@radius:dword, @@ray:PTR Ray
+    local @@oc:Vec, @@temp:dword, @@b:dword, @@c:dword
+
+    ;; Yay math. To check if we hit a function we are making use of the good old
+    ;; 
+    ;;      (x - Cx)^2 + (y - Cy)^2 + (z - Cy)^2 = r^2 
+    ;;
+    ;; with C(x,y,z) the center of our sphere and r the radius
+    ;;
+    ;; However this is not in vector format. We want to use our vector functions
+    ;; we worked so hard on. So we can replace this with:
+    ;; 
+    ;;      (P - C) * (P - C) = (x - Cx)^2 + (y - Cy)^2 + (z - Cz)^2
+    ;; 
+    ;; So our equation becomes 
+    ;;
+    ;;      (P - C) * (P - C) = r^2+
+    ;;
+    ;; Now when we substitute P(t) = A + tB, we finally become
+    ;;
+    ;;      (A + tB - C) * (A + tB - C) = r^2 
+    ;;      t^2b * b + 2tb * (A - C) + (A + C) - r^2 = 0
+    ;;
+    ;; With that we can finally calculate the ray intersection points.
+    lea ecx, [@@oc]
+    mov ebx, [@@ray]
+    lea ebx, [ebx+Ray.origin]
+    call vec_sub, ecx, ebx, [@@center]
+    
+    mov ebx, [@@ray]
+    lea ebx, [ebx+Ray.direction]
+    call vec_dot, ebx, ebx
+    mov edx, eax
+
+    call vec_dot, ecx, ebx
+    mov [@@b], eax
+    fld [@@b]
+    fmul [float_2]
+    fstp [@@b]
+
+    fld [@@radius]
+    fmul [@@radius]
+
+    call vec_dot, ecx, ecx
+    mov [@@c], eax
+    fld [@@c]
+    fxch
+    fsub
+
+    mov [@@temp], edx
+    fld [@@temp]
+    fmul [float_4]
+    fmul
+
+    fld [@@b]
+    fmul [@@b]
+    fxch
+    fsub
+
+    fst [@@temp]
+
+    xor eax, eax
+    fldz
+    fxch
+    fcompp
+    fnstsw ax
+    shr eax, 8
+    and eax, 111B
+    cmp eax, 0
+    sete al
+    
+    ret
+endp hit_sphere
+
 proc cast_ray
     arg @@ray:PTR Ray, @@dest_color:PTR Color
-    local @@temp_vec:Vec
-    uses eax, ebx, ecx
+    local @@temp_vec:Vec, @@temp:dword
+    uses eax, ebx, ecx, edx
 
+    ;; For now we are just setting up the 'scene' here. We check if we hit a 
+    ;; sphere at (0, 0, 0) with a width of 0.5 units.
+    lea eax, [@@temp_vec]
+    call vec_set, eax, [float_0], [float_0], [float_minus_1]
+    call hit_sphere, eax, [float_0_50], [@@ray]
+    cmp eax, 0
+    je @@background
+
+    call vec_set, [@@dest_color], [float_0_50], [float_0], [float_0]
+    jmp @@end
+
+@@background:
+    ;; Calculate a lerp from blue to white.
+    ;; Because our direction Y component goes from -1.0 to 1.0 (after 
+    ;; normalisation) we scale it to 0.0 - 1.0. This is easy enough. Just add
+    ;; 1.0 and divide in half
+    ;;
+    ;;      t = (normalize(ray.direction).y + 1.0) / 2
+    ;;
+    ;; then we add blue and white to the mix to scale. When t = 0 we want white,
+    ;; 1.0 means blue. In the middle we will get our lerp.
+    ;;
+    ;;      lerp_value = ((1 - t) * white) + (t * blue)
+
+    ;; TODO: instead of doing it ourselves, implement unit_vector function.
+    ;; Calculate the unit vector
+    mov ebx, [@@ray]
+    lea ebx, [ebx + Ray.direction]
+    call vec_length, ebx
+    lea ecx, [@@temp_vec]
+    call vec_cpy, ecx, ebx
+    call vec_div_float, ecx, eax
     
+    ;; Calculate t
+    call vec_get_y, ecx
+    mov [@@temp], eax
+    fld [@@temp]
+    fadd [float_1]
+    fdiv [float_2]
+    fst [@@temp]
 
-    call vec_set, [@@dest_color], ecx, eax, [float_0_75]
+    ;; Set the blue value 
+    call vec_set, ecx, [float_0_50], [float_0_75], [float_1]
+    call vec_mul_float, ecx, [@@temp]
 
+    ;; Set the white value and lerp
+    mov ebx, [@@dest_color]
+    call vec_set, ebx, [float_1], [float_1], [float_1]
+    fld1
+    fxch
+    fsub
+    fstp [@@temp]
+    call vec_mul_float, ebx, [@@temp]
+    ;; Finally write it to the dest color by adding both of them together
+    call vec_add, ebx, ecx, ebx
+
+@@end:
     ret
 endp cast_ray
 
@@ -281,19 +409,26 @@ proc renderer_render
 
     @@width_loop:
         cmp ebx, VIDEO_GFX_WIDTH
-        jge @@end_width_loop
+        je @@end_width_loop
         
-        fld [image_width_minus_1]
+        ; u = width_iter / width
+        ; v = height_iter / height
+
         mov [@@temp], ebx
         fild [@@temp]
+        fld [image_width_minus_1]
         fdiv
         fstp [@@u]
-        fld [image_height_minus_1]
+
         mov [@@temp], eax
         fild [@@temp]
+        fld [image_height_minus_1]
         fdiv
         fstp [@@v]
 
+        ;; ray = origin, ray_direction
+        ;; ray_direction = lower_left_corner + u*horizontal + v*vertical 
+        ;;                 - origin
         lea edi, [@@temp_vec]
         lea ecx, [@@lower_left_corner]
         call vec_cpy, edi, ecx
@@ -315,6 +450,8 @@ proc renderer_render
         lea ecx, [@@ray]
         lea edx, [@@camera_loc]
         call ray_set, ecx, edx, edi
+
+        ;; Finally cast a ray with ecx:Ray and esi:destination pixel
         call cast_ray, ecx, esi
         
         add esi, VEC_SIZE
