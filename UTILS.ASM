@@ -78,7 +78,7 @@ endp print_int
 
 proc pad_print_buffer
     arg @@padding:dword
-    uses eax, ebx
+    uses eax, ebx, edx
 
     call strlen, offset print_int_buffer
     cmp eax, [@@padding]
