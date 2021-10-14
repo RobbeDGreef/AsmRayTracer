@@ -24,6 +24,9 @@ macros.
 
 	make -f LMAKEFILE
 
+## Current state of things
+![Sphere render](saved/first_sphere_dosbox.png?raw=true "First sphere render")
+
 ## Coding style
 ### Line limit
 No line should be longer than 80 characters. You can use a backtick '\' to split
