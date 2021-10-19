@@ -370,10 +370,10 @@ test_begin vec_add
 
     lea ecx, [@@v1]
     lea edx, [@@v2]
-    call vec_set, ecx, [test_vec_add_xvalue1], [test_vec_add_yvalue1], \
-                  [test_vec_add_zvalue1]
-    call vec_set, edx, [test_vec_add_xvalue2], [test_vec_add_yvalue2], \
-                  [test_vec_add_zvalue2]
+    call vec_set, ecx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
+    call vec_set, edx, [test_vec_dummy_x2], [test_vec_dummy_y2], \
+                  [test_vec_dummy_z2]
     call vec_add, ebx, ecx, edx
     call feq, [ebx+Vec.x], [test_vec_add_xoutput]
     cmp eax, 1
@@ -401,10 +401,10 @@ test_begin vec_sub
 
     lea ecx, [@@v1]
     lea edx, [@@v2]
-    call vec_set, ecx, [test_vec_sub_xvalue1], [test_vec_sub_yvalue1], \
-                  [test_vec_sub_zvalue1]
-    call vec_set, edx, [test_vec_sub_xvalue2], [test_vec_sub_yvalue2], \
-                  [test_vec_sub_zvalue2]
+    call vec_set, ecx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
+    call vec_set, edx, [test_vec_dummy_x2], [test_vec_dummy_y2], \
+                  [test_vec_dummy_z2]
     call vec_sub, ebx, ecx, edx
     call feq, [ebx+Vec.x], [test_vec_sub_xoutput]
     cmp eax, 1
@@ -450,8 +450,8 @@ test_begin vec_mul_float
     local @@v:Vec
 
     lea ebx, [@@v]
-    call vec_set, ebx, [test_vec_mul_float_xvalue], [test_vec_mul_float_yvalue], \
-                  [test_vec_mul_float_zvalue]
+    call vec_set, ebx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
     call vec_mul_float, ebx, [test_vec_mul_float_fvalue]
     call feq, [ebx+Vec.x], [test_vec_mul_float_xoutput]
     cmp eax, 1
@@ -478,8 +478,8 @@ test_begin vec_div_float
     local @@v:Vec
 
     lea ebx, [@@v]
-    call vec_set, ebx, [test_vec_div_float_xvalue], [test_vec_div_float_yvalue], \
-                  [test_vec_div_float_zvalue]
+    call vec_set, ebx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
     call vec_div_float, ebx, [test_vec_div_float_fvalue]
     call feq, [ebx+Vec.x], [test_vec_div_float_xoutput]
     cmp eax, 1
@@ -506,8 +506,8 @@ test_begin vec_length
     local @@v1:Vec
 
     lea eax, [@@v1]
-    call vec_set, eax, [test_vec_length_xvalue], [test_vec_length_yvalue], \
-                  [test_vec_length_zvalue]
+    call vec_set, ecx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
     call vec_length, eax
     call feq, eax, [test_vec_length_output]
     cmp eax, 1
@@ -698,13 +698,10 @@ DATASEG
     test_vec_dot_simple_failed db "vec_dot - simple", 0
 
     test_vec_mul_float_name db "vec_mul_float", 0
-    test_vec_mul_float_xvalue dd 123.123
-    test_vec_mul_float_yvalue dd 321.321
-    test_vec_mul_float_zvalue dd 123.321
-    test_vec_mul_float_fvalue dd 2.15
-    test_vec_mul_float_xoutput dd 264.71445
-    test_vec_mul_float_youtput dd 690.84015
-    test_vec_mul_float_zoutput dd 265.14015
+    test_vec_mul_float_fvalue dd 2.5
+    test_vec_mul_float_xoutput dd 30.3075
+    test_vec_mul_float_youtput dd 80.8025
+    test_vec_mul_float_zoutput dd 59.635
     test_vec_mul_float_x_failed db "vec_mul_float - x", 0
     test_vec_mul_float_y_failed db "vec_mul_float - y", 0
     test_vec_mul_float_z_failed db "vec_mul_float - z", 0
@@ -717,50 +714,32 @@ DATASEG
     test_vec_cpy_simple_failed db  "vec_cpy - simple", 0
 
     test_vec_div_float_name db "vec_div_float", 0
-    test_vec_div_float_xvalue dd 123.123
-    test_vec_div_float_yvalue dd 321.321
-    test_vec_div_float_zvalue dd 123.321
-    test_vec_div_float_fvalue dd 2.15
-    test_vec_div_float_xoutput dd 57.2665116279
-    test_vec_div_float_youtput dd 149.451627907
-    test_vec_div_float_zoutput dd 57.3586046512
+    test_vec_div_float_fvalue dd 2.5
+    test_vec_div_float_xoutput dd 4.8496
+    test_vec_div_float_youtput dd 12.9284
+    test_vec_div_float_zoutput dd 9.5416
     test_vec_div_float_x_failed db "vec_div_float - x", 0
     test_vec_div_float_y_failed db "vec_div_float - y", 0
     test_vec_div_float_z_failed db "vec_div_float - z", 0
 
     test_vec_add_name db "vec_add", 0
-    test_vec_add_xvalue1 dd 111.111
-    test_vec_add_yvalue1 dd 222.222
-    test_vec_add_zvalue1 dd 333.444
-    test_vec_add_xvalue2 dd 333.333
-    test_vec_add_yvalue2 dd 123.123
-    test_vec_add_zvalue2 dd 111.111
-    test_vec_add_xoutput dd 444.444
-    test_vec_add_youtput dd 345.345
-    test_vec_add_zoutput dd 444.555
+    test_vec_add_xoutput dd 18.977
+    test_vec_add_youtput dd 36.842
+    test_vec_add_zoutput dd 36.299
     test_vec_add_x_failed db "vec_add - x", 0
     test_vec_add_y_failed db "vec_add - y", 0
     test_vec_add_z_failed db "vec_add - z", 0
 
     test_vec_sub_name db "vec_sub", 0
-    test_vec_sub_xvalue1 dd 999.999
-    test_vec_sub_yvalue1 dd 555.555
-    test_vec_sub_zvalue1 dd 333.444
-    test_vec_sub_xvalue2 dd 333.333
-    test_vec_sub_yvalue2 dd 222.222
-    test_vec_sub_zvalue2 dd 111.111
-    test_vec_sub_xoutput dd 666.666
-    test_vec_sub_youtput dd 333.333
-    test_vec_sub_zoutput dd 222.333
+    test_vec_sub_xoutput dd 5.269
+    test_vec_sub_youtput dd 27.8
+    test_vec_sub_zoutput dd 11.409
     test_vec_sub_x_failed db "vec_sub - x", 0
     test_vec_sub_y_failed db "vec_sub - y", 0
     test_vec_sub_z_failed db "vec_sub - z", 0
 
     test_vec_length_name db "vec_length", 0
-    test_vec_length_xvalue dd 111.111
-    test_vec_length_yvalue dd 222.222
-    test_vec_length_zvalue dd 333.333
-    test_vec_length_output dd 415.7392939
+    test_vec_length_output dd 41.95983181567819
     test_vec_length_failed db "vec_length"
 
     test_vec_length_squared_name db "vec_length_squared", 0
