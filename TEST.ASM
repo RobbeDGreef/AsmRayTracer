@@ -273,10 +273,10 @@ test_begin vec_get_x
     local @@v:Vec
 
     lea ebx, [@@v]
-    call vec_set, ebx, [test_vec_get_x_xvalue], [test_vec_get_x_yvalue], \
-                  [test_vec_get_x_zvalue]
+    call vec_set, ebx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
     call vec_get_x, ebx
-    call feq, eax, [test_vec_get_x_xvalue] 
+    call feq, eax, [test_vec_dummy_x] 
     cmp eax, 1
     je @@completed
     call test_failed, offset test_vec_get_x_failed, eax
@@ -289,10 +289,10 @@ test_begin vec_get_y
     local @@v:Vec
 
     lea ebx, [@@v]
-    call vec_set, ebx, [test_vec_get_y_xvalue], [test_vec_get_y_yvalue], \
-                  [test_vec_get_y_zvalue]
+    call vec_set, ebx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
     call vec_get_y, ebx
-    call feq, eax, [test_vec_get_y_yvalue] 
+    call feq, eax, [test_vec_dummy_y] 
     cmp eax, 1
     je @@completed
     call test_failed, offset test_vec_get_y_failed, eax
@@ -305,10 +305,10 @@ test_begin vec_get_z
     local @@v:Vec
 
     lea ebx, [@@v]
-    call vec_set, ebx, [test_vec_get_z_xvalue], [test_vec_get_z_yvalue], \
-                  [test_vec_get_z_zvalue]
+    call vec_set, ebx, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
     call vec_get_z, ebx
-    call feq, eax, [test_vec_get_z_zvalue] 
+    call feq, eax, [test_vec_dummy_z] 
     cmp eax, 1
     je @@completed
     call test_failed, offset test_vec_get_z_failed, eax
@@ -321,10 +321,10 @@ test_begin vec_set_x
     local @@v:Vec
 
     lea eax, [@@v]
-    call vec_set, eax, [test_vec_set_x_xvalue], [test_vec_set_x_yvalue], \
-                  [test_vec_set_x_zvalue]
-    call vec_set_x, eax, [test_vec_set_x_fvalue]
-    call feq, [eax+Vec.x], [test_vec_set_x_fvalue] 
+    call vec_set, eax, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
+    call vec_set_x, eax, [test_vec_dummy_x2]
+    call feq, [eax+Vec.x], [test_vec_dummy_x2] 
     cmp eax, 1
     je @@completed
     call test_failed, offset test_vec_set_x_failed, eax
@@ -337,10 +337,10 @@ test_begin vec_set_y
     local @@v:Vec
 
     lea eax, [@@v]
-    call vec_set, eax, [test_vec_set_y_xvalue], [test_vec_set_y_yvalue], \
-                  [test_vec_set_y_zvalue]
-    call vec_set_y, eax, [test_vec_set_y_fvalue]
-    call feq, [eax+Vec.y], [test_vec_set_y_fvalue] 
+    call vec_set, eax, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
+    call vec_set_y, eax, [test_vec_dummy_y2]
+    call feq, [eax+Vec.y], [test_vec_dummy_y2] 
     cmp eax, 1
     je @@completed
     call test_failed, offset test_vec_set_y_failed, eax
@@ -353,10 +353,10 @@ test_begin vec_set_z
     local @@v:Vec
 
     lea eax, [@@v]
-    call vec_set, eax, [test_vec_set_z_xvalue], [test_vec_set_z_yvalue], \
-                  [test_vec_set_z_zvalue]
-    call vec_set_z, eax, [test_vec_set_z_fvalue]
-    call feq, [eax+Vec.z], [test_vec_set_z_fvalue] 
+    call vec_set, eax, [test_vec_dummy_x], [test_vec_dummy_y], \
+                  [test_vec_dummy_z]
+    call vec_set_z, eax, [test_vec_dummy_z2]
+    call feq, [eax+Vec.z], [test_vec_dummy_z2] 
     cmp eax, 1
     je @@completed
     call test_failed, offset test_vec_set_z_failed, eax
@@ -747,42 +747,21 @@ DATASEG
     test_vec_length_squared_failed db "vec_length_squared", 0
 
     test_vec_get_x_name db "vec_get_x", 0
-    test_vec_get_x_xvalue dd 111.111
-    test_vec_get_x_yvalue dd 222.222
-    test_vec_get_x_zvalue dd 333.333
     test_vec_get_x_failed db "vec_get_x", 0
 
     test_vec_get_y_name db "vec_get_y", 0
-    test_vec_get_y_xvalue dd 111.111
-    test_vec_get_y_yvalue dd 222.222
-    test_vec_get_y_zvalue dd 333.333
     test_vec_get_y_failed db "vec_get_y", 0
 
     test_vec_get_z_name db "vec_get_z", 0
-    test_vec_get_z_xvalue dd 111.111
-    test_vec_get_z_yvalue dd 222.222
-    test_vec_get_z_zvalue dd 333.333
     test_vec_get_z_failed db "vec_get_z", 0
 
     test_vec_set_x_name db "vec_set_x", 0
-    test_vec_set_x_xvalue dd 111.111
-    test_vec_set_x_yvalue dd 222.222
-    test_vec_set_x_zvalue dd 333.333
-    test_vec_set_x_fvalue dd 444.444
     test_vec_set_x_failed db "vec_set_x", 0
 
     test_vec_set_y_name db "vec_set_y", 0
-    test_vec_set_y_xvalue dd 111.111
-    test_vec_set_y_yvalue dd 222.222
-    test_vec_set_y_zvalue dd 333.333
-    test_vec_set_y_fvalue dd 444.444
     test_vec_set_y_failed db "vec_set_y", 0
 
     test_vec_set_z_name db "vec_set_z", 0
-    test_vec_set_z_xvalue dd 111.111
-    test_vec_set_z_yvalue dd 222.222
-    test_vec_set_z_zvalue dd 333.333
-    test_vec_set_z_fvalue dd 444.444
     test_vec_set_z_failed db "vec_set_z", 0
 
     test_ray_at_name db "ray_at", 0
