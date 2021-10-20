@@ -7,6 +7,7 @@ include "utils.inc"
 include "vec.inc"
 include "renderer.inc"
 include "init.inc"
+include "gui.inc"
 
 CODESEG
 
@@ -24,6 +25,8 @@ proc main
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
     call renderer_init
+    ;call renderer_render
+    call fill_background
 
     call renderer_render
 
