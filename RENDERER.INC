@@ -23,3 +23,4 @@ GLOBAL img_framebuffer:PTR dword
 GLOBAL img_framebuffer_size:PTR dword
 GLOBAL img_rgbbuf:PTR dword
 GLOBAL img_rgbbuf_size:PTR dword
+GLOBAL vesa_lfb:dword
