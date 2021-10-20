@@ -1,0 +1,1 @@
+GLOBAL fill_background:PROC
