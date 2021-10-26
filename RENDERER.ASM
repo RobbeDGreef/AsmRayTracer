@@ -145,19 +145,35 @@ proc renderer_to_buffer
     mov eax, [@@buf_width]
     mov ebx, [config_video_img_width]
     cmp eax, ebx
-    je @@start_copy
-    jl @@less_than
-    jg @@greater_than
+    je @@height_checks
+    jl @@less_than_w
+    jg @@greater_than_w
 
-@@less_than:
+@@less_than_w:
     sub ebx, eax
-    mov [@@lineadd_vm], ebx
-    jmp @@start_copy
+    mov eax, ebx
+    mov ebx, VEC_SIZE
+    mul ebx
+    mov [@@lineadd_vm], eax
+    jmp @@height_checks
 
-@@greater_than:
+@@greater_than_w:
     sub eax, ebx
+    mov ecx, 4
+    mul ecx
     mov [@@lineadd_buf], eax
     mov [@@buf_width], ebx
+
+@@height_checks:
+    mov eax, [@@buf_height]
+    mov ebx, [config_video_img_height]
+    cmp eax, ebx
+    je @@start_copy
+    jg @@greater_than_h
+    jl @@start_copy
+
+@@greater_than_h:
+    mov [@@buf_height], ebx 
 
 @@start_copy:
 
