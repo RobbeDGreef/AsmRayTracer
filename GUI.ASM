@@ -11,25 +11,23 @@ include "renderer.inc"
 CODESEG
 ; video_framebuffer is buffer
 proc fill_background
-    local @@color:dword
-    uses eax, ebx, ecx, edx
+    uses eax, ebx, ecx, edx, edi
 
-    lea eax, [@@color]
-    call vec_set, eax, float_0, float_max_char, float_0 ; we put the color in eax
+    mov eax, 0ff00ffh
+    lea edi, [vesa_lfb]
+    mov ecx, 0
+@@loopke:
+    cmp ecx, VIDEO_FB_SIZE/4
+    jge @@end
 
-    lea ebx, video_framebuffer
-    mov edx, ebx
-
-    mov ecx, VIDEO_GFX_WIDTH * VIDEO_GFX_HEIGHT
-
-@@setpixel:
+    mov ebx, edi
+    add ebx, ecx
     mov [ebx], eax
-    lea ebx, [edx+4]
-    mov edx, ebx
-    loop @@setpixel
+    call log_hex, ebx
 
-   ; call renderer_flip
-
+    add ecx, 4
+    jmp @@loopke
+@@end:
 ret
 endp fill_background
 
