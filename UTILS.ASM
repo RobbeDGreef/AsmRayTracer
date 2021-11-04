@@ -15,7 +15,7 @@ CODESEG
 ;; NOT_TESTED
 proc print_char
     arg @@char:dword
-    uses eax, edx
+    uses eax, ebx, ecx, edx
 ifdef NASM
     push ebx
     push ecx
@@ -70,7 +70,6 @@ endp print_str
 ;; Prints an integer to STDOUT
 proc print_int
     arg @@value:dword
-    uses eax
     call itoa, [@@value], offset print_int_buffer, 10
     call print_str, offset print_int_buffer
     ret
@@ -98,7 +97,6 @@ endp pad_print_buffer
 
 proc print_int_padded
     arg @@value:dword, @@padding:dword
-    uses eax, ebx
     call itoa, [@@value], offset print_int_buffer, 10
     call pad_print_buffer, [@@padding]
     call print_str, offset print_int_buffer
@@ -108,7 +106,6 @@ endp print_int_padded
 ;; Prints an integer to STDOUT in hexadecimal notation (prefixed with 0x)
 proc print_hex
     arg @@value:dword
-    uses eax
     call print_str, offset hex_prefix
     call itoa, [@@value], offset print_int_buffer, 16
     call print_str, offset print_int_buffer
@@ -117,7 +114,6 @@ endp print_hex
 
 proc print_hex_padded
     arg @@value:dword, @@padding:dword
-    uses eax
     call itoa, [@@value], offset print_int_buffer, 16
     call pad_print_buffer, [@@padding]
     call print_str, offset print_int_buffer
@@ -161,7 +157,7 @@ endp print_float
 
 proc print_hex_multiple
     arg @@count:dword
-    uses eax, ebx, ecx, edx
+    uses eax, ecx
 
     mov eax, 12
     mov ecx, 0
