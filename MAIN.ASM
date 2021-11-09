@@ -7,6 +7,7 @@ include "utils.inc"
 include "vec.inc"
 include "renderer.inc"
 include "init.inc"
+include "gui.inc"
 
 CODESEG
 
@@ -21,11 +22,13 @@ proc main
     call log_str, offset start_str
     call gettime_millis
     mov [@@begin_time], eax
-    call set_video_mode, VIDEO_MODE_GRAPHICS
+    ;call set_video_mode, VIDEO_MODE_GRAPHICS
     
     call renderer_init
+    ;call renderer_render
+    call fill_background
 
-    call renderer_render
+    ;call renderer_render
 
 ifndef NASM
     call renderer_show_img
@@ -38,7 +41,7 @@ ifndef NASM
     call sleep_millis, 3000
 endif
 
-    call set_video_mode, VIDEO_MODE_TEXT
+    ;call set_video_mode, VIDEO_MODE_TEXT
 
     mov ebx, [@@begin_time]
     call gettime_millis
