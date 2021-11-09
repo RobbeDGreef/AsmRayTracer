@@ -77,6 +77,7 @@ class Converter:
 
         self.current_linenum = 1
         self.current_line = ""
+        self.skip1 = False
 
     def note(self, reason):
         print(reason)
@@ -114,6 +115,10 @@ class Converter:
         return ""
 
     def parse_compat_directive(self, directive):
+        if directive == "skip1":
+            # Skip the next line and just write it to stdout
+            self.skip1 = True
+            return None
         return None
 
     def parse_inline(self, line):
@@ -194,6 +199,10 @@ class Converter:
         
         if len(lineparts) == 0:
             return "" + NEWLINE
+
+        if self.skip1:
+            self.skip1 = False
+            return line + NEWLINE
 
         # Compat directives (if ever necessary)
         if line.startswith(";; compat"):

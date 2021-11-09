@@ -1,0 +1,3 @@
+GLOBAL config_video_img_width:dword
+GLOBAL config_video_img_height:dword
+GLOBAL config_video_img_focal_length:dword

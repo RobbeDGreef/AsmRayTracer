@@ -7,10 +7,11 @@ include "utils.inc"
 include "renderer.inc"
 include "vec.inc"
 include "ray.inc"
+include "config.inc"
 
 VESA_VIDEO_ADDR     equ 0A0000h
 VESA_BANK_SIZE      equ (64*1024)
-VESA_BANK_SWITCHES  equ (VIDEO_GFX_FB_SIZE/VESA_BANK_SIZE)+1
+VESA_BANK_SWITCHES  equ (VIDEO_FB_SIZE/VESA_BANK_SIZE)+1
 
 CODESEG
 
@@ -85,15 +86,19 @@ proc renderer_to_bmp
 
     lea eax, [@@hdr]
     mov [word ptr eax+bmp_hdr.id], BMP_HDR_ID
-    mov [dword ptr eax+bmp_hdr.size], BMP_HDR_SIZE+BMP_DIB_SIZE+2+VIDEO_GFX_FB_SIZE
+    mov ecx, BMP_HDR_SIZE+BMP_DIB_SIZE+2
+    add ecx, [img_rgbbuf_size]
+    mov [dword ptr eax+bmp_hdr.size], ecx
     mov [dword ptr eax+bmp_hdr.img_data_off], BMP_HDR_SIZE+BMP_DIB_SIZE+2
     
-    call write_file, ebx, eax, 14
+    call write_file, ebx, eax, BMP_HDR_SIZE
 
     lea eax, [@@dip_hdr]
     mov [dword ptr eax+bmp_dip_hdr.size], BMP_DIB_SIZE
-    mov [dword ptr eax+bmp_dip_hdr.img_width], VIDEO_GFX_WIDTH
-    mov [dword ptr eax+bmp_dip_hdr.img_height], VIDEO_GFX_HEIGHT
+    mov ecx, [config_video_img_width]
+    mov [dword ptr eax+bmp_dip_hdr.img_width], ecx
+    mov ecx, [config_video_img_height]
+    mov [dword ptr eax+bmp_dip_hdr.img_height], ecx
     mov [word ptr eax+bmp_dip_hdr.places_cnt], BMP_DIB_SIZE
     mov [word ptr eax+bmp_dip_hdr.bpp], BMP_DIB_BPP
     mov [dword ptr eax+bmp_dip_hdr.compression_type], BMP_DIB_COMPRESSION_TYPE
@@ -108,105 +113,153 @@ proc renderer_to_bmp
     ;; something else
     call write_file, ebx, eax, 2
 
-    call write_file, ebx, offset video_rgbbuf, VIDEO_GFX_FB_SIZE
+    call write_file, ebx, [img_rgbbuf], [img_rgbbuf_size]
     call close_file, ebx
 
     ret
 endp renderer_to_bmp
 
 proc renderer_to_rgbbuffer
-    uses eax, ebx, ecx
-
-    mov eax, offset video_rgbbuf
-    lea ebx, [video_framebuffer]
-    xor ecx, ecx
-
-@@convert_loop:
-    cmp ecx, VIDEO_GFX_FB_SIZE
-    jge @@end
-    
-    fld [dword ptr ebx+8]
-    fmul [float_max_char]
-    fistp [word ptr eax]
-    
-    fld [dword ptr ebx+4]
-    fmul [float_max_char]
-    fistp [word ptr eax+1]
-    
-    fld [dword ptr ebx]
-    fmul [float_max_char]
-    fistp [word ptr eax+2]
-
-    ;; Set alpha
-    mov [byte ptr eax+3], 0ffh
-
-    add ebx, VEC_SIZE
-    add eax, 4
-    add ecx, 4
-    jmp @@convert_loop
-
-@@end:
-
+    call renderer_to_buffer, [img_rgbbuf], [config_video_img_width], [config_video_img_height]
     ret
 endp renderer_to_rgbbuffer
 
-;; Writes the current video framebuffer contents to the screen
-;; WARNING: This is a slow function becaue it needs to convert all the RGB float
-;; values to integers.
-proc renderer_flip
-    local @@temp:dword
-    uses eax, edi, esi
-    xor eax, eax
+proc renderer_to_buffer
+    arg @@buffer:dword, @@buf_width:dword, @@buf_height:dword
+    local @@lineadd_vm:dword, @@lineadd_buf:dword
+    uses eax, ebx, ecx
 
-    lea esi, [video_framebuffer]
+    ;; Pseudo for width (the same goes for height)
+    ;;
+    ;; if buf_width < videomem_width:
+    ;;      lineadd_vm = videomem_width - buf_width
+    ;;      lineadd_buf = 0
+    ;; if buf_width > videomem_width:
+    ;;      lineadd_buf = buf_width - videomem_width
+    ;;      lineadd_vm = 0
+    ;;      buf_width = videomem_width
+
+    mov [@@lineadd_vm], 0
+    mov [@@lineadd_buf], 0
+    
+    mov eax, [@@buf_width]
+    mov ebx, [config_video_img_width]
+    cmp eax, ebx
+    je @@height_checks
+    jl @@less_than_w
+    jg @@greater_than_w
+
+@@less_than_w:
+    sub ebx, eax
+    mov eax, ebx
+    mov ebx, VEC_SIZE
+    mul ebx
+    mov [@@lineadd_vm], eax
+    jmp @@height_checks
+
+@@greater_than_w:
+    sub eax, ebx
+    mov ecx, 4
+    mul ecx
+    mov [@@lineadd_buf], eax
+    mov [@@buf_width], ebx
+
+@@height_checks:
+    mov eax, [@@buf_height]
+    mov ebx, [config_video_img_height]
+    cmp eax, ebx
+    je @@start_copy
+    jg @@greater_than_h
+    jl @@start_copy
+
+@@greater_than_h:
+    mov [@@buf_height], ebx 
+
+@@start_copy:
+
+    mov eax, [@@buffer]
+    mov ebx, [img_framebuffer]
+
+    call print_hex, [img_framebuffer]
+    call print_newline
+
+    xor ecx, ecx
+    xor edx, edx
+
+@@height_loop:
+    cmp ecx, [@@buf_height]
+    jge @@end
+
+    xor edx, edx
+    @@width_loop:
+        cmp edx, [@@buf_width]
+        jge @@end_width_loop
+    
+        fld [dword ptr ebx+8]
+        fmul [float_max_char]
+        fistp [word ptr eax]
+         
+        fld [dword ptr ebx+4]
+        fmul [float_max_char]
+        fistp [word ptr eax+1]
+
+        fld [dword ptr ebx]
+        fmul [float_max_char]
+        fistp [word ptr eax+2]
+
+        ;; Set alpha
+        mov [byte ptr eax+3], 0ffh
+
+        add ebx, VEC_SIZE
+        add eax, 4
+
+        inc edx
+        jmp @@width_loop
+    
+    @@end_width_loop:
+    add eax, [@@lineadd_buf]
+    add ebx, [@@lineadd_vm]
+    
+    inc ecx
+    jmp @@height_loop
+
+@@end:
+    ret
+endp renderer_to_buffer
+
+proc renderer_buf_to_screen
+    uses eax, ecx, edi, esi
+
+    xor eax, eax
+    lea esi, [vesa_lfb]
+
 @@copy_loop:
     cmp eax, VESA_BANK_SWITCHES
     je @@end
     call set_bank, eax
 
     mov edi, VESA_VIDEO_ADDR
-    
-    @@bank_fill_loop:
-        cmp edi, VESA_VIDEO_ADDR+VESA_BANK_SIZE
-        je @@continue
-
-        fld [dword ptr esi+8]
-        fmul [float_max_char]
-
-ifdef NASM
-        fstp [@@temp]
-else
-        fistp [word ptr edi]
-endif
-
-        fld [dword ptr esi+4]
-        fmul [float_max_char]
-ifdef NASM
-        fstp [@@temp]
-else
-        fistp [word ptr edi+1]
-endif
-
-        fld [dword ptr esi]
-        fmul [float_max_char]
-ifdef NASM
-        fstp [@@temp]
-else
-        fistp [word ptr edi+2]
-endif
-
-        add edi, 4
-        add esi, VEC_SIZE
-        jmp @@bank_fill_loop
-
-    @@continue:
+    mov ecx, VESA_BANK_SIZE/4
+    rep movsd
     
     inc eax
     jmp @@copy_loop
 
 @@end:
     ret
-endp renderer_flip
+endp renderer_buf_to_screen
+
+;; Writes the current video framebuffer contents to the screen
+;; WARNING: This is a slow function becaue it needs to convert all the RGB float
+;; values to integers.
+proc renderer_show_img
+
+    lea eax, [vesa_lfb]
+    call renderer_to_buffer, eax, VIDEO_FB_WIDTH, VIDEO_FB_HEIGHT 
+    call renderer_buf_to_screen
+
+    ret
+endp renderer_show_img
 
 proc hit_sphere
     arg @@center:PTR Point, @@radius:dword, @@ray:PTR Ray
@@ -358,8 +411,18 @@ endp cast_ray
 proc renderer_render
     local @@temp:dword, @@camera_loc:Point, @@horizontal:Vec, @@vertical:Vec, \
           @@lower_left_corner:Vec, @@temp_vec:Vec, @@temp_vec2:Vec, \
-          @@ray:Ray, @@u:dword, @@v:dword
+          @@ray:Ray, @@u:dword, @@v:dword, @@float_width_minus_1:dword, \
+          @@float_height_minus_1:dword
     uses eax, ecx, ebx, edx, edi, esi
+
+    ;; First calculate width and height - 1
+    fild [config_video_img_width]
+    fsub [float_1]
+    fstp [@@float_width_minus_1]
+    
+    fild [config_video_img_height]
+    fsub [float_1]
+    fstp [@@float_height_minus_1]
 
     ;; camera_loc = (0, 0, 0)
     lea eax, [@@camera_loc]
@@ -367,8 +430,12 @@ proc renderer_render
     
     ;; horizontal = (viewport_height * aspect_ratio, 0, 0)
     lea eax, [@@horizontal]
-    fld [viewport_height]
-    fmul [aspect_ratio]
+
+    ;; Calculate aspect ratio and multiply it with the viewport height
+    fild [config_video_img_width]
+    fild [config_video_img_height]
+    fdiv
+    fmul [viewport_height]
     fstp [@@temp]
     call vec_set, eax, [@@temp], [float_0], [float_0]
 
@@ -392,11 +459,11 @@ proc renderer_render
     call vec_div_float, ebx, [float_2]
     call vec_sub, eax, eax, ebx
     
-    call vec_set, ebx, [float_0], [float_0], [focal_length]
+    call vec_set, ebx, [float_0], [float_0], [config_video_img_focal_length]
     call vec_sub, eax, eax, ebx
 
-    lea esi, [video_framebuffer]
-    mov eax, VIDEO_GFX_HEIGHT
+    mov esi, [img_framebuffer]
+    mov eax, [config_video_img_height]
     dec eax
 
     call log_str, offset render_start_str
@@ -408,7 +475,7 @@ proc renderer_render
     mov ebx, 0
 
     @@width_loop:
-        cmp ebx, VIDEO_GFX_WIDTH
+        cmp ebx, [config_video_img_width]
         je @@end_width_loop
         
         ; u = width_iter / width
@@ -416,13 +483,13 @@ proc renderer_render
 
         mov [@@temp], ebx
         fild [@@temp]
-        fld [image_width_minus_1]
+        fld [@@float_width_minus_1]
         fdiv
         fstp [@@u]
 
         mov [@@temp], eax
         fild [@@temp]
-        fld [image_height_minus_1]
+        fld [@@float_height_minus_1]
         fdiv
         fstp [@@v]
 
@@ -459,6 +526,7 @@ proc renderer_render
         jmp @@width_loop
 
     @@end_width_loop:
+
     dec eax
     jmp @@height_loop
 
@@ -468,27 +536,79 @@ proc renderer_render
     ret
 endp renderer_render
 
-DATASEG
-    ;; Shouldn't be hard coded but this is faster
-    image_width_minus_1  dd 799.0
-    image_height_minus_1 dd 599.0
+ifdef NASM
+;; compat-skip1
+extern _end
+;; compat-skip1
+extern malloc
+endif
 
-    aspect_ratio dd 1.333333    ;; 800/600
-    focal_length dd 1.0
+proc renderer_init
+    uses eax, ebx, ecx
+    mov ecx, 16
+    not ecx
 
-    viewport_height dd 2.0
+    mov eax, [config_video_img_height]
+    mov ebx, [config_video_img_width]
+    mul ebx
+    mov ebx, VIDEO_FB_BPP
+    mul ebx
+    mov [img_rgbbuf_size], eax
 
-DATASEG
-    render_start_str db "Render start", 0
+    mov eax, [config_video_img_width]
+    mov ebx, [config_video_img_height]
+    mul ebx
+    mov ebx, VEC_SIZE
+    mul ebx
+    mov [img_framebuffer_size], eax
+
+ifndef NASM
+    mov ebx, 0500000h                     ;; Load the video framebuffer at 3MB
+    mov [img_framebuffer], ebx
+    add ebx, eax
+
+    ;; Make sure it is 16bytes aligned (for optimalisation reasons)
+    and ebx, ecx
+    add ebx, 16
+    mov [img_rgbbuf], ebx
+else
+    ;; Allocate a little more memory
+    ;; I wanted to use the linux brk syscall but it is giving me a hard time
+    ;; so i'm going to be lazy and link in malloc. This is safer anyway.
+    add eax, [img_rgbbuf_size]
+    add eax, 64                     ;; Some extra padding bytes
+    
+    ;; C uses a different calling convention so we need to remember and save
+    ;; the registers we are using.
+    push ecx
+    call malloc, eax
+    pop ecx 
+
+    mov [img_framebuffer], eax
+    add eax, [img_framebuffer_size]
+    and eax, ecx
+    add eax, 16
+    mov [img_rgbbuf], eax
+endif 
+    ret
+endp renderer_init
 
 UDATASEG
-
 ifdef NASM
-    video_framebuffer resb (VIDEO_GFX_FB_SIZE/4)*16
-    video_rgbbuf resb VIDEO_GFX_FB_SIZE
+    vesa_lfb: resb (VIDEO_FB_WIDTH*VIDEO_FB_WIDTH*VIDEO_FB_BPP)
 else
-    video_framebuffer Color (VIDEO_GFX_FB_SIZE/4) dup (?)
-    video_rgbbuf db VIDEO_GFX_FB_SIZE dup (?)
+    vesa_lfb db (VIDEO_FB_WIDTH*VIDEO_FB_WIDTH*VIDEO_FB_BPP) dup (?)
 endif
+
+DATASEG
+    viewport_height dd 2.0
+
+    ;; These are set in renderer_init(
+    img_framebuffer       dd 0
+    img_rgbbuf            dd 0
+    img_framebuffer_size  dd 0
+    img_rgbbuf_size       dd 0
+
+    render_start_str db "Render start", 0
 
 END 

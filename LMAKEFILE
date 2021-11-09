@@ -10,7 +10,7 @@ SRCS := $(filter-out TEST.ASM, $(SRCS))
 OBJS = ${SRCS:.ASM=.o}
 DEST = raytracer
 
-LDFLAGS = -melf_i386
+LDFLAGS = -melf_i386 -lc -dynamic-linker /lib/ld-linux.so.2
 NASMFLAGS = -f elf -DNASM
 
 NASM = nasm
