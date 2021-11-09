@@ -98,7 +98,7 @@ endp pad_print_buffer
 
 proc print_int_padded
     arg @@value:dword, @@padding:dword
-    uses eax, ebx
+    uses eax
     call itoa, [@@value], offset print_int_buffer, 10
     call pad_print_buffer, [@@padding]
     call print_str, offset print_int_buffer
@@ -161,7 +161,7 @@ endp print_float
 
 proc print_hex_multiple
     arg @@count:dword
-    uses eax, ebx, ecx, edx
+    uses eax, ecx
 
     mov eax, 12
     mov ecx, 0
