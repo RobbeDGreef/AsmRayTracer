@@ -26,8 +26,8 @@ proc main
     
     call renderer_init
     ;call renderer_render
-    call fill_background
-
+    ;call fill_background
+    call pixel_plot, 200, 200, 0ff2540h
     ;call renderer_render
 
 ifndef NASM

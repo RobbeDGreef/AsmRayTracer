@@ -21,5 +21,18 @@ proc fill_background
 ret
 endp fill_background
 
+proc pixel_plot
+    arg @@x_coord:dword, @@y_coord:dword, @@color:dword
+    uses eax, ebx, edx
+
+    mov eax, VIDEO_FB_WIDTH
+    mul [@@y_coord]
+    add eax, [@@x_coord]
+    lea ebx, [vesa_lfb + eax*4]
+    mov edx, [@@color]
+    mov [ebx], edx
+
+    ret
+endp
 
 END
