@@ -18,6 +18,7 @@ GLOBAL exit:PROC                ;; void exit(dword exit_code)
 
 ;; Will create a file, if it already exists it will truncate it.
 GLOBAL create_file:PROC         ;; dword create_file(char* file_name, dword access_mode) 
+GLOBAL open_file:PROC           ;; dword open_file(char* file_name, dword access_mode)
 FILE_ATTR_READ_ONLY     equ 1
 FILE_ATTR_HIDDEN        equ 2
 FILE_ATTR_SYSTEM        equ 4

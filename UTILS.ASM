@@ -277,6 +277,30 @@ endp exit
 ;; file io functions
 ;; =============================================================================
 
+proc open_file
+    arg @@file_name:dword, @@access_mode:dword returns eax
+    uses ebx, ecx, edx
+
+ifndef NASM
+    ;; Since the return value is in ax, we want to make sure the entire
+    ;; register is clean
+    xor eax, eax
+
+    mov edx, [@@file_name]
+    mov ecx, [@@access_mode]
+    mov ah, 3Dh
+    int 21h
+else
+    mov eax, 5                  ;; open syscall
+    mov ebx, [@@file_name]
+    mov ecx, [@@access_mode]
+    
+    int 80h
+endif
+
+    ret
+endp open_file
+
 ;; Creates a file, returns the file handle. If the file already exists
 ;; it will trunctate the file.
 proc create_file
