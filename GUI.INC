@@ -1,2 +1,1 @@
-GLOBAL fill_background:PROC
-GLOBAL pixel_plot:PROC ;;c dingen
+GLOBAL fill_background:PROC     ;; void fill_background(int color)

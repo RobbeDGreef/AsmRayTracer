@@ -11,10 +11,12 @@ include "renderer.inc"
 CODESEG
 ; video_framebuffer is buffer
 proc fill_background
+    arg @@color:dword
     uses eax, ebx, ecx, edx, edi
 
-    mov eax, 0ff00ffh
+    mov eax, [@@color]
     mov ecx, VIDEO_MAX_FB_SIZE / 4
+    ; video_framebuffer is buffer
     lea edi, [vesa_lfb]
     rep stosd
     
