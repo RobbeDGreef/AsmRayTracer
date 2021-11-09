@@ -14,20 +14,10 @@ proc fill_background
     uses eax, ebx, ecx, edx, edi
 
     mov eax, 0ff00ffh
+    mov ecx, VIDEO_MAX_FB_SIZE / 4
     lea edi, [vesa_lfb]
-    mov ecx, 0
-@@loopke:
-    cmp ecx, VIDEO_FB_SIZE/4
-    jge @@end
-
-    mov ebx, edi
-    add ebx, ecx
-    mov [ebx], eax
-    call log_hex, ebx
-
-    add ecx, 4
-    jmp @@loopke
-@@end:
+    rep stosd
+    
 ret
 endp fill_background
 

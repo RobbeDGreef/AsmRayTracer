@@ -22,7 +22,7 @@ proc main
     call log_str, offset start_str
     call gettime_millis
     mov [@@begin_time], eax
-    ;call set_video_mode, VIDEO_MODE_GRAPHICS
+    call set_video_mode, VIDEO_MODE_GRAPHICS
     
     call renderer_init
     ;call renderer_render
@@ -31,7 +31,7 @@ proc main
     ;call renderer_render
 
 ifndef NASM
-    call renderer_show_img
+    call renderer_buf_to_screen
 else
     call renderer_to_bmp, offset bmpout
 endif
@@ -41,7 +41,7 @@ ifndef NASM
     call sleep_millis, 3000
 endif
 
-    ;call set_video_mode, VIDEO_MODE_TEXT
+    call set_video_mode, VIDEO_MODE_TEXT
 
     mov ebx, [@@begin_time]
     call gettime_millis
