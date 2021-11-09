@@ -1,9 +1,9 @@
 macro def_vec name
-struc &name
+struc &name&
     x   dd ?
     y   dd ?
     z   dd ?
-ends &name
+ends &name&
 endm def_vec
 
 def_vec Vec

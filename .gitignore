@@ -1,6 +1,10 @@
 debug/
 DELETED/
+compat/
 *.OBJ
 *.EXE
 debug.log
 OUTPUT.LOG
+raytracer
+perf*
+test.bmp
