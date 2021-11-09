@@ -1,48 +1,10 @@
 import os
 import font
 
-fontfile = "FONT"
-
-empty_cell = [
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-]
-
-full_cell = [
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-    0xff,
-]
+fontfile = "FONT.BIN"
 
 with open(fontfile, "wb+") as f:
     for i in range(32):
-        f.write(bytearray(empty_cell))
-    f.write(bytearray(font.MonospaceFont_16_bitmap))
+        f.write(bytearray([0 for x in range(16)]))
+    f.write(bytearray(font.MonospaceFont16))
     f.close()
