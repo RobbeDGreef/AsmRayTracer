@@ -8,7 +8,7 @@ include "vec.inc"
 include "renderer.inc"
 include "init.inc"
 include "gui.inc"
-include "kbh.inc"
+include "keyb.inc"
 
 CODESEG
 
@@ -20,7 +20,7 @@ proc main
 
     call init
     call gui_init
-    call install_keyboard_handler
+    call __keyb_installKeyboardHandler
 
     call log_str, offset start_str
     call gettime_millis
@@ -28,7 +28,7 @@ proc main
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
     call renderer_init
-    call text_plot, 200, 200, offset test_str, 0ff0000h
+    ;call text_plot, 200, 200, offset test_str, 0ff0000h
     ;call char_plot, 200, 200, 'A', 0ff0000h 
     ;call renderer_render
     ;call fill_background
@@ -41,7 +41,6 @@ ifndef NASM
 else
     call renderer_to_bmp, offset bmpout
 endif
-
 
 ifndef NASM
     call sleep_millis, 3000
@@ -57,7 +56,7 @@ endif
     call print_str, offset finished_str2
     call print_newline
 
-    call uninstall_keyboard_handler
+    call __keyb_uninstallKeyboardHandler
 
     call exit, 0
 endp main
