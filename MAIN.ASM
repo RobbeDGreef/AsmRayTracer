@@ -8,6 +8,7 @@ include "vec.inc"
 include "renderer.inc"
 include "init.inc"
 include "gui.inc"
+include "kbh.inc"
 
 CODESEG
 
@@ -19,6 +20,7 @@ proc main
 
     call init
     call gui_init
+    call install_keyboard_handler
 
     call log_str, offset start_str
     call gettime_millis
@@ -54,6 +56,8 @@ endif
     call print_int, eax
     call print_str, offset finished_str2
     call print_newline
+
+    call uninstall_keyboard_handler
 
     call exit, 0
 endp main

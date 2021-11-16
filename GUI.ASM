@@ -98,7 +98,7 @@ proc text_plot
     cmp [byte ptr ebx], 0
     je @@end
 
-    movzx eax, [byte ptr ebx]
+    movzx eax, [byte ptr ebx] ; zero extend
     call char_plot, [@@x_coord], [@@y_coord], eax, [@@color]
 
     add [@@x_coord], FONTCHAR_WIDTH
