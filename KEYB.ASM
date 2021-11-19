@@ -39,7 +39,8 @@ PROC __keyb_install_keyboard_handler
 	
 	; store current handler
 	push	es			
-	mov		eax, 3509h			; get current interrupt handler 09h
+	mov al, 35h ; get interrupt handler
+	mov ah, 09h ; interrupt handler 9
 	int		21h					; in ES:EBX
 	mov		[original_keyboard_handler_s], es	; store SELECTOR
 	mov		[original_keyboard_handler_o], ebx	; store OFFSET
@@ -50,7 +51,8 @@ PROC __keyb_install_keyboard_handler
 	mov		ax, cs
 	mov		ds, ax
 	mov		edx, offset keyboard_handler			; new OFFSET
-	mov		eax, 2509h							; set custom interrupt handler 09h
+	mov 	al, 25h ; set interrupt vector
+	mov 	ah, 09h ; vector 9
 	int		21h									; uses DS:EDX
 	pop		ds
 	
@@ -78,7 +80,8 @@ PROC __keyb_uninstall_keyboard_handler
 		
 	mov		edx, [original_keyboard_handler_o]		; retrieve OFFSET
 	mov		ds, [original_keyboard_handler_s]		; retrieve SELECTOR
-	mov		eax, 2509h							; set original interrupt handler 09h
+	mov 	ah, 25h
+	mov 	al, 09h
 	int		21h									; uses DS:EDX
 	
 	pop		ds
