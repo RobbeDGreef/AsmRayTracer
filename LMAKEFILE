@@ -25,5 +25,4 @@ $(DEST): ${OBJS}
 	$(NASM) $(NASMFLAGS) -t compat/$< -o compat/$@
 
 clean:
-	#rm -rf ${OBJS} $(DEST)
-	echo ${OBJS}
+	rm -rf ${OBJS} $(DEST)
