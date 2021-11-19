@@ -2,12 +2,12 @@
 ; 32-bit Keyboard functionality.
 ;-------------------------------------------------------------------
 
-GLOBAL __keyb_installKeyboardHandler:PROC
-GLOBAL __keyb_uninstallKeyboardHandler:PROC
+GLOBAL __keyb_install_keyboard_handler:PROC
+GLOBAL __keyb_uninstall_keyboard_handler:PROC
 
-GLOBAL __keyb_keyboardState:BYTE:128
-GLOBAL __keyb_rawScanCode:BYTE
-GLOBAL __keyb_keysActive:BYTE
+GLOBAL __keyb_keyboard_state:BYTE:128
+GLOBAL __keyb_raw_scan_code:BYTE
+GLOBAL __keyb_keys_active:BYTE
 
 ;-------------------------------------------------------------------
 ; Scancodes

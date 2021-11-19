@@ -47,6 +47,78 @@ proc pixel_plot
     ret
 endp
 
+proc draw_horizontal_line
+    arg @@x1:dword, @@x2:dword, @@y:dword, @@color:dword
+    uses eax, ebx, ecx, edx
+
+    mov eax, [@@x1]
+    mov ebx, [@@x2]
+
+    @@printline:
+        cmp eax, ebx
+        jg @@end
+        call pixel_plot, eax, [@@y], [@@color]
+        inc eax
+        jmp @@printline
+
+    @@end:
+    ret
+endp draw_horizontal_line
+
+proc draw_vertical_line
+    arg @@x:dword, @@y1:dword, @@y2:dword, @@color:dword
+
+    mov eax, [@@y1]
+    mov ebx, [@@y2]
+    @@printline:
+        cmp eax, ebx
+        jg @@end
+        call pixel_plot, [@@x], eax, [@@color]
+        inc eax
+        jmp @@printline
+
+    @@end:    
+    ret
+endp draw_vertical_line    
+
+proc draw_button
+    arg @@x1:dword, @@y1:dword, @@text:dword, @@backgroundcolor:dword
+
+    mov eax, [@@x1]
+    add eax, 200
+
+    mov ebx, [@@y1]
+    add ebx, 80
+
+    call draw_rect, [@@x1], [@@y1], eax, ebx, [@@backgroundcolor]
+    ;call draw_vertical_line, [@@x1], [@@y1], ebx, 0ff2540h   add these later for   3D effect
+    ;call draw_vertical_line, eax, [@@y1], ebx, 0ff2540h 
+
+    sub ebx, 45
+
+    call text_plot, [@@x1], ebx, offset test_str, 000000h
+    ret
+endp draw_button
+
+
+proc draw_rect
+    arg @@x1:dword, @@y1:dword, @@x2:dword, @@y2:dword, @@color:dword 
+    uses ebx, edx
+
+    mov ebx, [@@y1]
+    mov edx, [@@y2]
+
+    @@printlines:
+        cmp ebx, edx
+        jg @@end
+        call draw_horizontal_line, [@@x1], [@@x2], ebx, [@@color]
+        inc ebx
+        jmp @@printlines
+
+    @@end:
+    ret
+endp draw_rect    
+
 proc char_plot
     arg @@x_coord:dword, @@y_coord:dword, @@char:dword, @@color:dword
     uses eax, ecx, edx, edi
@@ -108,9 +180,10 @@ proc text_plot
 @@end:
     ret
 endp text_plot
-
+ 
 DATASEG
+    highlighted_component dd, 0
     font_file_name db "FONT.BIN", 0
     font_array db FONTFILE_SIZE dup (?)
-
+    test_str db "Hello world!!", 0
 END

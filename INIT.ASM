@@ -4,6 +4,7 @@ MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "init.inc"
+include "keyb.inc"
 
 CODESEG
 
@@ -36,7 +37,14 @@ endif
     mov [@@temp], ax
     fldcw [@@temp]
 
+     call __keyb_install_keyboard_handler
+
     ret
 endp init
+
+proc destruct 
+    call __keyb_uninstall_keyboard_handler
+    ret
+endp destruct 
 
 END

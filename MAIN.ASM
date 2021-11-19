@@ -8,7 +8,6 @@ include "vec.inc"
 include "renderer.inc"
 include "init.inc"
 include "gui.inc"
-include "keyb.inc"
 
 CODESEG
 
@@ -20,7 +19,6 @@ proc main
 
     call init
     call gui_init
-    call __keyb_installKeyboardHandler
 
     call log_str, offset start_str
     call gettime_millis
@@ -34,6 +32,8 @@ proc main
     ;call fill_background
     ;call pixel_plot, 200, 200, 0ff2540h
     ;call renderer_render
+    ;call draw_horizontal_line, 50, 250, 50, 0ff2540h 
+    call draw_button, 50, 150, offset test_str, 34eb58h
 
 ifndef NASM
     ;call renderer_show_img
@@ -56,7 +56,7 @@ endif
     call print_str, offset finished_str2
     call print_newline
 
-    call __keyb_uninstallKeyboardHandler
+    call destruct
 
     call exit, 0
 endp main

@@ -8,13 +8,17 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 INCLUDE "keyb.inc"
 
+KEY_BUFFER	EQU 60h			; the port of the keyboard buffer
+KEY_CONTROL	EQU 61h			; the port of the keyboard controller
+PIC_PORT	EQU 20h			; the port of the peripheral
+
 ;-----------------------------------------------------------
 ; CODE
 ;-----------------------------------------------------------
 CODESEG
 
 ; Installs the custom keyboard handler
-PROC __keyb_installKeyboardHandler
+PROC __keyb_install_keyboard_handler
     push	ebp
     mov		ebp, esp
 
@@ -29,7 +33,7 @@ PROC __keyb_installKeyboardHandler
 	; clear state buffer and the two state bytes
 	cld
 	mov		ecx, (128 / 2) + 1
-	mov		edi, offset __keyb_keyboardState
+	mov		edi, offset __keyb_keyboard_state
 	xor		eax, eax
 	rep		stosw
 	
@@ -37,15 +41,15 @@ PROC __keyb_installKeyboardHandler
 	push	es			
 	mov		eax, 3509h			; get current interrupt handler 09h
 	int		21h					; in ES:EBX
-	mov		[originalKeyboardHandlerS], es	; store SELECTOR
-	mov		[originalKeyboardHandlerO], ebx	; store OFFSET
+	mov		[original_keyboard_handler_s], es	; store SELECTOR
+	mov		[original_keyboard_handler_o], ebx	; store OFFSET
 	pop		es
 		
 	; set new handler
 	push	ds
 	mov		ax, cs
 	mov		ds, ax
-	mov		edx, offset keyboardHandler			; new OFFSET
+	mov		edx, offset keyboard_handler			; new OFFSET
 	mov		eax, 2509h							; set custom interrupt handler 09h
 	int		21h									; uses DS:EDX
 	pop		ds
@@ -61,10 +65,10 @@ PROC __keyb_installKeyboardHandler
     mov		esp, ebp
     pop		ebp
     ret
-ENDP __keyb_installKeyboardHandler
+ENDP __keyb_install_keyboard_handler
 
 ; Restores the original keyboard handler
-PROC __keyb_uninstallKeyboardHandler
+PROC __keyb_uninstall_keyboard_handler
     push	ebp
     mov		ebp, esp
 
@@ -72,8 +76,8 @@ PROC __keyb_uninstallKeyboardHandler
 	push	edx
 	push	ds
 		
-	mov		edx, [originalKeyboardHandlerO]		; retrieve OFFSET
-	mov		ds, [originalKeyboardHandlerS]		; retrieve SELECTOR
+	mov		edx, [original_keyboard_handler_o]		; retrieve OFFSET
+	mov		ds, [original_keyboard_handler_s]		; retrieve SELECTOR
 	mov		eax, 2509h							; set original interrupt handler 09h
 	int		21h									; uses DS:EDX
 	
@@ -84,14 +88,10 @@ PROC __keyb_uninstallKeyboardHandler
     mov		esp, ebp
     pop		ebp
     ret
-ENDP __keyb_uninstallKeyboardHandler
+ENDP __keyb_uninstall_keyboard_handler
 
 ; Keyboard handler (Interrupt function, DO NOT CALL MANUALLY!)
-PROC keyboardHandler
-	KEY_BUFFER	EQU 60h			; the port of the keyboard buffer
-	KEY_CONTROL	EQU 61h			; the port of the keyboard controller
-	PIC_PORT	EQU 20h			; the port of the peripheral
-
+PROC keyboard_handler
 	push	eax
 	push	ebx
 	push	esi
@@ -105,7 +105,7 @@ PROC keyboardHandler
 	sti							; re-enable CPU interrupts
 	in		al, KEY_BUFFER		; get the key that was pressed from the keyboard
 	mov		bl, al				; store scan code for later use
-	mov		[__keyb_rawScanCode], al	; store the key in global variable
+	mov		[__keyb_raw_scan_code], al	; store the key in global variable
 	in		al, KEY_CONTROL		; set the control register to reflect key was read
 	or		al, 82h				; set the proper bits to reset the keyboard flip flop
 	out		KEY_CONTROL, al		; send the new data back to the control register
@@ -123,13 +123,13 @@ PROC keyboardHandler
 	shr		al, 1				; al now contains the actual scan code ([0;127])
 	xor		ebx, ebx	
 	mov		bl, al				; bl now contains the actual scan code ([0;127])
-	lea		esi, [__keyb_keyboardState + ebx]	; load address of key relative to __keyboardState in ebx
+	lea		esi, [__keyb_keyboard_state + ebx]	; load address of key relative to __keyboardState in ebx
 	mov		al, [esi]			; load the keyboard state of the scan code in al
 	; al = tracked state (0 or 1) of pressed key (the value in memory)
 	; ah = physical state (0 or 1) of pressed key
 	neg		al
 	add		al, ah				; al contains -1, 0 or +1 (-1 on key release, 0 on no change and +1 on key press)
-	add		[__keyb_keysActive], al	; update __keysActive counter
+	add		[__keyb_keys_active], al	; update __keysActive counter
 	mov		al, ah
 	mov		[esi], al			; update tracked state
 	
@@ -139,18 +139,18 @@ PROC keyboardHandler
 	pop		eax
 	
 	iretd
-ENDP keyboardHandler
+ENDP keyboard_handler
 
 ;-----------------------------------------------------------
 ; DATA
 ;-----------------------------------------------------------
 DATASEG
 
-  originalKeyboardHandlerS	dw ?			; SELECTOR of original keyboard handler
-  originalKeyboardHandlerO	dd ?			; OFFSET of original keyboard handler
+  original_keyboard_handler_s	dw ?			; SELECTOR of original keyboard handler
+  original_keyboard_handler_o	dd ?			; OFFSET of original keyboard handler
 
-__keyb_keyboardState		db 128 dup(?)	; state for all 128 keys
-__keyb_rawScanCode			db ?			; scan code of last pressed key
-__keyb_keysActive			db ?			; number of actively pressed keys
+__keyb_keyboard_state			db 128 dup(?)	; state for all 128 keys
+__keyb_raw_scan_code			db ?			; scan code of last pressed key
+__keyb_keys_active				db ?			; number of actively pressed keys
 
 END
