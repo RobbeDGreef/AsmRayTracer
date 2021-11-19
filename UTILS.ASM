@@ -384,7 +384,7 @@ ifndef NASM
     int 21h
 else
     mov eax, 4
-    mov ebx, 3
+    mov ebx, [@@file_handle]
     mov ecx, [@@data]
     mov edx, [@@count]
     int 80h
