@@ -5,6 +5,7 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "utils.inc"
 include "vec.inc"
+include "video.inc"
 include "renderer.inc"
 include "init.inc"
 include "gui.inc"
@@ -28,7 +29,7 @@ proc main
     call log_str, offset start_str
     call gettime_millis
     mov [@@begin_time], eax
-    call set_video_mode, VIDEO_MODE_GRAPHICS
+    call video_set_mode, VIDEO_MODE_GRAPHICS
     
     ;; Setting up our scene
     lea ebx, [@@scene]
@@ -45,12 +46,11 @@ proc main
     call sphere_set, ecx, edx ,[float_0_50]
     call scene_add, ebx, ecx
 
-
     call renderer_init
 
 ifndef NASM
     call text_plot, 0, 0, offset loading_str, 0ffffffh
-    call renderer_buf_to_screen
+    call video_buffer_flip
 endif
 
     call renderer_render, ebx
@@ -62,7 +62,7 @@ else
     call renderer_to_bmp, offset bmpout
 endif
 
-    call set_video_mode, VIDEO_MODE_TEXT
+    call video_set_mode, VIDEO_MODE_TEXT
 
     mov ebx, [@@begin_time]
     call gettime_millis
