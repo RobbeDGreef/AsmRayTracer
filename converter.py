@@ -163,8 +163,8 @@ class Converter:
 
 
         if self.current_segment == "data":
+            parts = line.split(' ')
             if line.find(" dup ") != -1:
-                parts = line.split(' ')
                 newparts = [parts[0]]
                 newparts.append('times')
                 newparts.append('(' + parts[2] + ")*" + str(self.get_type_size(parts[1])))
@@ -390,7 +390,13 @@ class Converter:
             out = ""
             for arg in reversed(self.pushed):
                 out += "pop " + arg + NEWLINE
-            out += "leave" + NEWLINE + "ret" + NEWLINE
+            
+            # Only add leave keyword when we are actually parsing a function
+            # and not, say, an optimized label function.
+            if self.parsing_function:
+                out += "leave" + NEWLINE
+            
+            out += "ret" + NEWLINE
             self.pushed.clear()
             return out
 
