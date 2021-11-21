@@ -66,8 +66,20 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [x] vec_eq
 - [x] Frame buffer class
   - [x] Essentially a large buffer that has a function to copy itself to memory
-- [ ] Ray class
+- [x] Ray class
   - [x] struct implementation 
   - [x] getters and setters
   - [x] at(float t) function (origin + t*direction)
 - [x] Compatability mode for easier debugging and profiling
+- [x] Multiple samples
+- [x] Shading
+- [ ] Camera
+  - [x] Positioned
+  - [ ] ViewAt
+- [ ] Materials
+  - [ ] Diffuse materials
+  - [ ] metallic materials
+- [ ] Scene system
+  - [x] Simple linked list
+  - [ ] BVH trees (maybe)
+- [ ] Loading objects other than spheres (maybe)
