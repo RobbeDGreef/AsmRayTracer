@@ -805,6 +805,16 @@ random_float:
     pop eax
     ret
 
+random_float_ranged:
+    call random_float
+    fld [esp+8]
+    fld [esp+4]
+    fsubp
+    fmulp
+    fld [esp+4]
+    faddp
+    ret
+
 DATASEG
     itoa_lookup db "0123456789ABCDEF"
     print_int_buffer db 16 dup (?)
@@ -816,6 +826,7 @@ DATASEG
     float_epsilon dd 0.0007
 
     float_0         dd 0.0
+    float_0_0_1     dd 0.001 
     float_0_25      dd 0.25
     float_0_50      dd 0.50
     float_0_75      dd 0.75

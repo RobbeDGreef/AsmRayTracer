@@ -332,6 +332,76 @@ proc vec_cross
     ret
 endp vec_cross
 
+proc vec_sqrt
+    arg @@v:PTR Vec
+    uses eax
+    
+    mov eax, [@@v]
+    fld [eax+Vec.x]
+    fld [eax+Vec.y]
+    fld [eax+Vec.z]
+    fsqrt
+    fstp [eax+Vec.z]
+    fsqrt
+    fstp [eax+Vec.y]
+    fsqrt
+    fstp [eax+Vec.x]
+
+    ret
+endp vec_sqrt
+
+proc vec_random
+    arg @@v:PTR Vec, @@min:dword, @@max:dword
+    local @@temp:dword
+
+    call random_float_ranged, [@@min], [@@max]
+    call random_float_ranged, [@@min], [@@max]
+    call random_float_ranged, [@@min], [@@max]
+
+    fstp [@@temp]
+    push [@@temp]
+    fstp [@@temp]
+    push [@@temp]
+    fstp [@@temp]
+    push [@@temp]
+    push [@@v]
+    call vec_set
+    add esp, 16 
+
+    ret
+endp vec_random
+
+;; We generate a random vector in a unit sphere
+;; essentially we just choose 3 random vectors
+;; and if its length squared is lower than 1 it 
+;; is in the unit vector (since x^2 + y^2 + z^2 = r^2)
+;; This is not amazingly efficient but good enough. 
+proc vec_random_in_unit_sphere
+    arg @@v:PTR Vec
+    local @@temp:dword
+    uses eax
+
+@@check_loop:
+    call vec_random, [@@v], [float_minus_1], [float_1]
+    call vec_length_squared, [@@v]
+    mov [@@temp], eax
+    call flt, [@@temp], [float_1]
+    cmp eax, 1
+    jne @@check_loop
+    ret
+endp vec_random_in_unit_sphere
+
+proc vec_random_unit_vec
+    arg @@v:PTR Vec
+    uses eax
+
+    call vec_random_in_unit_sphere, [@@v]
+    call vec_length, [@@v]
+    call vec_div_float, [@@v], eax
+
+    ret
+endp vec_random_unit_vec
+
 DATASEG
     vec_print_x_str db "x: ", 0
     vec_print_y_str db " y: ", 0
