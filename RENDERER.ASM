@@ -471,13 +471,6 @@ proc renderer_render
     ret
 endp renderer_render
 
-ifdef NASM
-;; compat-skip1
-extern _end
-;; compat-skip1
-extern malloc
-endif
-
 proc renderer_init
     uses eax, ebx, ecx
     mov ecx, 16
@@ -498,7 +491,7 @@ proc renderer_init
     mov [img_framebuffer_size], eax
 
 ifndef NASM
-    mov ebx, 0500000h                     ;; Load the video framebuffer at MB
+    mov ebx, 0500000h                     ;; Load the video framebuffer at 5 MB
     mov [img_framebuffer], ebx
     add ebx, eax
 
@@ -507,17 +500,10 @@ ifndef NASM
     add ebx, 16
     mov [img_rgbbuf], ebx
 else
-    ;; Allocate a little more memory
-    ;; I wanted to use the linux brk syscall but it is giving me a hard time
-    ;; so i'm going to be lazy and link in malloc. This is safer anyway.
     add eax, [img_rgbbuf_size]
     add eax, 64                     ;; Some extra padding bytes
     
-    ;; C uses a different calling convention so we need to remember and save
-    ;; the registers we are using.
-    push ecx
-    call malloc, eax
-    pop ecx 
+    call alloc, eax
 
     mov [img_framebuffer], eax
     add eax, [img_framebuffer_size]
