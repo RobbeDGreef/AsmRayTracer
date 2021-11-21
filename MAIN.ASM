@@ -17,7 +17,8 @@ CODESEG
 GLOBAL main:PROC
 
 proc main
-    local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec
+    local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
+          @@sphere2:Sphere
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -33,11 +34,17 @@ proc main
     lea ebx, [@@scene]
     call scene_init, ebx
 
-    lea ecx, [@@sphere]
     lea edx, [@@loc]
+    lea ecx, [@@sphere2]
+    call vec_set, edx, [float_0], [sphere2_y], [float_minus_1]
+    call sphere_set, ecx, edx, [sphere2_radius]
+    call scene_add, ebx, ecx
+
+    lea ecx, [@@sphere]
     call vec_set, edx, [float_0], [float_0], [float_minus_1]
     call sphere_set, ecx, edx ,[float_0_50]
     call scene_add, ebx, ecx
+
 
     call renderer_init
 
@@ -78,5 +85,8 @@ DATASEG
     loading_str db "Loading...", 0
 
     test_str db "Hello world!!", 0
+
+    sphere2_radius dd 100.0
+    sphere2_y dd -100.5
 
 END main
