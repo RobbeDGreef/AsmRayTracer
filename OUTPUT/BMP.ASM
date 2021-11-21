@@ -40,7 +40,7 @@ ends bmp_dip_hdr
 proc bmp_write
     arg @@file_name:PTR byte, @@buf:PTR byte, @@buf_size:dword, @@width:dword, @@height:dword 
     local @@hdr:bmp_hdr, @@dip_hdr:bmp_dip_hdr
-    uses eax, ebx, ecx
+    uses eax, ebx, ecx, edx, edi, esi
 
     call create_file, [@@file_name], 0
     mov ebx, eax
@@ -70,10 +70,48 @@ proc bmp_write
     mov [dword ptr eax+bmp_dip_hdr.important_colors_cnt], 0
 
     call write_file, ebx, eax, BMP_DIB_SIZE
-    ;; 2 pad bytes, reused ebx as address but this might as well have been 
+    ;; 2 pad bytes, reused eax as address but this might as well have been 
     ;; something else
     call write_file, ebx, eax, 2
 
+    push ebx
+
+    ;; BMPs store the width lines upside down for some weird reason so we have
+    ;; to copy them
+    mov ecx, [@@width]
+    shl ecx, 2              ;; * 4
+
+    mov esi, [@@buf]
+    mov edi, esi
+    add edi, [@@buf_size]
+    sub edi, ecx
+@@height_loop:
+    cmp esi, edi
+    jg @@end_height_loop
+    
+    mov ebx, ecx
+    sub ebx, 4
+    @@swap_loop:
+        cmp ebx, 0
+        jl @@end_swap_loop
+
+        mov edx, [esi+ebx]
+        mov eax, [edi+ebx]
+        mov [esi+ebx], eax
+        mov[edi+ebx], edx
+
+        sub ebx, 4
+        jmp @@swap_loop
+
+    @@end_swap_loop:
+    
+    sub edi, ecx
+    add esi, ecx
+    jmp @@height_loop
+
+@@end_height_loop:
+    
+    pop ebx
     call write_file, ebx, [@@buf], [@@buf_size]
     call close_file, ebx
 
