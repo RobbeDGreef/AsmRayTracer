@@ -799,7 +799,7 @@ random_float:
     push eax
     call random_int
     push eax
-    fild [esp]
+    fild [dword esp]
     fidiv [dword int32_max]
     add esp, 4
     pop eax
