@@ -3,8 +3,8 @@
 # =============================================================================
 
 # Settings
-objs = main.obj init.obj utils.obj vec.obj ray.obj renderer.obj config.obj gui.obj mm.obj sphere.obj object.obj
-testobjs = init.obj test.obj utils.obj vec.obj ray.obj renderer.obj config.obj gui.obj mm.obj sphere.obj object.obj
+objs = main.obj init.obj utils.obj vec.obj ray.obj renderer.obj config.obj gui.obj mm.obj sphere.obj object.obj scene.obj
+testobjs = init.obj test.obj utils.obj vec.obj ray.obj renderer.obj config.obj gui.obj mm.obj sphere.obj object.obj scene.obj
 dest = raytracer.exe
 
 # =============================================================================

@@ -8,6 +8,8 @@ include "vec.inc"
 include "renderer.inc"
 include "init.inc"
 include "gui.inc"
+include "scene.inc"
+include "sphere.inc"
 include "mm.inc"
 
 CODESEG
@@ -15,7 +17,7 @@ CODESEG
 GLOBAL main:PROC
 
 proc main
-    local @@begin_time:dword
+    local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -27,6 +29,16 @@ proc main
     mov [@@begin_time], eax
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
+    ;; Setting up our scene
+    lea ebx, [@@scene]
+    call scene_init, ebx
+
+    lea ecx, [@@sphere]
+    lea edx, [@@loc]
+    call vec_set, edx, [float_0], [float_0], [float_minus_1]
+    call sphere_set, ecx, edx ,[float_0_50]
+    call scene_add, ebx, ecx
+
     call renderer_init
 
 ifndef NASM
@@ -34,7 +46,7 @@ ifndef NASM
     call renderer_buf_to_screen
 endif
 
-    call renderer_render
+    call renderer_render, ebx
     
 ifndef NASM
     call renderer_show_img

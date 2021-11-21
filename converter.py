@@ -150,6 +150,14 @@ class Converter:
         # Remove the offset keyword since NASM doesn't need that
         if line.find("offset ") != -1:
             return line.replace("offset", "")
+        
+        sizekwd = line.find(" size ")
+        if line.startswith("size ") or sizekwd != -1:
+            t = line[sizekwd+2:].split(' ')[1]
+            if t in self.typetable:
+                return " " + str(self.typetable[t]) + " "
+            print(f"Type '{t}' not found in typetable. Cannot get size") 
+
 
         if self.current_segment == "data":
             if line.find(" dup ") != -1:

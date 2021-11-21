@@ -9,9 +9,9 @@ include "vec.inc"
 include "ray.inc"
 include "config.inc"
 include "object.inc"
-
-;; to be removed
-include "sphere.inc"
+include "hit.inc"
+include "mm.inc"
+include "scene.inc"
 
 VESA_VIDEO_ADDR     equ 0A0000h
 VESA_BANK_SIZE      equ (64*1024)
@@ -266,14 +266,14 @@ proc renderer_show_img
 endp renderer_show_img
 
 proc cast_ray
-    arg @@ray:PTR Ray, @@dest_color:PTR Color
-    local @@temp_vec:Vec, @@temp:dword, @@s:Sphere
+    arg @@ray:PTR Ray, @@dest_color:PTR Color, @@scene:PTR Scene
+    local @@temp_vec:Vec, @@temp:dword, @@hit:Hit
     uses eax, ebx, ecx, edx
 
-    ;; For now we are just setting up the 'scene' here. We check if we hit a 
-    ;; sphere at (0, 0, -1) with a width of 0.5 units.
-    lea eax, [@@temp_vec]
-    call vec_set, eax, [float_0], [float_0], [float_minus_1]
+    lea ecx, [@@hit]
+    call scene_hit, [@@scene], [@@ray], [float_0], [float_pos_inf], ecx
+    cmp eax, 0
+    je @@background
 
     lea ebx, [@@s]
     call sphere_set, ebx, eax, [float_0_50]
@@ -344,6 +344,7 @@ endp cast_ray
 ;; This function has a very large callframe but that is not a problem since we
 ;; don't run this recursively. And this is better than doing things on the heap.
 proc renderer_render
+    arg @@scene:PTR Scene
     local @@temp:dword, @@camera_loc:Point, @@horizontal:Vec, @@vertical:Vec, \
           @@lower_left_corner:Vec, @@temp_vec:Vec, @@temp_vec2:Vec, \
           @@ray:Ray, @@u:dword, @@v:dword, @@float_width_minus_1:dword, \
@@ -454,7 +455,7 @@ proc renderer_render
         call ray_set, ecx, edx, edi
 
         ;; Finally cast a ray with ecx:Ray and esi:destination pixel
-        call cast_ray, ecx, esi
+        call cast_ray, ecx, esi, [@@scene]
         
         add esi, VEC_SIZE
         inc ebx
