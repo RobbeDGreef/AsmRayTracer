@@ -242,7 +242,7 @@ proc renderer_render
     local @@temp:dword, @@camera_loc:Point, @@horizontal:Vec, @@vertical:Vec, \
           @@lower_left_corner:Vec, @@temp_vec:Vec, @@temp_vec2:Vec, \
           @@ray:Ray, @@u:dword, @@v:dword, @@float_width_minus_1:dword, \
-          @@float_height_minus_1:dword
+          @@float_height_minus_1:dword, @@pixel:Vec
     uses eax, ecx, ebx, edx, edi, esi
 
     ;; First calculate width and height - 1
@@ -269,35 +269,55 @@ proc renderer_render
     cmp eax, 0
     jl @@end_height_loop
 
-    mov ebx, 0
+    call gui_notify, eax, [config_video_img_height]
+
+    mov ebx, [config_video_img_width]
 
     @@width_loop:
-        cmp ebx, [config_video_img_width]
+        cmp ebx, 0
         je @@end_width_loop
-        
-        ; u = width_iter / width
-        ; v = height_iter / height
-
-        mov [@@temp], ebx
-        fild [@@temp]
-        fld [@@float_width_minus_1]
-        fdiv
-        fstp [@@u]
-
-        mov [@@temp], eax
-        fild [@@temp]
-        fld [@@float_height_minus_1]
-        fdiv
-        fstp [@@v]
 
         lea ecx, [@@ray]
-        call cam_get_ray, ecx, [@@u], [@@v]
+        lea edi, [@@pixel]
+        mov edx, [config_render_samples]
+        @@sample_loop:
+            cmp edx, 0
+            je @@end_sample_loop
 
-        ;; Cast a ray with esi:destination pixel
-        call cast_ray, ecx, esi, [@@scene]
-        
+            ; u = width_iter / width
+            ; v = height_iter / height
+
+            mov [@@temp], ebx
+            fild [@@temp]
+            call random_float
+            faddp
+            fld [@@float_width_minus_1]
+            fdiv
+            fstp [@@u]
+
+            mov [@@temp], eax
+            fild [@@temp]
+            call random_float
+            faddp
+            fld [@@float_height_minus_1]
+            fdiv
+            fstp [@@v]
+
+            call cam_get_ray, ecx, [@@u], [@@v]
+
+            ;; Cast a ray with esi:destination pixel
+            call cast_ray, ecx, edi, [@@scene]
+            call vec_add, esi, esi, edi
+
+            dec edx
+            jmp @@sample_loop
+
+        @@end_sample_loop:
+
+        call vec_div_int, esi, [config_render_samples]
+
         add esi, VEC_SIZE
-        inc ebx
+        dec ebx
         jmp @@width_loop
 
     @@end_width_loop:
@@ -350,7 +370,9 @@ else
     and eax, ecx
     add eax, 16
     mov [img_rgbbuf], eax
-endif 
+endif
+
+    call memset, [img_framebuffer], 0, [img_framebuffer_size]
     ret
 endp renderer_init
 
