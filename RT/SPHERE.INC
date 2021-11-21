@@ -1,4 +1,4 @@
-include "object.inc"
+include "rt/object.inc"
 
 struc Sphere
     obj Object ?

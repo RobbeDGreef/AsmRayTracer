@@ -14,8 +14,8 @@ MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "utils.inc"
-include "vec.inc"
-include "ray.inc"
+include "rt/vec.inc"
+include "rt/ray.inc"
 include "init.inc"
 
 CODESEG

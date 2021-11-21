@@ -4,11 +4,11 @@ MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "utils.inc"
-include "vec.inc"
-include "ray.inc"
-include "sphere.inc"
-include "object.inc"
-include "hit.inc"
+include "rt/vec.inc"
+include "rt/ray.inc"
+include "rt/sphere.inc"
+include "rt/object.inc"
+include "rt/hit.inc"
 
 CODESEG
 

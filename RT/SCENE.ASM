@@ -3,11 +3,12 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-include "scene.inc"
-include "ray.inc"
-include "hit.inc"
 include "utils.inc"
 include "mm.inc"
+
+include "rt/scene.inc"
+include "rt/ray.inc"
+include "rt/hit.inc"
 
 CODESEG
 

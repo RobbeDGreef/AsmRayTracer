@@ -3,7 +3,7 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-include "video.inc"
+include "output/video.inc"
 
 VESA_VIDEO_ADDR     equ 0A0000h
 VESA_BANK_SIZE      equ (64*1024)

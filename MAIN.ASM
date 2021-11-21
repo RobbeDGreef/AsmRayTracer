@@ -3,14 +3,15 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-include "utils.inc"
-include "vec.inc"
-include "video.inc"
-include "renderer.inc"
+include "output/video.inc"
+include "rt/vec.inc"
+include "rt/renderer.inc"
+include "rt/scene.inc"
+include "rt/sphere.inc"
+include "gui/gui.inc"
+
 include "init.inc"
-include "gui.inc"
-include "scene.inc"
-include "sphere.inc"
+include "utils.inc"
 include "mm.inc"
 
 CODESEG
