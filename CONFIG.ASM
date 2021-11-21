@@ -9,5 +9,6 @@ DATASEG
     config_video_img_width              dd 800
     config_video_img_height             dd 600
     config_video_img_focal_length       dd 1.0
+    config_render_samples               dd 128
 
 END
