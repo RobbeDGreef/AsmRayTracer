@@ -146,22 +146,12 @@ proc renderer_show_img
     ret
 endp renderer_show_img
 
-proc cast_ray
-    arg @@ray:PTR Ray, @@dest_color:PTR Color, @@scene:PTR Scene
-    local @@temp_vec:Vec, @@temp:dword, @@hit:Hit
-    uses eax, ebx, ecx, edx
+proc shade_normals
+    arg @@ray:PTR Ray, @@hit:PTR Hit, @@dest_color:PTR Vec
+    local @@temp_vec:Vec
+    uses ebx, ecx, edx
 
-    lea ecx, [@@hit]
-    call scene_hit, [@@scene], [@@ray], [float_0], [float_pos_inf], ecx
-    cmp eax, 0
-    je @@background
-
-    call flt, [float_0], [ecx+Hit.t]
-    cmp eax, 1
-    jne @@background
-
-    ;; Shading our normals. This is temporary since the material invocation
-    ;; code will come here. This is just to check if our normals are correct.
+    ;; Shading our normals. This is good for debugging
     mov ebx, [@@dest_color]
     call ray_at, [@@ray], ebx, [ecx+Hit.t]
     
@@ -178,6 +168,48 @@ proc cast_ray
     call vec_set, edx, [float_1], [float_1], [float_1]
     call vec_add, ebx, ebx, edx
     call vec_mul_float, ebx, [float_0_50]
+
+    ret
+endp shade_normals
+
+proc cast_ray
+    arg @@ray:PTR Ray, @@dest_color:PTR Color, @@bounces:dword, @@scene:PTR Scene
+    local @@temp_vec:Vec, @@target:Vec, @@temp:dword, @@hit:Hit, @@bounced:Ray
+    uses eax, ebx, ecx, edx, edi, esi
+
+    cmp [@@bounces], 0
+    jne @@continue
+
+    call vec_set, [@@dest_color], [float_0],[float_0],[float_0]
+    jmp @@end
+
+@@continue:
+    lea ecx, [@@hit]
+    call scene_hit, [@@scene], [@@ray], [float_0_0_1], [float_pos_inf], ecx
+    cmp eax, 0
+    je @@background
+
+    call flt, [float_0], [ecx+Hit.t]
+    cmp eax, 1
+    jne @@background
+
+    ;call shade_normals, [@@ray], ecx, [@@dest_color] 
+
+    ;; target = random_in_unit_vector() + rec.normal
+    lea ebx, [@@target]
+    call vec_random_unit_vec, ebx
+    lea edx, [@@hit]
+    lea edx, [edx+Hit.normal]
+    call vec_add, ebx, ebx, edx
+    
+    lea edx, [@@bounced]
+    lea edi, [@@hit]
+    lea edi, [edi+Hit.hit_point]
+    call ray_set, edx, edi, ebx
+
+    dec [@@bounces]
+    call cast_ray, edx, [@@dest_color], [@@bounces], [@@scene]
+    call vec_mul_float, [@@dest_color], [float_0_50]
 
     jmp @@end
 
@@ -308,7 +340,7 @@ proc renderer_render
             call cam_get_ray, ecx, [@@u], [@@v]
 
             ;; Cast a ray with esi:destination pixel
-            call cast_ray, ecx, edi, [@@scene]
+            call cast_ray, ecx, edi, [config_render_max_bounces], [@@scene]
             call vec_add, esi, esi, edi
 
             dec edx
@@ -317,6 +349,7 @@ proc renderer_render
         @@end_sample_loop:
 
         call vec_div_int, esi, [config_render_samples]
+        call vec_sqrt, esi
 
         add esi, VEC_SIZE
         inc ebx
