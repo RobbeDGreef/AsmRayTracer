@@ -15,6 +15,7 @@ include "rt/ray.inc"
 include "rt/object.inc"
 include "rt/hit.inc"
 include "rt/scene.inc"
+include "rt/cam.inc"
 
 CODESEG
 
@@ -253,44 +254,10 @@ proc renderer_render
     fsub [float_1]
     fstp [@@float_height_minus_1]
 
-    ;; camera_loc = (0, 0, 0)
-    lea eax, [@@camera_loc]
+    ;; Set the camera location to (0, 0, 0)
+    lea eax, [@@temp_vec]
     call vec_set, eax, [float_0], [float_0], [float_0]
-    
-    ;; horizontal = (viewport_height * aspect_ratio, 0, 0)
-    lea eax, [@@horizontal]
-
-    ;; Calculate aspect ratio and multiply it with the viewport height
-    fild [config_video_img_width]
-    fild [config_video_img_height]
-    fdiv
-    fmul [viewport_height]
-    fstp [@@temp]
-    call vec_set, eax, [@@temp], [float_0], [float_0]
-
-    ;; vertical = (0, viewport_height, 0)
-    lea eax, [@@vertical]
-    call vec_set, eax, [float_0], [viewport_height], [float_0]
-
-    ;; lower_left_corner = camera_loc - horizontal / 2 - vertical / 2 
-    ;;                     - (0, 0, focal_length)
-    lea eax, [@@lower_left_corner]
-    lea ebx, [@@camera_loc]
-    call vec_cpy, eax, ebx
-
-    lea ebx, [@@temp_vec]
-    lea ecx, [@@horizontal]
-    call vec_cpy, ebx, ecx
-    call vec_div_float, ebx, [float_2]
-    call vec_sub, eax, eax, ebx
-
-    lea ecx, [@@vertical]
-    call vec_cpy, ebx, ecx
-    call vec_div_float, ebx, [float_2]
-    call vec_sub, eax, eax, ebx
-    
-    call vec_set, ebx, [float_0], [float_0], [config_video_img_focal_length]
-    call vec_sub, eax, eax, ebx
+    call cam_set_loc, eax
 
     mov esi, [img_framebuffer]
     mov eax, [config_video_img_height]
@@ -323,32 +290,10 @@ proc renderer_render
         fdiv
         fstp [@@v]
 
-        ;; ray = origin, ray_direction
-        ;; ray_direction = lower_left_corner + u*horizontal + v*vertical 
-        ;;                 - origin
-        lea edi, [@@temp_vec]
-        lea ecx, [@@lower_left_corner]
-        call vec_cpy, edi, ecx
-
-        lea ecx, [@@temp_vec2]
-        lea edx, [@@horizontal]
-        call vec_cpy, ecx, edx
-        call vec_mul_float, ecx, [@@u]
-        call vec_add, edi, edi, ecx
-
-        lea edx, [@@vertical]
-        call vec_cpy, ecx, edx
-        call vec_mul_float, ecx, [@@v]
-        call vec_add, edi, edi, ecx
-        
-        lea ecx, [@@camera_loc]
-        call vec_sub, edi, edi, ecx
-
         lea ecx, [@@ray]
-        lea edx, [@@camera_loc]
-        call ray_set, ecx, edx, edi
+        call cam_get_ray, ecx, [@@u], [@@v]
 
-        ;; Finally cast a ray with ecx:Ray and esi:destination pixel
+        ;; Cast a ray with esi:destination pixel
         call cast_ray, ecx, esi, [@@scene]
         
         add esi, VEC_SIZE
