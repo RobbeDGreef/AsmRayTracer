@@ -9,6 +9,7 @@ include "rt/ray.inc"
 include "rt/sphere.inc"
 include "rt/object.inc"
 include "rt/hit.inc"
+include "rt/mat.inc"
 
 CODESEG
 
@@ -173,7 +174,11 @@ proc hit_sphere
     call vec_sub, edx, ecx, edi
     call vec_div_float, edx, eax
 
-    mov [ebx+Hit.hit_front], dword 1
+    mov eax, [@@object]
+    lea eax, [eax+Object.material]
+    mov [ebx+Hit.hit_mat], eax
+
+    mov [ebx+Hit.hit_front], 1
 
     mov eax, [@@ray]
     lea eax, [eax+Ray.direction]
@@ -196,10 +201,10 @@ proc hit_sphere
 endp hit_sphere
 
 proc sphere_set
-    arg @@sphere:PTR Sphere, @@location:PTR Point, @@radius:dword
+    arg @@sphere:PTR Sphere, @@location:PTR Point, @@radius:dword, @@mat:PTR Mat
     uses eax, ebx
 
-    call object_set, [@@sphere], [@@location], offset hit_sphere
+    call object_set, [@@sphere], [@@location], offset hit_sphere, [@@mat]
     
     mov eax, [@@sphere]
     mov ebx, [@@radius]

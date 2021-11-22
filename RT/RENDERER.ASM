@@ -174,7 +174,7 @@ endp shade_normals
 
 proc cast_ray
     arg @@ray:PTR Ray, @@dest_color:PTR Color, @@bounces:dword, @@scene:PTR Scene
-    local @@temp_vec:Vec, @@target:Vec, @@temp:dword, @@hit:Hit, @@bounced:Ray
+    local @@temp_vec:Vec, @@target:Vec, @@temp:dword, @@hit:Hit, @@bounced:Ray, @@color:Color
     uses eax, ebx, ecx, edx, edi, esi
 
     cmp [@@bounces], 0
@@ -193,23 +193,22 @@ proc cast_ray
     cmp eax, 1
     jne @@background
 
+    ;; Usefull for debugging.
     ;call shade_normals, [@@ray], ecx, [@@dest_color] 
 
-    ;; target = random_in_unit_vector() + rec.normal
-    lea ebx, [@@target]
-    call vec_random_unit_vec, ebx
-    lea edx, [@@hit]
-    lea edx, [edx+Hit.normal]
-    call vec_add, ebx, ebx, edx
+    mov edx, [ecx+Hit.hit_mat]
+    lea edi, [@@bounced]
+    mov edx, [edx]
     
-    lea edx, [@@bounced]
-    lea edi, [@@hit]
-    lea edi, [edi+Hit.hit_point]
-    call ray_set, edx, edi, ebx
+    ;; Calculate the material scatter and bounce the ray
+    call [edx+Mat.scatter], edx, [@@ray], ecx, [@@dest_color], edi
+    cmp eax, 1
+    jne @@ret_black
 
+    lea esi, [@@color]
     dec [@@bounces]
-    call cast_ray, edx, [@@dest_color], [@@bounces], [@@scene]
-    call vec_mul_float, [@@dest_color], [float_0_50]
+    call cast_ray, edi, esi, [@@bounces], [@@scene]
+    call vec_mul, [@@dest_color], [@@dest_color], esi
 
     jmp @@end
 
