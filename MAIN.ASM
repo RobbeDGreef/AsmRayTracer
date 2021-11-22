@@ -10,6 +10,7 @@ include "rt/scene.inc"
 include "rt/sphere.inc"
 include "gui/gui.inc"
 include "rt/lmbrtian.inc"
+include "rt/metal.inc"
 
 include "init.inc"
 include "utils.inc"
@@ -21,7 +22,8 @@ GLOBAL main:PROC
 
 proc main
     local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
-          @@sphere2:Sphere, @@mat:Lambertian, @@color:Color
+          @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
+          @@color2:Color, @@sphere3:Sphere
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -33,15 +35,19 @@ proc main
     mov [@@begin_time], eax
     call video_set_mode, VIDEO_MODE_GRAPHICS
     
-
     ;; Setting up our scene
     lea ebx, [@@scene]
     call scene_init, ebx
 
     lea eax, [@@color]
     call vec_set, eax, [float_0_75], [float_0_25], [float_0_25]
-    lea edi, [@@mat]
+    lea edi, [@@lam]
     call lambertian_init, edi, eax
+
+    lea eax, [@@color2]
+    call vec_set, eax, [float_0], [float_0_50], [float_0_75]
+    lea esi, [@@met]
+    call metal_init, esi, eax
 
     lea edx, [@@loc]
     lea ecx, [@@sphere2]
@@ -54,6 +60,15 @@ proc main
     call sphere_set, ecx, edx ,[float_0_50], edi
     call scene_add, ebx, ecx
 
+    lea ecx, [@@sphere3]
+    call vec_set, edx, [float_0_75], [float_0_25], [float_minus_1]
+    call sphere_set, ecx, edx, [float_0_25], esi
+    call scene_add, ebx, ecx
+
+
+    ;; End setting up scene
+
+    ;; Start renderer
     call renderer_init
     call renderer_render, ebx
     

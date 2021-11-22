@@ -40,27 +40,40 @@ endp scene_add
 proc scene_hit
     arg @@scene:PTR Scene, @@ray:PTR Ray, @@t_min:dword, @@t_max:dword,\
         @@hit:PTR Hit
+    local @@closest_hit:dword, @@temp_hit:Hit, @@hit_something:dword
     uses ebx, ecx, edx 
+
+    mov eax, [@@t_max]
+    mov [@@closest_hit], eax
+    mov [@@hit_something], 0
 
     mov ebx, [@@scene]
     mov ecx, [ebx+Scene.head]
-    
+
 @@objectloop:
     cmp ecx, 0
-    je @@no_hit
-
-    mov edx, [ecx+SceneElement.object]
-    call [edx+Object.hit_function], edx, [@@ray], [@@t_min], [@@t_max], [@@hit]
-    cmp eax, 1
     je @@end
 
+    lea eax, [@@temp_hit]
+    mov edx, [ecx+SceneElement.object]
+    call [edx+Object.hit_function], edx, [@@ray], [@@t_min], [@@closest_hit], \
+         eax
+    cmp eax, 1
+    jne @@no_hit
+
+
+    mov [@@hit_something], 1
+    lea eax, [@@temp_hit]
+    call hit_cpy, [@@hit], eax
+    mov eax, [eax+Hit.t]
+    mov [@@closest_hit], eax
+
+@@no_hit:
     mov ecx, [ecx+SceneElement.next]
     jmp @@objectloop
 
-@@no_hit: 
-    mov eax, 0
-
 @@end:
+    mov eax, [@@hit_something]
     ret
 endp scene_hit
 
