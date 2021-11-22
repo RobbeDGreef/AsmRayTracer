@@ -212,7 +212,29 @@ proc cast_ray
 
     jmp @@end
 
+@@ret_black:
+    call vec_set, [@@dest_color], [float_0], [float_0], [float_0]
+    jmp @@end
+
 @@background:
+    
+    ;lea eax, [@@color]
+    ;lea ebx, [@@temp_vec]
+    ;call vec_set, eax, [float_0_50], [float_0_75], [float_1]
+    ;call vec_set, ebx, [float_1], [float_1], [float_1]
+    ;call lerp, [@@dest_color], [@@ray], eax, ebx
+
+    ;; A little faster, but less pretty.
+    call vec_set, [@@dest_color], [float_0_50], [float_0_75], [float_1]
+
+@@end:
+    ret
+endp cast_ray
+
+proc lerp
+    arg @@dest_color:PTR Color, @@ray:PTR Ray, @@c1:PTR Color, @@c2:PTR Color
+    local @@temp:dword, @@temp_vec:Vec
+    uses ebx, ecx
     ;; Calculate a lerp from blue to white.
     ;; Because our direction Y component goes from -1.0 to 1.0 (after 
     ;; normalisation) we scale it to 0.0 - 1.0. This is easy enough. Just add
@@ -243,12 +265,13 @@ proc cast_ray
     fst [@@temp]
 
     ;; Set the blue value 
-    call vec_set, ecx, [float_0_50], [float_0_75], [float_1]
+    call vec_cpy, ecx, [@@c1]
     call vec_mul_float, ecx, [@@temp]
 
     ;; Set the white value and lerp
     mov ebx, [@@dest_color]
-    call vec_set, ebx, [float_1], [float_1], [float_1]
+    call vec_cpy, ebx, [@@c2]
+
     fld1
     fxch
     fsub
@@ -256,10 +279,8 @@ proc cast_ray
     call vec_mul_float, ebx, [@@temp]
     ;; Finally write it to the dest color by adding both of them together
     call vec_add, ebx, ecx, ebx
-
-@@end:
     ret
-endp cast_ray
+endp lerp
 
 ;; This will render the frame of the current scene.
 ;; Setting up the scene will happen through various other functions in the 
