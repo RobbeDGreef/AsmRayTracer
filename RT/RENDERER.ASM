@@ -3,6 +3,7 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
+include "gui/gui.inc"
 include "output/video.inc"
 include "output/bmp.inc"
 include "utils.inc"
@@ -16,6 +17,7 @@ include "rt/object.inc"
 include "rt/hit.inc"
 include "rt/scene.inc"
 include "rt/cam.inc"
+include "rt/mat.inc"
 
 CODESEG
 
@@ -199,7 +201,7 @@ proc cast_ray
     mov edx, [ecx+Hit.hit_mat]
     lea edi, [@@bounced]
     mov edx, [edx]
-    
+
     ;; Calculate the material scatter and bounce the ray
     call [edx+Mat.scatter], edx, [@@ray], ecx, [@@dest_color], edi
     cmp eax, 1
@@ -321,9 +323,13 @@ proc renderer_render
     cmp eax, 0
     jl @@end_height_loop
 
-    call print_int, eax
-    call print_newline
+    mov ebx, eax
+    and ebx, 0fh
+    cmp ebx, 0
+    jne @@start_width_loop
+    call gui_progress_notify, eax, [config_video_img_height]
 
+@@start_width_loop:
     mov ebx, 0
     @@width_loop:
         cmp ebx, [config_video_img_width]
