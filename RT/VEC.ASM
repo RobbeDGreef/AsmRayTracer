@@ -52,28 +52,20 @@ endp vec_print
 ;; are equal. If they are 1 will be returned, 0 otherwise.
 proc vec_eq
     arg @@v1:PTR Vec, @@v2:PTR Vec
-    uses ebx, ecx, edi, esi
+    uses ebx, ecx
 
-    xor eax, eax
+    mov ebx, [@@v1]
+    mov ecx, [@@v2]
     
-    mov edi, [@@v1]
-    mov esi, [@@v2]
-    
-    mov ebx, [edi+Vec.x]
-    mov ecx, [esi+Vec.x]
-    call feq, ebx, ecx
+    call feq, [ebx+Vec.x], [ecx+Vec.x]
     cmp eax, 1
     jne @@end
     
-    mov ebx, [edi+Vec.y]
-    mov ecx, [esi+Vec.y]
-    call feq, ebx, ecx
+    call feq, [ebx+Vec.y], [ecx+Vec.y]
     cmp eax, 1
     jne @@end
     
-    mov ebx, [edi+Vec.z]
-    mov ecx, [esi+Vec.z]
-    call feq, ebx, ecx
+    call feq, [ebx+Vec.z], [ecx+Vec.z]
 @@end:
     ret
 endp vec_eq
@@ -350,6 +342,28 @@ proc vec_sqrt
     ret
 endp vec_sqrt
 
+proc vec_mul
+    arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
+    local @@temp:dword
+    uses eax, ebx, ecx, edx
+    mov eax, [@@dest]
+    mov ebx, [@@v1]
+    mov ecx, [@@v2]
+
+    fld [ebx+Vec.x]
+    fmul [ecx+Vec.x]
+    fstp [eax+Vec.x]
+
+    fld [ebx+Vec.y]
+    fmul [ecx+Vec.y]
+    fstp [eax+Vec.y]
+
+    fld [ebx+Vec.z]
+    fmul [ecx+Vec.z]
+    fstp [eax+Vec.z]
+    ret
+endp vec_mul
+
 proc vec_random
     arg @@v:PTR Vec, @@min:dword, @@max:dword
     local @@temp:dword
@@ -375,21 +389,20 @@ endp vec_random
 ;; essentially we just choose 3 random vectors
 ;; and if its length squared is lower than 1 it 
 ;; is in the unit vector (since x^2 + y^2 + z^2 = r^2)
-;; This is not amazingly efficient but good enough. 
-proc vec_random_in_unit_sphere
-    arg @@v:PTR Vec
-    local @@temp:dword
-    uses eax
-
+;; WARNING: TRASHES EAX 
+;; WARNING: HIGHLY OPTIMIZED, DONT CALL DIRECTLY
+vec_random_in_unit_sphere:
+    push [float_1]
+    push [float_minus_1]
+    push [esp+12]
 @@check_loop:
-    call vec_random, [@@v], [float_minus_1], [float_1]
-    call vec_length_squared, [@@v]
-    mov [@@temp], eax
-    call flt, [@@temp], [float_1]
+    call vec_random
+    call vec_length_squared
+    call flt, eax, [float_1]
     cmp eax, 1
     jne @@check_loop
+    add esp, 12
     ret
-endp vec_random_in_unit_sphere
 
 proc vec_random_unit_vec
     arg @@v:PTR Vec
@@ -402,7 +415,26 @@ proc vec_random_unit_vec
     ret
 endp vec_random_unit_vec
 
+proc vec_random_in_hemisphere
+    arg @@v:PTR Vec, @@normal:PTR Vec
+    local @@temp:dword
+
+    call vec_random_in_unit_sphere, [@@v]
+    call vec_dot, [@@v], [@@normal]
+    mov [@@temp], eax
+    call flt, [float_0], [@@temp]
+    cmp eax, 1
+    je @@end
+    call vec_mul_float, [@@v], [float_minus_1]
+    
+@@end:
+    ret
+endp vec_random_in_hemisphere
+
 DATASEG
+    ;; Kinda breaks abstraction but it has enough padding to handle future 
+    ;; enlargement of vector (even though that will never happen)
+    nullvec dd 0.0, 0.0, 0.0, 0.0, 0.0
     vec_print_x_str db "x: ", 0
     vec_print_y_str db " y: ", 0
     vec_print_z_str db " z: ", 0
