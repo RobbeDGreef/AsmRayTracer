@@ -6,6 +6,9 @@ In dosbox execute the following command
 
     RUN.BAT
 
+Since the concept of a raytracer is inherently slow, it is adivced to hold down 
+ALT+F12 to speed up the emulator until the image is rendered.
+
 ## To run the unit tests
 In dosbox execute the following command
 
