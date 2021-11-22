@@ -37,7 +37,7 @@ WSL 1 is not able to do this you will need WSL 2**.
 linux mode but this bug will soon be fixed*
 
 ## Current state of things
-![Sphere render](saved/multiple_balls.png?raw=true "First sphere render")
+![Sphere render](saved/metal_test.bmp?raw=true "First sphere render")
 
 ## Coding style
 ### Line limit
