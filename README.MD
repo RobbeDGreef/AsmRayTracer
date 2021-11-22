@@ -81,7 +81,12 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [ ] ViewAt
 - [ ] Materials
   - [ ] Diffuse materials
+    - [x] Simple perfect diffuse
+    - [ ] Configurable diffuse
   - [ ] metallic materials
+    - [x] Simple perfect metallic
+    - [ ] Configurable metallic
+  - [x] Unlit
 - [ ] Scene system
   - [x] Simple linked list
   - [ ] BVH trees (maybe)

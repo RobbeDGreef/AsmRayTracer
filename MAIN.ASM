@@ -9,8 +9,10 @@ include "rt/renderer.inc"
 include "rt/scene.inc"
 include "rt/sphere.inc"
 include "gui/gui.inc"
+
 include "rt/lmbrtian.inc"
 include "rt/metal.inc"
+include "rt/unlit.inc"
 
 include "init.inc"
 include "utils.inc"
@@ -23,7 +25,7 @@ GLOBAL main:PROC
 proc main
     local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
           @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
-          @@color2:Color, @@sphere3:Sphere
+          @@color2:Color, @@sphere3:Sphere, @@color3:Color, @@unlit:Unlit
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -46,23 +48,31 @@ proc main
 
     lea eax, [@@color2]
     call vec_set, eax, [float_0], [float_0_50], [float_0_75]
-    lea esi, [@@met]
-    call metal_init, esi, eax
+    lea edi, [@@met]
+    call metal_init, edi, eax
+
+    lea eax, [@@color3]
+    call vec_set, eax, [float_0_20], [float_0_25], [float_0_90]
+    lea edi, [@@unlit]
+    call unlit_init, edi, eax
 
     lea edx, [@@loc]
     lea ecx, [@@sphere2]
+    lea edi, [@@unlit]
     call vec_set, edx, [float_0], [sphere2_y], [float_minus_1]
     call sphere_set, ecx, edx, [sphere2_radius], edi
     call scene_add, ebx, ecx
 
     lea ecx, [@@sphere]
+    lea edi, [@@lam]
     call vec_set, edx, [float_0], [float_0], [float_minus_1]
     call sphere_set, ecx, edx ,[float_0_50], edi
     call scene_add, ebx, ecx
 
     lea ecx, [@@sphere3]
+    lea edi, [@@met]
     call vec_set, edx, [float_0_75], [float_0_25], [float_minus_1]
-    call sphere_set, ecx, edx, [float_0_25], esi
+    call sphere_set, ecx, edx, [float_0_25], edi
     call scene_add, ebx, ecx
 
 

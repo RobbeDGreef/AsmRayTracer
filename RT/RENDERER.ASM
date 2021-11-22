@@ -205,17 +205,14 @@ proc cast_ray
     ;; Calculate the material scatter and bounce the ray
     call [edx+Mat.scatter], edx, [@@ray], ecx, [@@dest_color], edi
     cmp eax, 1
-    jne @@ret_black
+    ;; If we return 0, we don't want to bounce again and just want to end.
+    jne @@end
 
     lea esi, [@@color]
     dec [@@bounces]
     call cast_ray, edi, esi, [@@bounces], [@@scene]
     call vec_mul, [@@dest_color], [@@dest_color], esi
 
-    jmp @@end
-
-@@ret_black:
-    call vec_set, [@@dest_color], [float_0], [float_0], [float_0]
     jmp @@end
 
 @@background:
