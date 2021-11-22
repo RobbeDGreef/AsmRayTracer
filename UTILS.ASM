@@ -728,7 +728,7 @@ endp sleep_millis
 
 ;; Float eq. Returns 1 in eax if the floats are equal.
 proc feq
-    arg @@arg1:dword, @@arg2:dword returns eax
+    arg @@arg1:dword, @@arg2:dword
     ;; diff = arg1 - arg2;
     ;; return (diff < elipson) && (-diff < elipson) 
     xor eax, eax
@@ -736,7 +736,7 @@ proc feq
     fld [@@arg1]
     fsubp
     fabs
-    fcom [float_epsilon]
+    fcomp [float_epsilon]
     fnstsw ax
     shr eax, 8
     and eax, 111B
@@ -807,12 +807,13 @@ random_float:
 
 random_float_ranged:
     call random_float
-    fld [esp+8]
-    fld [esp+4]
+    fld [dword esp+8]
+    fld [dword esp+4]
     fsubp
     fmulp
-    fld [esp+4]
+    fld [dword esp+4]
     faddp
+
     ret
 
 DATASEG
