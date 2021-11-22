@@ -8,7 +8,7 @@ include "config.inc"
 DATASEG
     config_video_img_width              dd 400
     config_video_img_height             dd 300
-    config_video_img_focal_length       dd 1.0
+    config_video_img_focal_length       dd 1.2
     config_render_samples               dd 8
-    config_render_max_bounces           dd 4
+    config_render_max_bounces           dd 12
 END
