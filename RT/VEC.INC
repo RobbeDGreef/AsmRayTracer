@@ -31,3 +31,10 @@ GLOBAL vec_div_int:PROC     ;; void vec_div_int(Vec* v, int i)
 GLOBAL vec_length:PROC      ;; float vec_length(Vec* v)
 GLOBAL vec_length_squared:PROC      ;; float vec_length_squared(Vec* v)
 GLOBAL vec_cross:PROC       ;; void vec_cross(Vec* dest, Vec* v1, Vec* v2)
+GLOBAL vec_sqrt:PROC        ;; void vec_sqrt(Vec* vec)
+GLOBAL vec_mul:PROC         ;; void vec_mul(Vec* dest, Vec* v1, Vec* v2)
+GLOBAL vec_random:PROC      ;; void vec_random(Vec* vec, float min, float max)
+GLOBAL vec_random_unit_vec:PROC ;; void vec_random_unit_vec(Vec* vec)
+GLOBAL vec_random_in_hemisphere:PROC ;; void vec_random_in_hemisphere(Vec* vec, Vec* normal)
+
+GLOBAL nullvec:Vec

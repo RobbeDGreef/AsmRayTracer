@@ -6,6 +6,11 @@ In dosbox execute the following command
 
     RUN.BAT
 
+Since the concept of a raytracer is inherently slow, it is adivced to hold 
+increase dosbos' cyles. This can be done by pressing CTRL+F12 multiple times
+or set it in the dosbox.conf file. Setting it to about 3GHz (3000000 cycles)
+should be enough to speed up the raytracer significantly.
+
 ## To run the unit tests
 In dosbox execute the following command
 
@@ -34,7 +39,7 @@ WSL 1 is not able to do this you will need WSL 2**.
 linux mode but this bug will soon be fixed*
 
 ## Current state of things
-![Sphere render](saved/multiple_balls.png?raw=true "First sphere render")
+![Sphere render](saved/metal_test.bmp?raw=true "First sphere render")
 
 ## Coding style
 ### Line limit
@@ -78,7 +83,12 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [ ] ViewAt
 - [ ] Materials
   - [ ] Diffuse materials
+    - [x] Simple perfect diffuse
+    - [ ] Configurable diffuse
   - [ ] metallic materials
+    - [x] Simple perfect metallic
+    - [ ] Configurable metallic
+  - [x] Unlit
 - [ ] Scene system
   - [x] Simple linked list
   - [ ] BVH trees (maybe)

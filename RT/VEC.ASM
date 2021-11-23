@@ -52,28 +52,20 @@ endp vec_print
 ;; are equal. If they are 1 will be returned, 0 otherwise.
 proc vec_eq
     arg @@v1:PTR Vec, @@v2:PTR Vec
-    uses ebx, ecx, edi, esi
+    uses ebx, ecx
 
-    xor eax, eax
+    mov ebx, [@@v1]
+    mov ecx, [@@v2]
     
-    mov edi, [@@v1]
-    mov esi, [@@v2]
-    
-    mov ebx, [edi+Vec.x]
-    mov ecx, [esi+Vec.x]
-    call feq, ebx, ecx
+    call feq, [ebx+Vec.x], [ecx+Vec.x]
     cmp eax, 1
     jne @@end
     
-    mov ebx, [edi+Vec.y]
-    mov ecx, [esi+Vec.y]
-    call feq, ebx, ecx
+    call feq, [ebx+Vec.y], [ecx+Vec.y]
     cmp eax, 1
     jne @@end
     
-    mov ebx, [edi+Vec.z]
-    mov ecx, [esi+Vec.z]
-    call feq, ebx, ecx
+    call feq, [ebx+Vec.z], [ecx+Vec.z]
 @@end:
     ret
 endp vec_eq
@@ -332,7 +324,117 @@ proc vec_cross
     ret
 endp vec_cross
 
+proc vec_sqrt
+    arg @@v:PTR Vec
+    uses eax
+    
+    mov eax, [@@v]
+    fld [eax+Vec.x]
+    fld [eax+Vec.y]
+    fld [eax+Vec.z]
+    fsqrt
+    fstp [eax+Vec.z]
+    fsqrt
+    fstp [eax+Vec.y]
+    fsqrt
+    fstp [eax+Vec.x]
+
+    ret
+endp vec_sqrt
+
+proc vec_mul
+    arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
+    local @@temp:dword
+    uses eax, ebx, ecx, edx
+    mov eax, [@@dest]
+    mov ebx, [@@v1]
+    mov ecx, [@@v2]
+
+    fld [ebx+Vec.x]
+    fmul [ecx+Vec.x]
+    fstp [eax+Vec.x]
+
+    fld [ebx+Vec.y]
+    fmul [ecx+Vec.y]
+    fstp [eax+Vec.y]
+
+    fld [ebx+Vec.z]
+    fmul [ecx+Vec.z]
+    fstp [eax+Vec.z]
+    ret
+endp vec_mul
+
+proc vec_random
+    arg @@v:PTR Vec, @@min:dword, @@max:dword
+    local @@temp:dword
+
+    call random_float_ranged, [@@min], [@@max]
+    call random_float_ranged, [@@min], [@@max]
+    call random_float_ranged, [@@min], [@@max]
+
+    fstp [@@temp]
+    push [@@temp]
+    fstp [@@temp]
+    push [@@temp]
+    fstp [@@temp]
+    push [@@temp]
+    push [@@v]
+    call vec_set
+    add esp, 16 
+
+    ret
+endp vec_random
+
+;; We generate a random vector in a unit sphere
+;; essentially we just choose 3 random vectors
+;; and if its length squared is lower than 1 it 
+;; is in the unit vector (since x^2 + y^2 + z^2 = r^2)
+;; WARNING: TRASHES EAX 
+;; WARNING: HIGHLY OPTIMIZED, DONT CALL DIRECTLY
+vec_random_in_unit_sphere:
+    push [float_1]
+    push [float_minus_1]
+    push [esp+12]
+@@check_loop:
+    call vec_random
+    call vec_length_squared
+    call flt, eax, [float_1]
+    cmp eax, 1
+    jne @@check_loop
+    add esp, 12
+    ret
+
+proc vec_random_unit_vec
+    arg @@v:PTR Vec
+    uses eax
+
+    call vec_random_in_unit_sphere, [@@v]
+    call vec_length, [@@v]
+    call vec_div_float, [@@v], eax
+
+    ret
+endp vec_random_unit_vec
+
+proc vec_random_in_hemisphere
+    arg @@v:PTR Vec, @@normal:PTR Vec
+    local @@temp:dword
+
+    call vec_random_in_unit_sphere, [@@v]
+    call vec_dot, [@@v], [@@normal]
+    mov [@@temp], eax
+    call flt, [float_0], [@@temp]
+    cmp eax, 1
+    je @@end
+    call vec_mul_float, [@@v], [float_minus_1]
+    
+@@end:
+    ret
+endp vec_random_in_hemisphere
+
 DATASEG
+    ;; Kinda breaks abstraction but it has enough padding to handle future 
+    ;; enlargement of vector (even though that will never happen)
+    nullvec dd 0.0, 0.0, 0.0, 0.0, 0.0
     vec_print_x_str db "x: ", 0
     vec_print_y_str db " y: ", 0
     vec_print_z_str db " z: ", 0

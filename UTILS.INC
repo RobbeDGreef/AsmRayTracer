@@ -55,15 +55,20 @@ GLOBAL feq:PROC                 ;; dword feq(float arg1, float arg2)
 GLOBAL flt:PROC                 ;; dword flt(float arg1, float arg2)
 
 GLOBAL random_int:PROC              ;; dword random_int()
-GLOBAL random_float:PROC            ;; void random_float() -> st0 
+GLOBAL random_float:PROC            ;; void random_float() -> st0
+GLOBAL random_float_ranged:PROC     ;; void random_float_ranged(float min, float max) -> st0
 
 ;; Float constants
 GLOBAL float_0:DWORD
+GLOBAL float_0_0_1:DWORD
+GLOBAL float_0_20:DWORD
 GLOBAL float_0_25:DWORD
 GLOBAL float_0_50:DWORD
 GLOBAL float_0_75:DWORD
+GLOBAL float_0_90:DWORD
 GLOBAL float_1:DWORD
 GLOBAL float_minus_1:DWORD
+GLOBAL float_minus_0_75:DWORD
 GLOBAL float_2:DWORD
 GLOBAL float_4:DWORD
 GLOBAL float_max_char:DWORD

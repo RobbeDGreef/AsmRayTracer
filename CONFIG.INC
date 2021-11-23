@@ -2,3 +2,5 @@ GLOBAL config_video_img_width:dword
 GLOBAL config_video_img_height:dword
 GLOBAL config_video_img_focal_length:dword
 GLOBAL config_render_samples:dword
+GLOBAL config_render_max_bounces:dword
+GLOBAL config_render_background:Vec
