@@ -26,14 +26,7 @@ proc main
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
     call renderer_init
-    ;call text_plot, 200, 200, offset test_str, 0ff0000h
-    ;call char_plot, 200, 200, 'A', 0ff0000h 
-    ;call renderer_render
-    ;call fill_background
-    ;call pixel_plot, 200, 200, 0ff2540h
-    ;call renderer_render
-    ;call draw_horizontal_line, 50, 250, 50, 0ff2540h 
-    call draw_button, 50, 150, offset test_str, 34eb58h
+    call gui_start
 
 ifndef NASM
     ;call renderer_show_img
