@@ -269,20 +269,22 @@ proc renderer_render
     cmp eax, 0
     jl @@end_height_loop
 
-    call gui_notify, eax, [config_video_img_height]
+    call print_int, eax
+    call print_newline
 
-    mov ebx, [config_video_img_width]
-
+    mov ebx, 0
     @@width_loop:
-        cmp ebx, 0
+        cmp ebx, [config_video_img_width]
         je @@end_width_loop
 
         lea ecx, [@@ray]
         lea edi, [@@pixel]
         mov edx, [config_render_samples]
+        dec edx
+
         @@sample_loop:
             cmp edx, 0
-            je @@end_sample_loop
+            jl @@end_sample_loop
 
             ; u = width_iter / width
             ; v = height_iter / height
@@ -317,7 +319,7 @@ proc renderer_render
         call vec_div_int, esi, [config_render_samples]
 
         add esi, VEC_SIZE
-        dec ebx
+        inc ebx
         jmp @@width_loop
 
     @@end_width_loop:
