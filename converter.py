@@ -50,6 +50,9 @@ class Converter:
     def __init__(self, infile, outfile):
         self.infile_name = infile
         self.inf = open(infile, "r")
+        if not os.path.exists(os.path.split(outfile)[0]):
+            os.makedirs(os.path.split(outfile)[0])
+
         self.outf = open(outfile, "w+")
         self.do_write = True
 
@@ -150,10 +153,18 @@ class Converter:
         # Remove the offset keyword since NASM doesn't need that
         if line.find("offset ") != -1:
             return line.replace("offset", "")
+        
+        sizekwd = line.find(" size ")
+        if line.startswith("size ") or sizekwd != -1:
+            t = line[sizekwd+2:].split(' ')[1]
+            if t in self.typetable:
+                return " " + str(self.typetable[t]) + " "
+            print(f"Type '{t}' not found in typetable. Cannot get size") 
+
 
         if self.current_segment == "data":
+            parts = line.split(' ')
             if line.find(" dup ") != -1:
-                parts = line.split(' ')
                 newparts = [parts[0]]
                 newparts.append('times')
                 newparts.append('(' + parts[2] + ")*" + str(self.get_type_size(parts[1])))
@@ -379,7 +390,13 @@ class Converter:
             out = ""
             for arg in reversed(self.pushed):
                 out += "pop " + arg + NEWLINE
-            out += "leave" + NEWLINE + "ret" + NEWLINE
+            
+            # Only add leave keyword when we are actually parsing a function
+            # and not, say, an optimized label function.
+            if self.parsing_function:
+                out += "leave" + NEWLINE
+            
+            out += "ret" + NEWLINE
             self.pushed.clear()
             return out
 

@@ -14,8 +14,8 @@ MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "utils.inc"
-include "vec.inc"
-include "ray.inc"
+include "rt/vec.inc"
+include "rt/ray.inc"
 include "init.inc"
 
 CODESEG
@@ -229,6 +229,23 @@ test_begin feq
     je @@completed
     call test_failed, offset test_feq_different_failed, eax
 test_end feq
+
+;; -----------------------------------------------------------------------------
+;; test_flt
+;; -----------------------------------------------------------------------------
+test_begin flt
+    call flt, [test_feq_v1], [test_feq_v3]
+    cmp al, 1
+    je @@success1
+    call test_failed, offset test_feq_less_than_failed, eax
+
+@@success1:
+    call flt, [test_feq_v3], [test_feq_v1]
+    cmp al, 0
+    je @@success2
+    call test_failed, offset test_flt_greater_failed, eax
+
+test_end flt
 
 test_begin vec_eq
     local @@v1:Vec, @@v2:Vec
@@ -605,8 +622,9 @@ proc main
     call test_itoa
     call test_strrev
     call test_memset
-    call test_file_io
+    ;call test_file_io
     call test_feq
+    call test_flt
     call test_vec_add
     call test_vec_sub
     call test_vec_dot
@@ -683,6 +701,8 @@ DATASEG
     test_feq_same_failed db "feq - same", 0
     test_feq_near_failed db "feq - near", 0
     test_feq_different_failed db "feq - different", 0
+    test_feq_less_than_failed db "flt - less than", 0
+    test_flt_greater_failed db "flt - greather than", 0
 
     test_vec_dummy_x dd 12.123
     test_vec_dummy_y dd 32.321

@@ -22,10 +22,19 @@ specific syscalls had to be replaced with their alternatives but this is not a
 big problem, we can just use `ifdef NASM <nasm code> else <tasm code> endif`
 macros.
 
+### Requirements
+You need to have `make`, `nasm`, `ld` and `python3` installed. On top of that
+you need 32 bit linux C libraries and your operating system needs to be able to 
+run 32 bit executables. **For example if you want to run this on windows,
+WSL 1 is not able to do this you will need WSL 2**.
+
 	make -f LMAKEFILE
 
+*The code currently contains a bug which doesn't show the ray traced ball in
+linux mode but this bug will soon be fixed*
+
 ## Current state of things
-![Sphere render](saved/first_sphere_dosbox.png?raw=true "First sphere render")
+![Sphere render](saved/multiple_balls.png?raw=true "First sphere render")
 
 ## Coding style
 ### Line limit
@@ -39,8 +48,8 @@ All file names should be upper case.
 Assembly language is case insensitive but try to leave everything lowercase. 
 
 ## Todo
-- [ ] utility functions
-  - [ ] print_float
+- [x] utility functions
+  - [x] print_float
 - [ ] Implement the vec class
   - [x] struct implementation
   - [x] getters and setters
@@ -57,8 +66,20 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [x] vec_eq
 - [x] Frame buffer class
   - [x] Essentially a large buffer that has a function to copy itself to memory
-- [ ] Ray class
+- [x] Ray class
   - [x] struct implementation 
-  - [ ] getters and setters
-  - [ ] at(float t) function (origin + t*direction)
+  - [x] getters and setters
+  - [x] at(float t) function (origin + t*direction)
 - [x] Compatability mode for easier debugging and profiling
+- [x] Multiple samples
+- [x] Shading
+- [ ] Camera
+  - [x] Positioned
+  - [ ] ViewAt
+- [ ] Materials
+  - [ ] Diffuse materials
+  - [ ] metallic materials
+- [ ] Scene system
+  - [x] Simple linked list
+  - [ ] BVH trees (maybe)
+- [ ] Loading objects other than spheres (maybe)

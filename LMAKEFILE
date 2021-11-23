@@ -7,6 +7,9 @@
 
 SRCS := $(wildcard *.ASM)
 SRCS := $(filter-out TEST.ASM, $(SRCS))
+SRCS += $(wildcard RT/*.ASM)
+SRCS += $(wildcard OUTPUT/*.ASM)
+SRCS += $(wildcard GUI/*.ASM)
 OBJS = ${SRCS:.ASM=.o}
 DEST = raytracer
 
@@ -17,7 +20,7 @@ NASM = nasm
 
 all: $(DEST)
 
-$(DEST): ${OBJS}
+$(DEST): $(OBJS)
 	$(LD) -e main $(LDFLAGS) -o $(DEST) $(addprefix compat/, $^)
 
 %.o: %.ASM
@@ -25,5 +28,4 @@ $(DEST): ${OBJS}
 	$(NASM) $(NASMFLAGS) -t compat/$< -o compat/$@
 
 clean:
-	#rm -rf ${OBJS} $(DEST)
-	echo ${OBJS}
+	rm -rf ${OBJS} $(DEST)
