@@ -83,7 +83,7 @@ proc renderer_to_bmp
     local @@hdr:bmp_hdr, @@dip_hdr:bmp_dip_hdr
     uses eax, ebx, ecx
 
-    call renderer_to_rgbbuffer 
+    call renderer_to_rgbbuffer
 
     call create_file, [@@file_name], 0
     mov ebx, eax
@@ -184,9 +184,6 @@ proc renderer_to_buffer
     mov eax, [@@buffer]
     mov ebx, [img_framebuffer]
 
-    call print_hex, [img_framebuffer]
-    call print_newline
-
     xor ecx, ecx
     xor edx, edx
 
@@ -275,16 +272,29 @@ proc cast_ray
     cmp eax, 0
     je @@background
 
-    lea ebx, [@@s]
-    call sphere_set, ebx, eax, [float_0_50]
+    call flt, [float_0], [ecx+Hit.t]
+    cmp eax, 1
+    jne @@background
 
-    call [ebx+Object.hit_function], ebx, [@@ray], 0, 0, 0
-    ;call hit_sphere, eax, [float_0_50], [@@ray]
+    ;; Shading our normals. This is temporary since the material invocation
+    ;; code will come here. This is just to check if our normals are correct.
+    mov ebx, [@@dest_color]
+    call ray_at, [@@ray], ebx, [ecx+Hit.t]
+    
+    mov edx, [@@ray]
+    lea edx, [edx+Ray.direction]
+    
+    lea edx, [@@temp_vec]
+    call vec_set, edx, [float_0], [float_0], [float_minus_1]
+    call vec_sub, ebx, ebx, edx
+    
+    call vec_length, ebx
+    call vec_div_float, ebx, eax
+    
+    call vec_set, edx, [float_1], [float_1], [float_1]
+    call vec_add, ebx, ebx, edx
+    call vec_mul_float, ebx, [float_0_50]
 
-    cmp eax, 0
-    je @@background
-
-    call vec_set, [@@dest_color], [float_0_50], [float_0], [float_0]
     jmp @@end
 
 @@background:
@@ -379,7 +389,8 @@ proc renderer_render
     lea eax, [@@vertical]
     call vec_set, eax, [float_0], [viewport_height], [float_0]
 
-    ;; lower_left_corner = camera_loc - horizontal / 2 - vertical / 2 - (0, 0, focal_length)
+    ;; lower_left_corner = camera_loc - horizontal / 2 - vertical / 2 
+    ;;                     - (0, 0, focal_length)
     lea eax, [@@lower_left_corner]
     lea ebx, [@@camera_loc]
     call vec_cpy, eax, ebx
