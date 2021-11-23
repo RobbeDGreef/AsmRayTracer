@@ -4,13 +4,15 @@
 
 # Settings
 main_objs = main.obj init.obj utils.obj config.obj mm.obj
-renderer_objs = vec.obj ray.obj renderer.obj sphere.obj object.obj scene.obj cam.obj mat.obj lmbrtian.obj hit.obj metal.obj unlit.obj emissive.obj
+renderer_objs = vec.obj ray.obj renderer.obj sphere.obj object.obj scene.obj cam.obj hit.obj
+material_objs = mat.obj lmbrtian.obj metal.obj unlit.obj emissive.obj
+texture_objs = 
 output_objs = bmp.obj video.obj
 gui_objs = gui.obj
 
 testobjs = init.obj test.obj utils.obj vec.obj ray.obj
 
-objs = $(main_objs) $(renderer_objs) $(output_objs) $(gui_objs)
+objs = $(main_objs) $(renderer_objs) $(material_objs) $(texture_objs) $(output_objs) $(gui_objs)
 
 dest = raytracer.exe
 
@@ -18,6 +20,8 @@ dest = raytracer.exe
 # Do NOT edit this section, unless you know what you are doing.
 # =============================================================================
 .asm: rt/
+.asm: rt/mat/
+.asm: rt/texture/
 .asm: output/
 .asm: gui/
 .asm.obj:

@@ -3,8 +3,8 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-include "rt/mat.inc"
-include "rt/emissive.inc"
+include "rt/mat/mat.inc"
+include "rt/mat/emissive.inc"
 include "rt/vec.inc"
 include "rt/hit.inc"
 include "rt/ray.inc"
@@ -34,7 +34,7 @@ proc emission
     ;; Set the emissive color to its own color * strength
     ;; note: this is calculated once in the constructor.
     mov ebx, [@@mat]
-    lea ebx, [ebx+Emissive.emissive_color]
+    lea ebx, [ebx+Emissive.emission_color]
     call vec_cpy, [@@color], ebx
 
     ret

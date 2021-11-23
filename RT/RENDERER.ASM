@@ -17,7 +17,7 @@ include "rt/object.inc"
 include "rt/hit.inc"
 include "rt/scene.inc"
 include "rt/cam.inc"
-include "rt/mat.inc"
+include "rt/mat/mat.inc"
 
 CODESEG
 

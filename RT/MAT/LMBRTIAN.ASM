@@ -3,8 +3,8 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-include "rt/mat.inc"
-include "rt/lmbrtian.inc"
+include "rt/mat/mat.inc"
+include "rt/mat/lmbrtian.inc"
 include "rt/vec.inc"
 include "rt/hit.inc"
 include "rt/ray.inc"

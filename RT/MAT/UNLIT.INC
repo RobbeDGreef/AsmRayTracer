@@ -1,4 +1,4 @@
-include "rt/mat.inc"
+include "rt/mat/mat.inc"
 include "rt/vec.inc"
 
 struc Unlit

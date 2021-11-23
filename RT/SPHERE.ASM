@@ -9,7 +9,7 @@ include "rt/ray.inc"
 include "rt/sphere.inc"
 include "rt/object.inc"
 include "rt/hit.inc"
-include "rt/mat.inc"
+include "rt/mat/mat.inc"
 
 CODESEG
 
