@@ -21,6 +21,7 @@ include "rt/mat.inc"
 
 CODESEG
 
+;; Wrapper function to render the renderer buffer to a BMP image.
 proc renderer_to_bmp
     arg @@file_name:PTR byte
 
@@ -31,6 +32,7 @@ proc renderer_to_bmp
     ret
 endp renderer_to_bmp
 
+;; 
 proc renderer_to_rgbbuffer
     call renderer_to_buffer, [img_rgbbuf], [config_video_img_width], [config_video_img_height]
     ret

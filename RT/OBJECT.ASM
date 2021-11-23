@@ -12,6 +12,8 @@ proc object_set
     arg @@obj:PTR Object, @@point:PTR Point, @@hit_function:dword, @@mat:PTR Mat
     uses eax, ebx
 
+    ;; Simply sets the values in the object struct.
+
     mov eax, [@@obj]
     lea eax, [eax+Object.location]
     mov ebx, [@@point]

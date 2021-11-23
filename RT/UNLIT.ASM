@@ -17,10 +17,13 @@ proc unlit_scatter
         @@out:PTR Ray
     uses ebx
 
+    ;; The scatter of an unlit function is just, don't bounce and return the 
+    ;; color of the function.
     mov ebx, [@@mat]
     lea ebx, [ebx+Unlit.color]
     call vec_cpy, [@@color], ebx
 
+    ;; Don't bounce, do emmission
     mov eax, 0
     ret
 endp unlit_scatter

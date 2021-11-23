@@ -1,5 +1,7 @@
 ;; Video functions
 GLOBAL video_set_mode:PROC      ;; void video_set_mode(dword mode)
+
+;; Writes the video buffer to screen
 GLOBAL video_buffer_flip:PROC   ;; void video_buffer_flip()
 
 VIDEO_MODE_TEXT         equ 3h
