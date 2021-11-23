@@ -257,7 +257,7 @@ proc cast_ray
     ;call lerp, [@@dest_color], [@@ray], eax, ebx
 
     ;; A little faster, but less pretty.
-    call vec_set, [@@dest_color], [float_0_50], [float_0_75], [float_1]
+    call vec_cpy, [@@dest_color], offset config_render_background
 
 @@end:
     ret
