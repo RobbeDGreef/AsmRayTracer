@@ -8,41 +8,58 @@ include "vec.inc"
 include "renderer.inc"
 include "init.inc"
 include "gui.inc"
+include "scene.inc"
+include "sphere.inc"
+include "mm.inc"
 
 CODESEG
 
 GLOBAL main:PROC
 
 proc main
-    local @@begin_time:dword
+    local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
+          @@sphere2:Sphere
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
     call gui_init
+    call mm_init
 
     call log_str, offset start_str
     call gettime_millis
     mov [@@begin_time], eax
     call set_video_mode, VIDEO_MODE_GRAPHICS
     
+    ;; Setting up our scene
+    lea ebx, [@@scene]
+    call scene_init, ebx
+
+    lea edx, [@@loc]
+    lea ecx, [@@sphere2]
+    call vec_set, edx, [float_0], [sphere2_y], [float_minus_1]
+    call sphere_set, ecx, edx, [sphere2_radius]
+    call scene_add, ebx, ecx
+
+    lea ecx, [@@sphere]
+    call vec_set, edx, [float_0], [float_0], [float_minus_1]
+    call sphere_set, ecx, edx ,[float_0_50]
+    call scene_add, ebx, ecx
+
+
     call renderer_init
-    call text_plot, 200, 200, offset test_str, 0ff0000h
-    ;call char_plot, 200, 200, 'A', 0ff0000h 
-    ;call renderer_render
-    ;call fill_background
-    ;call pixel_plot, 200, 200, 0ff2540h
-    ;call renderer_render
 
 ifndef NASM
-    ;call renderer_show_img
+    call text_plot, 0, 0, offset loading_str, 0ffffffh
     call renderer_buf_to_screen
-else
-    call renderer_to_bmp, offset bmpout
 endif
 
-
+    call renderer_render, ebx
+    
 ifndef NASM
+    call renderer_show_img
     call sleep_millis, 3000
+else
+    call renderer_to_bmp, offset bmpout
 endif
 
     call set_video_mode, VIDEO_MODE_TEXT
@@ -65,7 +82,11 @@ DATASEG
     finished_str db "Ray tracer finished in ", 0
     finished_str2 db " milliseconds", 0
     bmpout db "test.bmp", 0
+    loading_str db "Loading...", 0
 
     test_str db "Hello world!!", 0
+
+    sphere2_radius dd 100.0
+    sphere2_y dd -100.5
 
 END main

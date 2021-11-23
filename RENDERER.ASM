@@ -8,6 +8,10 @@ include "renderer.inc"
 include "vec.inc"
 include "ray.inc"
 include "config.inc"
+include "object.inc"
+include "hit.inc"
+include "mm.inc"
+include "scene.inc"
 
 VESA_VIDEO_ADDR     equ 0A0000h
 VESA_BANK_SIZE      equ (64*1024)
@@ -261,91 +265,22 @@ proc renderer_show_img
     ret
 endp renderer_show_img
 
-proc hit_sphere
-    arg @@center:PTR Point, @@radius:dword, @@ray:PTR Ray
-    local @@oc:Vec, @@temp:dword, @@b:dword, @@c:dword
-
-    ;; Yay math. To check if we hit a function we are making use of the good old
-    ;; 
-    ;;      (x - Cx)^2 + (y - Cy)^2 + (z - Cy)^2 = r^2 
-    ;;
-    ;; with C(x,y,z) the center of our sphere and r the radius
-    ;;
-    ;; However this is not in vector format. We want to use our vector functions
-    ;; we worked so hard on. So we can replace this with:
-    ;; 
-    ;;      (P - C) * (P - C) = (x - Cx)^2 + (y - Cy)^2 + (z - Cz)^2
-    ;; 
-    ;; So our equation becomes 
-    ;;
-    ;;      (P - C) * (P - C) = r^2+
-    ;;
-    ;; Now when we substitute P(t) = A + tB, we finally become
-    ;;
-    ;;      (A + tB - C) * (A + tB - C) = r^2 
-    ;;      t^2b * b + 2tb * (A - C) + (A + C) - r^2 = 0
-    ;;
-    ;; With that we can finally calculate the ray intersection points.
-    lea ecx, [@@oc]
-    mov ebx, [@@ray]
-    lea ebx, [ebx+Ray.origin]
-    call vec_sub, ecx, ebx, [@@center]
-    
-    mov ebx, [@@ray]
-    lea ebx, [ebx+Ray.direction]
-    call vec_dot, ebx, ebx
-    mov edx, eax
-
-    call vec_dot, ecx, ebx
-    mov [@@b], eax
-    fld [@@b]
-    fmul [float_2]
-    fstp [@@b]
-
-    fld [@@radius]
-    fmul [@@radius]
-
-    call vec_dot, ecx, ecx
-    mov [@@c], eax
-    fld [@@c]
-    fxch
-    fsub
-
-    mov [@@temp], edx
-    fld [@@temp]
-    fmul [float_4]
-    fmul
-
-    fld [@@b]
-    fmul [@@b]
-    fxch
-    fsub
-
-    fst [@@temp]
-
-    xor eax, eax
-    fldz
-    fxch
-    fcompp
-    fnstsw ax
-    shr eax, 8
-    and eax, 111B
-    cmp eax, 0
-    sete al
-    
-    ret
-endp hit_sphere
-
 proc cast_ray
-    arg @@ray:PTR Ray, @@dest_color:PTR Color
-    local @@temp_vec:Vec, @@temp:dword
+    arg @@ray:PTR Ray, @@dest_color:PTR Color, @@scene:PTR Scene
+    local @@temp_vec:Vec, @@temp:dword, @@hit:Hit
     uses eax, ebx, ecx, edx
 
-    ;; For now we are just setting up the 'scene' here. We check if we hit a 
-    ;; sphere at (0, 0, 0) with a width of 0.5 units.
-    lea eax, [@@temp_vec]
-    call vec_set, eax, [float_0], [float_0], [float_minus_1]
-    call hit_sphere, eax, [float_0_50], [@@ray]
+    lea ecx, [@@hit]
+    call scene_hit, [@@scene], [@@ray], [float_0], [float_pos_inf], ecx
+    cmp eax, 0
+    je @@background
+
+    lea ebx, [@@s]
+    call sphere_set, ebx, eax, [float_0_50]
+
+    call [ebx+Object.hit_function], ebx, [@@ray], 0, 0, 0
+    ;call hit_sphere, eax, [float_0_50], [@@ray]
+
     cmp eax, 0
     je @@background
 
@@ -409,6 +344,7 @@ endp cast_ray
 ;; This function has a very large callframe but that is not a problem since we
 ;; don't run this recursively. And this is better than doing things on the heap.
 proc renderer_render
+    arg @@scene:PTR Scene
     local @@temp:dword, @@camera_loc:Point, @@horizontal:Vec, @@vertical:Vec, \
           @@lower_left_corner:Vec, @@temp_vec:Vec, @@temp_vec2:Vec, \
           @@ray:Ray, @@u:dword, @@v:dword, @@float_width_minus_1:dword, \
@@ -519,7 +455,7 @@ proc renderer_render
         call ray_set, ecx, edx, edi
 
         ;; Finally cast a ray with ecx:Ray and esi:destination pixel
-        call cast_ray, ecx, esi
+        call cast_ray, ecx, esi, [@@scene]
         
         add esi, VEC_SIZE
         inc ebx
@@ -535,13 +471,6 @@ proc renderer_render
 
     ret
 endp renderer_render
-
-ifdef NASM
-;; compat-skip1
-extern _end
-;; compat-skip1
-extern malloc
-endif
 
 proc renderer_init
     uses eax, ebx, ecx
@@ -563,7 +492,7 @@ proc renderer_init
     mov [img_framebuffer_size], eax
 
 ifndef NASM
-    mov ebx, 0500000h                     ;; Load the video framebuffer at 3MB
+    mov ebx, 0500000h                     ;; Load the video framebuffer at 5 MB
     mov [img_framebuffer], ebx
     add ebx, eax
 
@@ -572,17 +501,10 @@ ifndef NASM
     add ebx, 16
     mov [img_rgbbuf], ebx
 else
-    ;; Allocate a little more memory
-    ;; I wanted to use the linux brk syscall but it is giving me a hard time
-    ;; so i'm going to be lazy and link in malloc. This is safer anyway.
     add eax, [img_rgbbuf_size]
     add eax, 64                     ;; Some extra padding bytes
     
-    ;; C uses a different calling convention so we need to remember and save
-    ;; the registers we are using.
-    push ecx
-    call malloc, eax
-    pop ecx 
+    call alloc, eax
 
     mov [img_framebuffer], eax
     add eax, [img_framebuffer_size]

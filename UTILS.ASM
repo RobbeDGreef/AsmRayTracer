@@ -384,7 +384,7 @@ ifndef NASM
     int 21h
 else
     mov eax, 4
-    mov ebx, 3
+    mov ebx, [@@file_handle]
     mov ecx, [@@data]
     mov edx, [@@count]
     int 80h
@@ -745,6 +745,23 @@ proc feq
     ret
 endp feq
 
+;; Float less than. Returns 1 in eax if the first float is smaller than the 
+;; second
+
+proc flt
+    arg @@arg1:dword, @@arg2:dword returns eax
+    fld [@@arg2]
+    fld [@@arg1]
+    fcompp
+    fnstsw ax
+    shr eax, 8
+    and eax, 111B
+    cmp eax, 1
+    sete al
+    ret
+endp flt
+
+
 DATASEG
     itoa_lookup db "0123456789ABCDEF"
     print_int_buffer db 16 dup (?)
@@ -762,4 +779,6 @@ DATASEG
     float_4         dd 4.0
     float_max_char  dd 255.0
     float_1000000   dd 1000000.0
+    float_pos_inf   dd 07F800000h   ; the bytes for +inf
+    float_neg_inf   dd 0FF800000h   ; the bytes for -inf
 END

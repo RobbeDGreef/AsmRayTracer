@@ -166,14 +166,28 @@ endp vec_add
 proc vec_sub
     arg @@dest:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
     local @@temp:dword
+    uses eax, ebx, ecx, edx
+    mov eax, [@@dest]
+    mov ebx, [@@v1]
+    mov ecx, [@@v2]
 
-    fld1
-    fchs
+    fld [ebx+Vec.x]
+    fsub [ecx+Vec.x]
     fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.x], edx
 
-    call vec_mul_float, [@@v2], [@@temp]
+    fld [ebx+Vec.y]
+    fsub [ecx+Vec.y]
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.y], edx
 
-    call vec_add, [@@dest], [@@v1], [@@v2]
+    fld [ebx+Vec.z]
+    fsub [ecx+Vec.z]
+    fstp [@@temp]
+    mov edx, [@@temp]
+    mov [eax+Vec.z], edx
     ret
 endp vec_sub
 
