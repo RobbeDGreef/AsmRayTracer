@@ -3,123 +3,28 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
+include "output/video.inc"
+include "output/bmp.inc"
 include "utils.inc"
-include "renderer.inc"
-include "vec.inc"
-include "ray.inc"
 include "config.inc"
-include "object.inc"
-include "hit.inc"
 include "mm.inc"
-include "scene.inc"
 
-VESA_VIDEO_ADDR     equ 0A0000h
-VESA_BANK_SIZE      equ (64*1024)
-VESA_BANK_SWITCHES  equ (VIDEO_FB_SIZE/VESA_BANK_SIZE)+1
+include "rt/renderer.inc"
+include "rt/vec.inc"
+include "rt/ray.inc"
+include "rt/object.inc"
+include "rt/hit.inc"
+include "rt/scene.inc"
 
 CODESEG
 
-;; Sets the current video mode via the BIOS. 
-proc set_video_mode
-    arg @@mode:dword
-    uses eax, ebx
-    ;; We use the bios to set the video mode
-    mov eax, 4f02h
-    mov ebx, [@@mode]
-
-ifndef NASM
-    int 10h
-endif
-    ret
-endp set_video_mode
-
-;; Local function, switches vesa banks
-proc set_bank
-    arg @@bank_number:dword
-    uses eax, ebx, edx
-
-    mov eax, 04f05h
-    xor bx, bx
-    mov edx, [@@bank_number]
-
-ifndef NASM
-    int 10h
-endif
-
-    ret
-endp set_bank
-
-BMP_HDR_ID                  equ 4d42h
-BMP_HDR_SIZE                equ 14
-BMP_DIB_SIZE                equ 40
-BMP_DIB_PLANES              equ 1
-BMP_DIB_BPP                 equ 32
-BMP_DIB_COMPRESSION_TYPE    equ 0
-BMP_DIB_COMPRESSION_SIZE    equ 0
-
-struc bmp_hdr
-    id              dw ?
-    size            dd ?
-    reserved        dd ?
-    img_data_off    dd ?
-ends bmp_hdr
-
-struc bmp_dip_hdr
-    size                    dd ?
-    img_width               dd ?
-    img_height              dd ?
-    places_cnt              dw ?
-    bpp                     dw ?
-    compression_type        dd ?
-    compression_size        dd ?
-    x_ppm                   dd ?
-    y_ppm                   dd ?
-    used_colors_cnt         dd ?
-    important_colors_cnt    dd ? 
-ends bmp_dip_hdr
-
 proc renderer_to_bmp
     arg @@file_name:PTR byte
-    local @@hdr:bmp_hdr, @@dip_hdr:bmp_dip_hdr
-    uses eax, ebx, ecx
 
     call renderer_to_rgbbuffer
-
-    call create_file, [@@file_name], 0
-    mov ebx, eax
-
-    lea eax, [@@hdr]
-    mov [word ptr eax+bmp_hdr.id], BMP_HDR_ID
-    mov ecx, BMP_HDR_SIZE+BMP_DIB_SIZE+2
-    add ecx, [img_rgbbuf_size]
-    mov [dword ptr eax+bmp_hdr.size], ecx
-    mov [dword ptr eax+bmp_hdr.img_data_off], BMP_HDR_SIZE+BMP_DIB_SIZE+2
+    call bmp_write, [@@file_name], [img_rgbbuf], [img_rgbbuf_size],\
+                    [config_video_img_width], [config_video_img_height]
     
-    call write_file, ebx, eax, BMP_HDR_SIZE
-
-    lea eax, [@@dip_hdr]
-    mov [dword ptr eax+bmp_dip_hdr.size], BMP_DIB_SIZE
-    mov ecx, [config_video_img_width]
-    mov [dword ptr eax+bmp_dip_hdr.img_width], ecx
-    mov ecx, [config_video_img_height]
-    mov [dword ptr eax+bmp_dip_hdr.img_height], ecx
-    mov [word ptr eax+bmp_dip_hdr.places_cnt], BMP_DIB_SIZE
-    mov [word ptr eax+bmp_dip_hdr.bpp], BMP_DIB_BPP
-    mov [dword ptr eax+bmp_dip_hdr.compression_type], BMP_DIB_COMPRESSION_TYPE
-    mov [dword ptr eax+bmp_dip_hdr.compression_size], BMP_DIB_COMPRESSION_SIZE
-    mov [dword ptr eax+bmp_dip_hdr.x_ppm], 0
-    mov [dword ptr eax+bmp_dip_hdr.y_ppm], 0
-    mov [dword ptr eax+bmp_dip_hdr.used_colors_cnt], 0
-    mov [dword ptr eax+bmp_dip_hdr.important_colors_cnt], 0
-
-    call write_file, ebx, eax, BMP_DIB_SIZE
-    ;; 2 pad bytes, reused ebx as address but this might as well have been 
-    ;; something else
-    call write_file, ebx, eax, 2
-
-    call write_file, ebx, [img_rgbbuf], [img_rgbbuf_size]
-    call close_file, ebx
-
     ret
 endp renderer_to_bmp
 
@@ -228,28 +133,6 @@ proc renderer_to_buffer
     ret
 endp renderer_to_buffer
 
-proc renderer_buf_to_screen
-    uses eax, ecx, edi, esi
-
-    xor eax, eax
-    lea esi, [vesa_lfb]
-
-@@copy_loop:
-    cmp eax, VESA_BANK_SWITCHES
-    je @@end
-    call set_bank, eax
-
-    mov edi, VESA_VIDEO_ADDR
-    mov ecx, VESA_BANK_SIZE/4
-    rep movsd
-    
-    inc eax
-    jmp @@copy_loop
-
-@@end:
-    ret
-endp renderer_buf_to_screen
-
 ;; Writes the current video framebuffer contents to the screen
 ;; WARNING: This is a slow function becaue it needs to convert all the RGB float
 ;; values to integers.
@@ -257,7 +140,7 @@ proc renderer_show_img
 
     lea eax, [vesa_lfb]
     call renderer_to_buffer, eax, VIDEO_FB_WIDTH, VIDEO_FB_HEIGHT 
-    call renderer_buf_to_screen
+    call video_buffer_flip
 
     ret
 endp renderer_show_img
@@ -525,13 +408,6 @@ else
 endif 
     ret
 endp renderer_init
-
-UDATASEG
-ifdef NASM
-    vesa_lfb: resb (VIDEO_FB_WIDTH*VIDEO_FB_WIDTH*VIDEO_FB_BPP)
-else
-    vesa_lfb db (VIDEO_FB_WIDTH*VIDEO_FB_WIDTH*VIDEO_FB_BPP) dup (?)
-endif
 
 DATASEG
     viewport_height dd 2.0

@@ -3,10 +3,10 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-include "gui.inc"
+include "output/video.inc"
 include "utils.inc"
-include "vec.inc"
-include "renderer.inc"
+
+include "gui/gui.inc"
 
 CODESEG
 

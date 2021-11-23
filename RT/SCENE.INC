@@ -1,4 +1,4 @@
-include "object.inc"
+include "rt/object.inc"
 
 struc SceneElement
     object dd ?

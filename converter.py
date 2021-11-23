@@ -50,6 +50,9 @@ class Converter:
     def __init__(self, infile, outfile):
         self.infile_name = infile
         self.inf = open(infile, "r")
+        if not os.path.exists(os.path.split(outfile)[0]):
+            os.makedirs(os.path.split(outfile)[0])
+
         self.outf = open(outfile, "w+")
         self.do_write = True
 

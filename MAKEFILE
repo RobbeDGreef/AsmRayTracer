@@ -3,14 +3,24 @@
 # =============================================================================
 
 # Settings
-objs = main.obj init.obj utils.obj vec.obj ray.obj renderer.obj config.obj gui.obj mm.obj sphere.obj object.obj scene.obj
-testobjs = init.obj test.obj utils.obj vec.obj ray.obj renderer.obj config.obj gui.obj mm.obj sphere.obj object.obj scene.obj
+main_objs = main.obj init.obj utils.obj config.obj mm.obj
+renderer_objs = vec.obj ray.obj renderer.obj sphere.obj object.obj scene.obj
+output_objs = bmp.obj video.obj
+gui_objs = gui.obj
+
+testobjs = init.obj test.obj utils.obj vec.obj ray.obj
+
+objs = $(main_objs) $(renderer_objs) $(output_objs) $(gui_objs)
+
 dest = raytracer.exe
 
 # =============================================================================
 # Do NOT edit this section, unless you know what you are doing.
 # =============================================================================
-.asm.obj
+.asm: rt/
+.asm: output/
+.asm: gui/
+.asm.obj:
   tasm /ml /m2 /w2 /z /zi /p /jIDEAL $<
 
 $(dest): $(objs)

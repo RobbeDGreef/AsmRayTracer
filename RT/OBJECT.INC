@@ -1,4 +1,4 @@
-include "vec.inc"
+include "rt/vec.inc"
 
 struc Object
     location Point ?
