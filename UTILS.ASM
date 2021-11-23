@@ -835,6 +835,7 @@ DATASEG
     float_0_90      dd 0.90
     float_1         dd 1.0
     float_minus_1   dd -1.0
+    float_minus_0_75 dd -0.75
     float_2         dd 2.0
     float_4         dd 4.0
     float_max_char  dd 255.0

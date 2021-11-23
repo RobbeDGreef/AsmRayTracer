@@ -36,6 +36,32 @@ proc renderer_to_rgbbuffer
     ret
 endp renderer_to_rgbbuffer
 
+proc fclamp_0_to_1
+    arg @@value:dword
+    local @@temp:dword
+
+    fld [@@value]
+    fld1
+    faddp
+
+    fld [@@value]
+    fld1
+    fsubp
+    fabs
+
+    fsubp
+    fst [@@temp]
+    fld [@@temp]
+    fabs
+    faddp
+    fmul [float_0_25]
+
+    fst [@@temp]
+
+    ret
+endp fclamp_0_to_1
+
+
 proc renderer_to_buffer
     arg @@buffer:dword, @@buf_width:dword, @@buf_height:dword
     local @@lineadd_vm:dword, @@lineadd_buf:dword
@@ -104,15 +130,15 @@ proc renderer_to_buffer
         cmp edx, [@@buf_width]
         jge @@end_width_loop
     
-        fld [dword ptr ebx+8]
+        call fclamp_0_to_1, [dword ptr ebx+8]
         fmul [float_max_char]
         fistp [word ptr eax]
          
-        fld [dword ptr ebx+4]
+        call fclamp_0_to_1, [dword ptr ebx+4]
         fmul [float_max_char]
         fistp [word ptr eax+1]
 
-        fld [dword ptr ebx]
+        call fclamp_0_to_1, [dword ptr ebx]
         fmul [float_max_char]
         fistp [word ptr eax+2]
 
@@ -176,14 +202,12 @@ endp shade_normals
 
 proc cast_ray
     arg @@ray:PTR Ray, @@dest_color:PTR Color, @@bounces:dword, @@scene:PTR Scene
-    local @@temp_vec:Vec, @@target:Vec, @@temp:dword, @@hit:Hit, @@bounced:Ray, @@color:Color
+    local @@temp_vec:Vec, @@target:Vec, @@temp:dword, @@hit:Hit, @@bounced:Ray,\
+          @@color:Color
     uses eax, ebx, ecx, edx, edi, esi
 
     cmp [@@bounces], 0
-    jne @@continue
-
-    call vec_set, [@@dest_color], [float_0],[float_0],[float_0]
-    jmp @@end
+    je @@emission
 
 @@continue:
     lea ecx, [@@hit]
@@ -204,14 +228,23 @@ proc cast_ray
 
     ;; Calculate the material scatter and bounce the ray
     call [edx+Mat.scatter], edx, [@@ray], ecx, [@@dest_color], edi
-    cmp eax, 1
-    ;; If we return 0, we don't want to bounce again and just want to end.
-    jne @@end
+    ;; If we return 0, we don't want to bounce again, just the emission
+    ;; if we return -1, don't bounce and don't do emission
+    cmp eax, 0
+    je @@emission
+    cmp eax, -1
+    je @@end
 
     lea esi, [@@color]
     dec [@@bounces]
     call cast_ray, edi, esi, [@@bounces], [@@scene]
     call vec_mul, [@@dest_color], [@@dest_color], esi
+
+@@emission:
+    cmp [edx+Mat.emission], 0
+    je @@end
+    call [edx+Mat.emission], edx, [@@ray], ecx, esi
+    call vec_add, [@@dest_color], esi
 
     jmp @@end
 
@@ -388,6 +421,12 @@ proc renderer_render
 
     ret
 endp renderer_render
+
+proc renderer_denoise
+    local @@temp:dword
+    uses eax, ebx, ecx
+    ret
+endp renderer_denoise
 
 proc renderer_init
     uses eax, ebx, ecx

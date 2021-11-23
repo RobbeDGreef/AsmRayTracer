@@ -49,12 +49,13 @@ proc lambertian_init
     arg @@mat:PTR Lambertian, @@color:PTR Color
     uses eax, ebx
 
-    mov ebx, offset lambertian_scatter
+    call mat_init, [@@mat], offset lambertian_scatter, 0
+
     mov eax, [@@mat]
-    mov [eax+Mat.scatter], ebx
     mov ebx, [@@color]
     lea eax, [eax+Lambertian.color]
     call vec_cpy, eax, ebx
+
 
     ret
 endp lambertian_init

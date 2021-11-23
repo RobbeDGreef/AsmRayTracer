@@ -6,8 +6,10 @@ In dosbox execute the following command
 
     RUN.BAT
 
-Since the concept of a raytracer is inherently slow, it is adivced to hold down 
-ALT+F12 to speed up the emulator until the image is rendered.
+Since the concept of a raytracer is inherently slow, it is adivced to hold 
+increase dosbos' cyles. This can be done by pressing CTRL+F12 multiple times
+or set it in the dosbox.conf file. Setting it to about 3GHz (3000000 cycles)
+should be enough to speed up the raytracer significantly.
 
 ## To run the unit tests
 In dosbox execute the following command

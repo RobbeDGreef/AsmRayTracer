@@ -68,6 +68,7 @@ GLOBAL float_0_75:DWORD
 GLOBAL float_0_90:DWORD
 GLOBAL float_1:DWORD
 GLOBAL float_minus_1:DWORD
+GLOBAL float_minus_0_75:DWORD
 GLOBAL float_2:DWORD
 GLOBAL float_4:DWORD
 GLOBAL float_max_char:DWORD

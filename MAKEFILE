@@ -4,7 +4,7 @@
 
 # Settings
 main_objs = main.obj init.obj utils.obj config.obj mm.obj
-renderer_objs = vec.obj ray.obj renderer.obj sphere.obj object.obj scene.obj cam.obj lmbrtian.obj hit.obj metal.obj
+renderer_objs = vec.obj ray.obj renderer.obj sphere.obj object.obj scene.obj cam.obj mat.obj lmbrtian.obj hit.obj metal.obj unlit.obj emissive.obj
 output_objs = bmp.obj video.obj
 gui_objs = gui.obj
 

@@ -1,0 +1,51 @@
+IDEAL
+P386
+MODEL FLAT, C
+ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
+
+include "rt/mat.inc"
+include "rt/emissive.inc"
+include "rt/vec.inc"
+include "rt/hit.inc"
+include "rt/ray.inc"
+include "utils.inc"
+
+CODESEG
+
+proc emissive_scatter
+    arg @@mat:PTR Emissive, @@in:PTR Ray, @@hit:PTR Hit, @@color:PTR Color,\
+        @@out:PTR Ray
+    mov eax, [@@mat]
+    lea eax, [eax+Emissive.color]
+    call vec_cpy, [@@color], eax
+    mov eax, -1
+    ret
+endp emissive_scatter
+
+proc emission
+    arg @@mat:PTR Emissive, @@ray:PTR Ray, @@hit:PTR Hit, @@color:PTR Color
+    uses ebx
+
+    mov ebx, [@@mat]
+    lea ebx, [ebx+Emissive.color]
+    call vec_cpy, [@@color], ebx
+
+    ret
+endp emission
+
+proc emissive_init
+    arg @@mat:PTR Emissive, @@color:PTR Color, @@strength:dword
+    uses eax, ebx
+
+    call mat_init, [@@mat], offset emissive_scatter, offset emission
+    
+    mov eax, [@@mat]
+    lea eax, [eax+Emissive.color]
+    call vec_cpy, eax, [@@color]
+    call vec_mul_float, eax, [@@strength]
+
+    ret
+endp emissive_init
+
+
+END

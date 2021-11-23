@@ -67,9 +67,9 @@ proc metal_init
     arg @@mat:PTR Metal, @@color:PTR Color
     uses eax, ebx
 
-    mov ebx, offset metal_scatter
+    call mat_init, [@@mat], offset metal_scatter, 0
+    
     mov eax, [@@mat]
-    mov [eax+Mat.scatter], ebx
     mov ebx, [@@color]
     lea eax, [eax+Metal.color]
     call vec_cpy, eax, ebx
