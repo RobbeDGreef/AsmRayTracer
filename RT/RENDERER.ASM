@@ -15,6 +15,7 @@ include "rt/ray.inc"
 include "rt/object.inc"
 include "rt/hit.inc"
 include "rt/scene.inc"
+include "rt/cam.inc"
 
 CODESEG
 
@@ -241,7 +242,7 @@ proc renderer_render
     local @@temp:dword, @@camera_loc:Point, @@horizontal:Vec, @@vertical:Vec, \
           @@lower_left_corner:Vec, @@temp_vec:Vec, @@temp_vec2:Vec, \
           @@ray:Ray, @@u:dword, @@v:dword, @@float_width_minus_1:dword, \
-          @@float_height_minus_1:dword
+          @@float_height_minus_1:dword, @@pixel:Vec
     uses eax, ecx, ebx, edx, edi, esi
 
     ;; First calculate width and height - 1
@@ -253,44 +254,10 @@ proc renderer_render
     fsub [float_1]
     fstp [@@float_height_minus_1]
 
-    ;; camera_loc = (0, 0, 0)
-    lea eax, [@@camera_loc]
+    ;; Set the camera location to (0, 0, 0)
+    lea eax, [@@temp_vec]
     call vec_set, eax, [float_0], [float_0], [float_0]
-    
-    ;; horizontal = (viewport_height * aspect_ratio, 0, 0)
-    lea eax, [@@horizontal]
-
-    ;; Calculate aspect ratio and multiply it with the viewport height
-    fild [config_video_img_width]
-    fild [config_video_img_height]
-    fdiv
-    fmul [viewport_height]
-    fstp [@@temp]
-    call vec_set, eax, [@@temp], [float_0], [float_0]
-
-    ;; vertical = (0, viewport_height, 0)
-    lea eax, [@@vertical]
-    call vec_set, eax, [float_0], [viewport_height], [float_0]
-
-    ;; lower_left_corner = camera_loc - horizontal / 2 - vertical / 2 
-    ;;                     - (0, 0, focal_length)
-    lea eax, [@@lower_left_corner]
-    lea ebx, [@@camera_loc]
-    call vec_cpy, eax, ebx
-
-    lea ebx, [@@temp_vec]
-    lea ecx, [@@horizontal]
-    call vec_cpy, ebx, ecx
-    call vec_div_float, ebx, [float_2]
-    call vec_sub, eax, eax, ebx
-
-    lea ecx, [@@vertical]
-    call vec_cpy, ebx, ecx
-    call vec_div_float, ebx, [float_2]
-    call vec_sub, eax, eax, ebx
-    
-    call vec_set, ebx, [float_0], [float_0], [config_video_img_focal_length]
-    call vec_sub, eax, eax, ebx
+    call cam_set_loc, eax
 
     mov esi, [img_framebuffer]
     mov eax, [config_video_img_height]
@@ -302,57 +269,55 @@ proc renderer_render
     cmp eax, 0
     jl @@end_height_loop
 
-    mov ebx, 0
+    call gui_notify, eax, [config_video_img_height]
+
+    mov ebx, [config_video_img_width]
 
     @@width_loop:
-        cmp ebx, [config_video_img_width]
+        cmp ebx, 0
         je @@end_width_loop
-        
-        ; u = width_iter / width
-        ; v = height_iter / height
-
-        mov [@@temp], ebx
-        fild [@@temp]
-        fld [@@float_width_minus_1]
-        fdiv
-        fstp [@@u]
-
-        mov [@@temp], eax
-        fild [@@temp]
-        fld [@@float_height_minus_1]
-        fdiv
-        fstp [@@v]
-
-        ;; ray = origin, ray_direction
-        ;; ray_direction = lower_left_corner + u*horizontal + v*vertical 
-        ;;                 - origin
-        lea edi, [@@temp_vec]
-        lea ecx, [@@lower_left_corner]
-        call vec_cpy, edi, ecx
-
-        lea ecx, [@@temp_vec2]
-        lea edx, [@@horizontal]
-        call vec_cpy, ecx, edx
-        call vec_mul_float, ecx, [@@u]
-        call vec_add, edi, edi, ecx
-
-        lea edx, [@@vertical]
-        call vec_cpy, ecx, edx
-        call vec_mul_float, ecx, [@@v]
-        call vec_add, edi, edi, ecx
-        
-        lea ecx, [@@camera_loc]
-        call vec_sub, edi, edi, ecx
 
         lea ecx, [@@ray]
-        lea edx, [@@camera_loc]
-        call ray_set, ecx, edx, edi
+        lea edi, [@@pixel]
+        mov edx, [config_render_samples]
+        @@sample_loop:
+            cmp edx, 0
+            je @@end_sample_loop
 
-        ;; Finally cast a ray with ecx:Ray and esi:destination pixel
-        call cast_ray, ecx, esi, [@@scene]
-        
+            ; u = width_iter / width
+            ; v = height_iter / height
+
+            mov [@@temp], ebx
+            fild [@@temp]
+            call random_float
+            faddp
+            fld [@@float_width_minus_1]
+            fdiv
+            fstp [@@u]
+
+            mov [@@temp], eax
+            fild [@@temp]
+            call random_float
+            faddp
+            fld [@@float_height_minus_1]
+            fdiv
+            fstp [@@v]
+
+            call cam_get_ray, ecx, [@@u], [@@v]
+
+            ;; Cast a ray with esi:destination pixel
+            call cast_ray, ecx, edi, [@@scene]
+            call vec_add, esi, esi, edi
+
+            dec edx
+            jmp @@sample_loop
+
+        @@end_sample_loop:
+
+        call vec_div_int, esi, [config_render_samples]
+
         add esi, VEC_SIZE
-        inc ebx
+        dec ebx
         jmp @@width_loop
 
     @@end_width_loop:
@@ -405,7 +370,9 @@ else
     and eax, ecx
     add eax, 16
     mov [img_rgbbuf], eax
-endif 
+endif
+
+    call memset, [img_framebuffer], 0, [img_framebuffer_size]
     ret
 endp renderer_init
 

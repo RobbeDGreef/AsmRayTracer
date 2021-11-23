@@ -761,11 +761,57 @@ proc flt
     ret
 endp flt
 
+;; Returns a random integer between 0 and int32_max (e.i. all positive integers)
+;; High performance random generator. The algorithm is based on Xoroshiro128 
+;; but is tweaked to be 32 bit, so essentially you could call it xoroshiro64
+;; (but i have never seen that in use so I don't know if its a thing). The CPU
+;; we are working on is 32 bit and has no support for long mode as far
+;; as I can tell. So we can't speed up and use xoroshiro128 easily.
+;;
+;; The reasons we don't use a basic LCG (linear congruential generator) is
+;; because our application requires a quasi monto carlo algorithm.  
+;;
+;; WARNING: special function, optimized, does not have proc/endp 
+;; 
+;; from testing I saw that TASM normally already optimizes the enter and leave
+;; instructions away if they are not necessary. The thing is I want to be sure
+;; about it so I'm going to leave this function manually optimized
+random_int:
+    mov eax, [rand_seed]
+    xor [rand_seed+4], eax
+    
+    rol [rand_seed], 6
+    mov eax, [rand_seed+4]
+    xor [rand_seed], eax
+    shl eax, 9
+    xor [rand_seed], eax
+    rol [rand_seed+4], 13
+    
+    mov eax, [rand_seed]
+    add eax, [rand_seed+4]
+    and eax, [int32_max]     ;; make sure the int is positive
+
+    ret
+
+;; High performance random float generator. It pushes a random float on the 
+;; floating point stack. (between 0 and 1)
+random_float:
+    push eax
+    call random_int
+    push eax
+    fild [dword esp]
+    fidiv [dword int32_max]
+    add esp, 4
+    pop eax
+    ret
 
 DATASEG
     itoa_lookup db "0123456789ABCDEF"
     print_int_buffer db 16 dup (?)
     hex_prefix db "0x", 0
+
+    int32_max dd 07FFFFFFFh
+    rand_seed dd 123456789, 987654321
 
     float_epsilon dd 0.0007
 

@@ -248,6 +248,17 @@ proc vec_div_float
     ret
 endp vec_div_float
 
+proc vec_div_int
+    arg @@v:PTR Vec, @@i:dword
+    local @@temp:dword
+
+    fld1
+    fidiv [@@i]
+    fstp [@@temp]
+    call vec_mul_float, [@@v], [@@temp]
+    ret
+endp vec_div_int
+
 proc vec_length
     arg @@v:PTR Vec returns eax
     local @@temp:dword
