@@ -18,10 +18,12 @@ proc metal_scatter
     local @@target:Vec, @@temp:Vec
     uses ebx, ecx
 
-    ;; target = random_in_unit_vector(normal)
     mov ecx, [@@hit]
     lea ecx, [ecx+Hit.normal]
     
+    ;; This perfect metal material will return a ray perfectly bounced mirrored
+    ;; over the normal line, esssentially bouncing it back perfectly.
+    ;;
     ;; unit_vector(in.direction()) - 2(unit_vector(in.direction) * hit.normal) 
     ;;                                                             * hit.normal
     
@@ -50,15 +52,20 @@ proc metal_scatter
     call vec_mul_float, ecx, [float_2]
     call vec_sub, ebx, ebx, ecx
 
+    ;; Now set the out ray with the current hit point and the bounced ray.
     mov ecx, [@@out]
     mov eax, [@@hit]
     lea eax, [eax+Hit.hit_point]
     call ray_set, ecx, eax, ebx
 
+    ;; And copy the color as always.
     mov ebx, [@@mat]
     lea ebx, [ebx+Metal.color]
     call vec_cpy, [@@color], ebx
 
+    ;; Metal materials always bounce back and are affected by emission so 1 is 
+    ;; returned. Check renderer cast_ray for more information on return values 
+    ;; of this function.
     mov eax, 1
     ret
 endp metal_scatter

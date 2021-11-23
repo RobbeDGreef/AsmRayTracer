@@ -11,6 +11,7 @@ proc hit_cpy
     arg @@dest:PTR Hit, @@src:PTR Hit
     uses edi, esi, ecx
 
+    ;; Simple copy function
     mov ecx, size Hit
     shr ecx, 2          ;; / 4    
     mov edi, [@@dest]

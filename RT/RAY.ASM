@@ -13,6 +13,8 @@ proc ray_set
     arg @@ray:PTR Ray, @@origin:PTR Point, @@direction:PTR Vec
     uses eax, ebx, ecx, edx, edi
 
+    ;; Simply sets the values in the ray struct.
+
     mov eax, [@@ray]
     mov ebx, [@@origin]
     mov ecx, [@@direction]
@@ -28,6 +30,10 @@ endp ray_set
 proc ray_at
     arg @@ray:PTR Ray, @@res:PTR Point, @@t:dword
     uses eax, ebx, edx
+
+    ;; Calculate the ray location at value 't'
+    ;;
+    ;; at = origin + direction * t
 
     mov eax, [@@ray]
     mov ebx, [@@res]

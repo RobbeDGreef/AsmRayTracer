@@ -42,9 +42,11 @@ proc bmp_write
     local @@hdr:bmp_hdr, @@dip_hdr:bmp_dip_hdr
     uses eax, ebx, ecx, edx, edi, esi
 
+    ;; Create the bmp file
     call create_file, [@@file_name], 0
     mov ebx, eax
 
+    ;; First fill the header and write it to the file
     lea eax, [@@hdr]
     mov [word ptr eax+bmp_hdr.id], BMP_HDR_ID
     mov ecx, BMP_HDR_SIZE+BMP_DIB_SIZE+2
@@ -54,6 +56,8 @@ proc bmp_write
     
     call write_file, ebx, eax, BMP_HDR_SIZE
 
+    ;; After the header, the dib header is written to file. This provides extra
+    ;; information about the bmp file.
     lea eax, [@@dip_hdr]
     mov [dword ptr eax+bmp_dip_hdr.size], BMP_DIB_SIZE
     mov ecx, [@@width]
@@ -70,10 +74,13 @@ proc bmp_write
     mov [dword ptr eax+bmp_dip_hdr.important_colors_cnt], 0
 
     call write_file, ebx, eax, BMP_DIB_SIZE
-    ;; 2 pad bytes, reused eax as address but this might as well have been 
-    ;; something else
+
+    ;; The image data in a BMP file should be 4 byte aligned so we write two 
+    ;; random bytes to the file to make sure all the following data is aligned.
+    ;; Reused the eax buffer to write the padding bytes.
     call write_file, ebx, eax, 2
 
+    ;; Save ebx because we have too little registers
     push ebx
 
     ;; BMPs store the width lines upside down for some weird reason so we have
@@ -81,6 +88,10 @@ proc bmp_write
     mov ecx, [@@width]
     shl ecx, 2              ;; * 4
 
+    ;; This part of the code uses two pointers, one starts at the top and one at
+    ;; the bottom (esi and edi respectively). Then it will swap the dwords
+    ;; between the two registers to make sure the two pointers essentially swap
+    ;; in memory.
     mov esi, [@@buf]
     mov edi, esi
     add edi, [@@buf_size]
@@ -95,6 +106,7 @@ proc bmp_write
         cmp ebx, 0
         jl @@end_swap_loop
 
+        ;; Here we swap the two buffers, dword per dword
         mov edx, [esi+ebx]
         mov eax, [edi+ebx]
         mov [esi+ebx], eax
@@ -111,6 +123,7 @@ proc bmp_write
 
 @@end_height_loop:
     
+    ;; Now finally write our mirrored buffer to file.
     pop ebx
     call write_file, ebx, [@@buf], [@@buf_size]
     call close_file, ebx

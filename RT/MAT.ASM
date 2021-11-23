@@ -11,6 +11,8 @@ proc mat_init
     arg @@mat:PTR Mat, @@scatter:dword, @@emission:dword
     uses eax, ebx, ecx
     
+    ;; Simply sets the scatter and emission variables in the structure
+
     mov eax, [@@mat]
     lea ebx, [eax+Mat.scatter]
     mov ecx, [@@scatter]
