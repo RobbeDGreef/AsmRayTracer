@@ -208,6 +208,12 @@ proc cast_ray
           @@color:Color
     uses eax, ebx, ecx, edx, edi, esi
 
+    ;; This line is veryyyyy important. We want to make sure that our return 
+    ;; color is at least black. Otherwise we might have garbage in this memory
+    ;; space and get garbage colors. (believe me i trakced a hard bug on this,
+    ;; we don't want stack values in our colors).
+    call vec_set, [@@dest_color], [float_0], [float_0], [float_0]
+
     cmp [@@bounces], 0
     je @@emission
 
