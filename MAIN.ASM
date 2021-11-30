@@ -15,6 +15,9 @@ include "rt/mat/metal.inc"
 include "rt/mat/unlit.inc"
 include "rt/mat/emissive.inc"
 
+include "rt/texture/solid.inc"
+include "rt/texture/tiles.inc"
+
 include "init.inc"
 include "utils.inc"
 include "mm.inc"
@@ -26,8 +29,8 @@ GLOBAL main:PROC
 proc main
     local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
           @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
-          @@color2:Color, @@sphere3:Sphere, @@color3:Color, @@unlit:Unlit,\
-          @@emission:Emissive, @@color4:Color
+          @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
+          @@texsolid:Solid, @@textiles:Tiles
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -43,22 +46,39 @@ proc main
     lea ebx, [@@scene]
     call scene_init, ebx
 
+    ;; Set the two colors for our tiled texture
     lea eax, [@@color]
-    call vec_set, eax, [float_0_75], [float_0_25], [float_0_25]
+    call vec_set, eax, [float_1], [float_1], [float_1]
+    lea edx, [@@color2]
+    call vec_set, edx, [float_0_20], [float_0_20], [float_0_20] 
+    
+    ;; Initialize tiled texture
+    lea ecx, [@@textiles]
+    call tiles_init, ecx, eax, edx, [float_10]
+    
+    ;; Initialize lambertian material with texture
     lea edi, [@@lam]
-    call lambertian_init, edi, eax
+    call lambertian_init, edi, ecx
 
-    lea eax, [@@color2]
+
+    ;; Set color for solid texture
+    lea eax, [@@color]
     call vec_set, eax, [float_0], [float_0_50], [float_0_75]
-    lea edi, [@@met]
-    call metal_init, edi, eax
+    
+    ;; Initialize solid texture
+    lea ecx, [@@texsolid]
+    call solid_init, ecx, eax
 
-    lea eax, [@@color3]
-    call vec_set, eax, [float_0_20], [float_0_25], [float_0_90]
+    ;; Initialize metal material with solid texture
+    lea edi, [@@met]
+    call metal_init, edi, eax ;, ecx
+
+    lea eax, [@@color]
+    call vec_set, eax, [float_0_20], [float_1], [float_0_25]
     lea edi, [@@unlit]
     call unlit_init, edi, eax
 
-    lea eax, [@@color4]
+    lea eax, [@@color]
     call vec_set, eax, [float_1], [float_1], [float_1]
     lea edi, [@@emission]
     call emissive_init, edi, eax, [float_2]
@@ -77,7 +97,7 @@ proc main
     call scene_add, ebx, ecx
 
     lea ecx, [@@sphere3]
-    lea edi, [@@emission]
+    lea edi, [@@met]
     call vec_set, edx, [float_0_75], [float_0_25], [float_minus_0_75]
     call sphere_set, ecx, edx, [float_0_25], edi
     call scene_add, ebx, ecx
@@ -120,5 +140,7 @@ DATASEG
 
     sphere2_radius dd 100.0
     sphere2_y dd -100.5
+
+    float_10 dd 10.0
 
 END main
