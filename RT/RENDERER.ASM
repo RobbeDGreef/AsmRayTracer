@@ -66,7 +66,7 @@ endp fclamp_0_to_1
 
 proc renderer_to_buffer
     arg @@buffer:dword, @@buf_width:dword, @@buf_height:dword
-    local @@lineadd_vm:dword, @@lineadd_buf:dword
+    local @@lineadd_vm:dword, @@lineadd_buf:dword, @@temp:dword
     uses eax, ebx, ecx
 
     ;; Pseudo for width (the same goes for height)
@@ -182,21 +182,16 @@ proc shade_normals
     uses ebx, ecx, edx
 
     ;; Shading our normals. This is good for debugging
+    ;; (normal + (1, 1, 1)) * 0.5
+    
     mov ebx, [@@dest_color]
-    call ray_at, [@@ray], ebx, [ecx+Hit.t]
-    
-    mov edx, [@@ray]
-    lea edx, [edx+Ray.direction]
-    
-    lea edx, [@@temp_vec]
-    call vec_set, edx, [float_0], [float_0], [float_minus_1]
-    call vec_sub, ebx, ebx, edx
-    
-    call vec_length, ebx
-    call vec_div_float, ebx, eax
-    
-    call vec_set, edx, [float_1], [float_1], [float_1]
-    call vec_add, ebx, ebx, edx
+    mov ecx, [@@hit]
+    lea ecx, [ecx+Hit.normal]
+
+    call vec_cpy, ebx, ecx
+    lea ecx, [@@temp_vec]
+    call vec_set, ecx, [float_1], [float_1], [float_1]
+    call vec_add, ebx, ebx, ecx
     call vec_mul_float, ebx, [float_0_50]
 
     ret
@@ -217,7 +212,6 @@ proc cast_ray
     cmp [@@bounces], 0
     je @@emission
 
-@@continue:
     lea ecx, [@@hit]
     call scene_hit, [@@scene], [@@ray], [float_0_0_1], [float_pos_inf], ecx
     cmp eax, 0
@@ -229,6 +223,7 @@ proc cast_ray
 
     ;; Usefull for debugging.
     ;call shade_normals, [@@ray], ecx, [@@dest_color] 
+    ;jmp @@end
 
     mov edx, [ecx+Hit.hit_mat]
     lea edi, [@@bounced]
@@ -413,6 +408,8 @@ proc renderer_render
         @@end_sample_loop:
 
         call vec_div_int, esi, [config_render_samples]
+        
+        ;; Do gamma correction
         call vec_sqrt, esi
 
         add esi, VEC_SIZE
