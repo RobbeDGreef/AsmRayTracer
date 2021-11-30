@@ -53,6 +53,7 @@ GLOBAL memmove:PROC             ;; void* memmove(void *d, void *s, dword length)
 ;; Float functions
 GLOBAL feq:PROC                 ;; dword feq(float arg1, float arg2)
 GLOBAL flt:PROC                 ;; dword flt(float arg1, float arg2)
+GLOBAL fpu_arccos:PROC          ;; void fpu_arccos(void) (st0->st0)
 
 GLOBAL random_int:PROC              ;; dword random_int()
 GLOBAL random_float:PROC            ;; void random_float() -> st0

@@ -42,10 +42,11 @@ proc lambertian_scatter
     lea eax, [eax+Hit.hit_point]
     call ray_set, ecx, eax, ebx
 
-    ;; And lastly copy the correct color.
+    ;; And lastly invoke the texture 
     mov ebx, [@@mat]
-    lea ebx, [ebx+Lambertian.color]
-    call vec_cpy, [@@color], ebx
+    mov ebx, [ebx+Lambertian.texture]
+    mov ecx, [@@hit]
+    call [ebx+Texture.get_color], ebx, [ecx+Hit.u], [ecx+Hit.v], [@@color]
 
     ;; Since diffuse materials ALWAYS scatter and should get effected by 
     ;; emission return 1. See renderer cast_ray for more information on return 
@@ -55,18 +56,16 @@ proc lambertian_scatter
 endp lambertian_scatter
 
 proc lambertian_init
-    arg @@mat:PTR Lambertian, @@color:PTR Color
+    arg @@mat:PTR Lambertian, @@tex:PTR Texture
     uses eax, ebx
-
+ 
     call mat_init, [@@mat], offset lambertian_scatter, 0
 
     mov eax, [@@mat]
-    mov ebx, [@@color]
-    lea eax, [eax+Lambertian.color]
-    call vec_cpy, eax, ebx
+    mov ebx, [@@tex]
+    mov [eax+Lambertian.texture], ebx
 
     ret
 endp lambertian_init
-
 
 END
