@@ -8,4 +8,4 @@ struc Tiles
     scale dword ?
 ends Tiles
 
-GLOBAL tiles_init:PROC ;; void tiles_init(Tiles* tex, Color* color)
+GLOBAL tiles_init:PROC ;; void tiles_init(Tiles* tex, Color* primary, Color* secondary, float scale)
