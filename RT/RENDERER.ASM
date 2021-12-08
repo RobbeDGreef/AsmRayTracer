@@ -5,7 +5,7 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "gui/gui.inc"
 include "output/video.inc"
-include "output/bmp.inc"
+include "bmp.inc"
 include "utils.inc"
 include "config.inc"
 include "mm.inc"
