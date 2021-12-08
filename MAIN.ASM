@@ -17,9 +17,11 @@ include "rt/mat/emissive.inc"
 
 include "rt/texture/solid.inc"
 include "rt/texture/tiles.inc"
+include "rt/texture/image.inc"
 
 include "init.inc"
 include "utils.inc"
+include "bmp.inc"
 include "mm.inc"
 
 CODESEG
@@ -30,7 +32,7 @@ proc main
     local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
           @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
           @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
-          @@texsolid:Solid, @@textiles:Tiles
+          @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -56,10 +58,12 @@ proc main
     lea ecx, [@@textiles]
     call tiles_init, ecx, eax, edx, [float_10]
     
+    lea ecx, [@@teximage]
+    call image_init, ecx, offset football_texture
+
     ;; Initialize lambertian material with texture
     lea edi, [@@lam]
     call lambertian_init, edi, ecx
-
 
     ;; Set color for solid texture
     lea eax, [@@color]
@@ -137,6 +141,8 @@ DATASEG
     bmpout db "test.bmp", 0
 
     test_str db "Hello world!!", 0
+    
+    football_texture db "IMAGES/FOOTBALL.BMP", 0
 
     sphere2_radius dd 100.0
     sphere2_y dd -100.5

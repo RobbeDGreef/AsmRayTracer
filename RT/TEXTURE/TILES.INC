@@ -5,7 +5,7 @@ struc Tiles
     texture Texture ?
     primary_color Color ?
     secondary_color Color ?
-    scale dword ?
+    scale dd ?
 ends Tiles
 
 GLOBAL tiles_init:PROC ;; void tiles_init(Tiles* tex, Color* primary, Color* secondary, float scale)
