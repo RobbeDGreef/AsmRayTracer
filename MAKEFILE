@@ -6,13 +6,14 @@
 main_objs = main.obj init.obj utils.obj config.obj mm.obj
 renderer_objs = vec.obj ray.obj renderer.obj sphere.obj object.obj scene.obj cam.obj hit.obj
 material_objs = mat.obj lmbrtian.obj metal.obj unlit.obj emissive.obj
-texture_objs = solid.obj texture.obj tiles.obj
+texture_objs = solid.obj texture.obj tiles.obj image.obj
 output_objs = bmp.obj video.obj
 gui_objs = gui.obj
+input_objs = bmpread.obj
 
 testobjs = init.obj test.obj utils.obj vec.obj ray.obj
 
-objs = $(main_objs) $(renderer_objs) $(material_objs) $(texture_objs) $(output_objs) $(gui_objs)
+objs = $(main_objs) $(renderer_objs) $(material_objs) $(texture_objs) $(output_objs) $(gui_objs) $(input_objs)
 
 dest = raytracer.exe
 
@@ -24,6 +25,7 @@ dest = raytracer.exe
 .asm: rt/texture/
 .asm: output/
 .asm: gui/
+.asm: input/
 .asm.obj:
   tasm /ml /m2 /w2 /z /zi /p /jIDEAL $<
 

@@ -11,6 +11,7 @@ SRCS += $(wildcard RT/*.ASM)
 SRCS += $(wildcard RT/MAT/*.ASM)
 SRCS += $(wildcard RT/TEXTURE/*.ASM)
 SRCS += $(wildcard OUTPUT/*.ASM)
+SRCS += $(wildcard INPUT/*.ASM)
 SRCS += $(wildcard GUI/*.ASM)
 OBJS = ${SRCS:.ASM=.o}
 DEST = raytracer
