@@ -32,7 +32,7 @@ proc main
     local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
           @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
           @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
-          @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,
+          @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -75,7 +75,7 @@ proc main
 
     ;; Initialize metal material with solid texture
     lea edi, [@@met]
-    call metal_init, edi, eax ;, ecx
+    call metal_init, edi, ecx
 
     lea eax, [@@color]
     call vec_set, eax, [float_0_20], [float_1], [float_0_25]

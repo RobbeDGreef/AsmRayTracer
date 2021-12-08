@@ -58,10 +58,11 @@ proc metal_scatter
     lea eax, [eax+Hit.hit_point]
     call ray_set, ecx, eax, ebx
 
-    ;; And copy the color as always.
+    ;; And lastly invoke the texture 
     mov ebx, [@@mat]
-    lea ebx, [ebx+Metal.color]
-    call vec_cpy, [@@color], ebx
+    mov ebx, [ebx+Metal.texture]
+    mov ecx, [@@hit]
+    call [ebx+Texture.get_color], ebx, [ecx+Hit.u], [ecx+Hit.v], [@@color]
 
     ;; Metal materials always bounce back and are affected by emission so 1 is 
     ;; returned. Check renderer cast_ray for more information on return values 
@@ -71,15 +72,14 @@ proc metal_scatter
 endp metal_scatter
 
 proc metal_init
-    arg @@mat:PTR Metal, @@color:PTR Color
+    arg @@mat:PTR Metal, @@tex:PTR Texture
     uses eax, ebx
 
     call mat_init, [@@mat], offset metal_scatter, 0
     
     mov eax, [@@mat]
-    mov ebx, [@@color]
-    lea eax, [eax+Metal.color]
-    call vec_cpy, eax, ebx
+    mov ebx, [@@tex]
+    mov [eax+Metal.texture], ebx
 
     ret
 endp metal_init

@@ -1,5 +1,5 @@
 include "rt/mat/mat.inc"
-include "rt/texture/solid.inc"
+include "rt/texture/texture.inc"
 include "rt/vec.inc"
 
 struc Lambertian
