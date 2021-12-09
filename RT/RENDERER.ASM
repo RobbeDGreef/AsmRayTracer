@@ -353,9 +353,9 @@ proc renderer_render
     fstp [@@float_height_minus_1]
 
     ;; Set the camera location to (0, 0, 0)
-    lea eax, [@@temp_vec]
-    call vec_set, eax, [float_0], [float_0], [float_0]
-    call cam_set_loc, eax
+    lea eax, [config_render_cam_pos]
+    lea ebx, [config_render_cam_look_at]
+    call cam_set_loc, eax, ebx
 
     mov esi, [img_framebuffer]
     mov eax, [config_video_img_height]

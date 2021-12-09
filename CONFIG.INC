@@ -6,3 +6,5 @@ GLOBAL config_render_samples:dword
 GLOBAL config_render_max_bounces:dword
 GLOBAL config_render_background:dword ;; vec
 GLOBAL config_render_hdri_path:PTR byte
+GLOBAL config_render_cam_pos:dword ;; vec
+GLOBAL config_render_cam_look_at:dword ;; vec

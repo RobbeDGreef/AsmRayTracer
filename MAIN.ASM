@@ -48,7 +48,7 @@ proc main
     ;; Setting up our scene
     lea ebx, [@@scene]
     call scene_init, ebx
-    jmp @@setup_scene_hdri_test
+    jmp @@setup_football_scene
 
     ;; =========================================================================
     ;; main scene
@@ -184,6 +184,27 @@ proc main
     call sphere_set, ecx, edx, [float_0_25], edi
     call scene_add, ebx, ecx
 
+    jmp @@start_renderer
+
+    ;; =========================================================================
+    ;; Football scene
+    ;; =========================================================================
+@@setup_football_scene:
+    ;; Initialize solid texture
+    lea ecx, [@@teximage]
+    call image_init, ecx, offset football_texture
+
+    ;; Initialize the metal material
+    lea edi, [@@lam]
+    call lambertian_init, edi, ecx
+
+    ;; Now finally set up the sphere
+    lea ecx, [@@sphere3]
+    lea edx, [@@loc]
+    call vec_set, edx, [float_0], [float_minus_0_25], [float_minus_2]
+    call sphere_set, ecx, edx, [float_0_25], edi
+    call scene_add, ebx, ecx
+    
     jmp @@start_renderer
 
     ;; End setting up scene
