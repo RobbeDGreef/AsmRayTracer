@@ -33,7 +33,7 @@ proc main
           @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
           @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
           @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,\ 
-          @@texsolid2:Solid, @@met2:Metal
+          @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -118,13 +118,34 @@ proc main
     ;; HDRI test scene
     ;; =========================================================================
 @@setup_scene_hdri_test:
-
     ;; -------------------------------------------------------------------------
-    ;; Ball in the middle
+    ;; Ball in the middle (copper)
     ;; -------------------------------------------------------------------------
     ;; Set color for solid texture
     lea eax, [@@color]
-    call vec_set, eax, [float_0_80], [float_0_60], [float_0]
+    call vec_set_rgb, eax, 176, 110, 55
+    
+    ;; Initialize solid texture
+    lea ecx, [@@texsolid3]
+    call solid_init, ecx, eax
+
+    ;; Initialize the metal material
+    lea edi, [@@met3]
+    call metal_init, edi, ecx
+
+    ;; Now finally set up the sphere
+    lea ecx, [@@sphere3]
+    lea edx, [@@loc]
+    call vec_set, edx, [float_minus_0_75], [float_minus_0_25], [float_minus_2]
+    call sphere_set, ecx, edx, [float_0_25], edi
+    call scene_add, ebx, ecx
+
+    ;; -------------------------------------------------------------------------
+    ;; Ball in the middle (gold)
+    ;; -------------------------------------------------------------------------
+    ;; Set color for solid texture
+    lea eax, [@@color]
+    call vec_set_rgb, eax, 165, 125, 0
     
     ;; Initialize solid texture
     lea ecx, [@@texsolid2]
@@ -137,16 +158,16 @@ proc main
     ;; Now finally set up the sphere
     lea ecx, [@@sphere2]
     lea edx, [@@loc]
-    call vec_set, edx, [float_0], [float_minux_0_25], [float_minus_1]
+    call vec_set, edx, [float_0], [float_minus_0_25], [float_minus_2]
     call sphere_set, ecx, edx, [float_0_25], edi
     call scene_add, ebx, ecx
 
     ;; -------------------------------------------------------------------------
-    ;; Ball on the right
+    ;; Ball on the right (silver)
     ;; -------------------------------------------------------------------------
     ;; Set color for solid texture
     lea eax, [@@color]
-    call vec_set, eax, [float_0_25], [float_0_25], [float_0_25]
+    call vec_set_rgb, eax, 192, 192, 192
     
     ;; Initialize solid texture
     lea ecx, [@@texsolid]
@@ -159,7 +180,7 @@ proc main
     ;; Now finally set up the sphere
     lea ecx, [@@sphere]
     lea edx, [@@loc]
-    call vec_set, edx, [float_0_75], [float_minux_0_25], [float_minus_1]
+    call vec_set, edx, [float_0_75], [float_minus_0_25], [float_minus_2]
     call sphere_set, ecx, edx, [float_0_25], edi
     call scene_add, ebx, ecx
 
@@ -207,7 +228,8 @@ DATASEG
     sphere2_y dd -100.5
 
     float_10            dd 10.0
-    float_minux_0_25    dd -0.25
+    float_minus_0_25    dd -0.25
+    float_minus_2       dd -2.0
     float_0_80          dd 0.80
     float_0_60          dd 0.60
 
