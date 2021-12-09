@@ -108,22 +108,37 @@ proc bmp_read
     cmp ecx, edi
     jl @@end_loop
 
-    movzx eax, [byte ptr ecx]
+    movzx eax, [byte ptr ecx+2]
     mov [@@temp], eax
     fild [@@temp]
     fdiv [float_max_char]
+
+    ;; Essentially what we do here is x^2 where x is the current value on the 
+    ;; fpu stack. This is necessary because BMP images are gamma corrected as 
+    ;; are most images. This is fine when a program needs to display the image
+    ;; but we already do gamma correction at the end of a raytrace. Meaning we
+    ;; would gamma correct these twice. Which causes overexposure of the image
+    ;; so we do the inverse of a gamma correction (gamma correction is sqrt) to
+    ;; undo the previous one.
+    fst [@@temp]
+    fmul [@@temp]
+
     fstp [dword ptr ebx]
     
     movzx eax, [byte ptr ecx+1]
     mov [@@temp], eax
     fild [@@temp]
     fdiv [float_max_char]
+    fst [@@temp]
+    fmul [@@temp]
     fstp [dword ptr ebx+4]
 
-    movzx eax, [byte ptr ecx+2]
+    movzx eax, [byte ptr ecx]
     mov [@@temp], eax
     fild [@@temp]
     fdiv [float_max_char]
+    fst [@@temp]
+    fmul [@@temp]
     fstp [dword ptr ebx+8]
 
     sub ebx, VEC_SIZE

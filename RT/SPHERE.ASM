@@ -13,6 +13,50 @@ include "rt/mat/mat.inc"
 
 CODESEG
 
+proc sphere_calc_coords
+    arg @@normal:PTR Vec, @@u:PTR dword, @@v:PTR dword
+    local @@temp:dword
+    uses eax, ebx, ecx
+
+    mov ecx, [@@normal]
+
+    ;; u = (atan2(-normal.z, normal.x) + pi) / (2*pi)
+    call vec_get_z, ecx
+    mov [@@temp], eax
+    fld [@@temp]
+    fchs
+    call vec_get_x, ecx
+    mov [@@temp], eax
+    fld [@@temp]
+    fpatan          ;; arctan(st(1) / st(0))
+    fldpi
+    faddp
+
+    fldpi
+    fldpi
+    faddp
+    fdivp
+    fstp [@@temp]
+    mov ebx, [@@u]
+    mov eax, [@@temp]
+    mov [ebx], eax
+
+    ;; v = acos(-normal.y) / pi
+    call vec_get_y, ecx
+    mov [@@temp], eax
+    fld [@@temp]
+    fchs
+    call fpu_arccos
+    fldpi
+    fdiv 
+    fstp [@@temp]
+    mov ebx, [@@v]
+    mov eax, [@@temp]
+    mov [ebx], eax
+
+    ret
+endp sphere_calc_coords
+
 proc hit_sphere
     arg @@object:PTR Object, @@ray:PTR Ray, @@t_min:dword, @@t_max:dword,\
         @@hit:PTR Hit
@@ -169,6 +213,11 @@ proc hit_sphere
     lea ecx, [ebx+Hit.hit_point]
     call ray_at, [@@ray], ecx, [@@root]
     
+    ;; Set the material we hit
+    mov eax, [@@object]
+    lea eax, [eax+Object.material]
+    mov [ebx+Hit.hit_mat], eax
+
     ;; Calculate the hit normal
     ;; The normal on a sphere can easily be calculated with the following 
     ;; formula:
@@ -183,45 +232,15 @@ proc hit_sphere
     call vec_sub, edx, ecx, edi
     call vec_div_float, edx, eax
 
-    ;; Set the material we hit
-    mov eax, [@@object]
-    lea eax, [eax+Object.material]
-    mov [ebx+Hit.hit_mat], eax
-
     ;; Calculate the UV coordinates of a sphere. We are going to use spherical
     ;; cooridnates. Those are the simplest.
     ;;
     ;;      todo: write out math 
 
     lea ecx, [ebx+Hit.normal]
-    
-    ;; u = (atan2(-normal.z, normal.x) + pi) / (2*pi)
-    call vec_get_z, ecx
-    mov [@@temp], eax
-    fld [@@temp]
-    fchs
-    call vec_get_x, ecx
-    mov [@@temp], eax
-    fld [@@temp]
-    fpatan          ;; arctan(st(1) / st(0))
-    fldpi
-    faddp
-
-    fldpi
-    fldpi
-    faddp
-    fdivp
-    fstp [ebx+Hit.u]
-    
-    ;; v = acos(-normal.y) / pi
-    call vec_get_y, ecx
-    mov [@@temp], eax
-    fld [@@temp]
-    fchs
-    call fpu_arccos
-    fldpi
-    fdiv 
-    fstp [ebx+Hit.v]
+    lea eax, [ebx+Hit.u]
+    lea edi, [ebx+Hit.v]
+    call sphere_calc_coords, ecx, eax, edi
 
     ;; Calculate whether or not we hit the front of the face or the back
     mov [ebx+Hit.hit_front], 1

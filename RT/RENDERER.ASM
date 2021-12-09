@@ -18,6 +18,8 @@ include "rt/hit.inc"
 include "rt/scene.inc"
 include "rt/cam.inc"
 include "rt/mat/mat.inc"
+include "rt/texture/image.inc"
+include "rt/sphere.inc"
 
 CODESEG
 
@@ -200,7 +202,7 @@ endp shade_normals
 proc cast_ray
     arg @@ray:PTR Ray, @@dest_color:PTR Color, @@bounces:dword, @@scene:PTR Scene
     local @@temp_vec:Vec, @@target:Vec, @@temp:dword, @@hit:Hit, @@bounced:Ray,\
-          @@color:Color
+          @@color:Color, @@u:dword, @@v:dword
     uses eax, ebx, ecx, edx, edi, esi
 
     ;; This line is veryyyyy important. We want to make sure that our return 
@@ -210,7 +212,7 @@ proc cast_ray
     call vec_set, [@@dest_color], [float_0], [float_0], [float_0]
 
     cmp [@@bounces], 0
-    je @@emission
+    je @@background
 
     lea ecx, [@@hit]
     call scene_hit, [@@scene], [@@ray], [float_0_0_1], [float_pos_inf], ecx
@@ -253,14 +255,23 @@ proc cast_ray
 
 @@background:
     
-    ;lea eax, [@@color]
-    ;lea ebx, [@@temp_vec]
-    ;call vec_set, eax, [float_0_50], [float_0_75], [float_1]
-    ;call vec_set, ebx, [float_1], [float_1], [float_1]
-    ;call lerp, [@@dest_color], [@@ray], eax, ebx
-
-    ;; A little faster, but less pretty.
+    cmp [img_hdri_texture], 0
+    jne @@hdri_texture
     call vec_cpy, [@@dest_color], offset config_render_background
+    jmp @@end
+
+@@hdri_texture:
+    lea ebx, [@@u]
+    lea ecx, [@@v]
+    mov edx, [@@ray]
+    lea edx, [edx+Ray.direction]
+    lea edi, [@@temp_vec]
+    call vec_cpy, edi, edx
+    call vec_length, edi
+    call vec_div_float, edi, eax
+
+    call sphere_calc_coords, edi, ebx, ecx
+    call image_get_color, [img_hdri_texture], [ebx], [ecx], [@@dest_color]
 
 @@end:
     ret
@@ -452,16 +463,6 @@ proc renderer_init
     mul ebx
     mov [img_framebuffer_size], eax
 
-ifndef NASM
-    mov ebx, 0500000h                     ;; Load the video framebuffer at 5 MB
-    mov [img_framebuffer], ebx
-    add ebx, eax
-
-    ;; Make sure it is 16bytes aligned (for optimalisation reasons)
-    and ebx, ecx
-    add ebx, 16
-    mov [img_rgbbuf], ebx
-else
     add eax, [img_rgbbuf_size]
     add eax, 64                     ;; Some extra padding bytes
     
@@ -472,9 +473,16 @@ else
     and eax, ecx
     add eax, 16
     mov [img_rgbbuf], eax
-endif
 
     call memset, [img_framebuffer], 0, [img_framebuffer_size]
+
+    cmp [config_render_hdri_path], 0
+    je @@end
+    call alloc, size Image
+    mov [img_hdri_texture], eax
+    call image_init, eax, offset config_render_hdri_path
+
+@@end:
     ret
 endp renderer_init
 
@@ -486,6 +494,7 @@ DATASEG
     img_rgbbuf            dd 0
     img_framebuffer_size  dd 0
     img_rgbbuf_size       dd 0
+    img_hdri_texture      dd 0
 
     render_start_str db "Render start", 0
 

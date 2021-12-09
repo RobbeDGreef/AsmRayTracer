@@ -763,19 +763,21 @@ endp flt
 
 ;; Calculates the arccos(x). Takes answer on the fpu stack and 
 ;; returns the answer on the fpu stack.
-fpu_arccos:
+proc fpu_arccos
+    local @@temp:dword
     ;; arccos(x) = 2arctan(sqrt(1-x^2) / (1+x))
-    fst [esp-4]
-    fmul [esp-4]
+    fst [@@temp]
+    fmul [@@temp]
     fld1
     fsubrp
     fsqrt
     fld1
-    fadd [esp-4]
+    fadd [@@temp]
     fpatan         ;; this instruction does arctan(st(1) / st(0)) 
     fmul [float_2]
 
     ret
+endp fpu_arccos
 
 ;; Returns a random integer between 0 and int32_max (e.i. all positive integers)
 ;; High performance random generator. The algorithm is based on Xoroshiro128 

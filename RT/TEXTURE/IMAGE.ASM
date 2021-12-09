@@ -65,7 +65,7 @@ proc image_init
     lea ecx, [ebx+Image.width]
     lea edx, [ebx+Image.height]
     call bmp_read, [@@image_path], ecx, edx
-    mov [ebx+Image.buffer], eax 
+    mov [ebx+Image.buffer], eax
 
 ;    mov ebx, [@@tex]
 ;    mov [ebx+Image.width], 40
