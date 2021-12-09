@@ -779,6 +779,11 @@ proc fpu_arccos
     ret
 endp fpu_arccos
 
+proc fpu_degrees_to_radians
+    fmul [degrees_to_radians_magic]
+    ret
+endp fpu_degrees_to_radians
+
 ;; Returns a random integer between 0 and int32_max (e.i. all positive integers)
 ;; High performance random generator. The algorithm is based on Xoroshiro128 
 ;; but is tweaked to be 32 bit, so essentially you could call it xoroshiro64
@@ -860,4 +865,5 @@ DATASEG
     float_1000000   dd 1000000.0
     float_pos_inf   dd 07F800000h   ; the bytes for +inf
     float_neg_inf   dd 0FF800000h   ; the bytes for -inf
+    degrees_to_radians_magic dd 0.017453292
 END

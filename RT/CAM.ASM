@@ -21,6 +21,18 @@ proc cam_set_loc
     ;; Set the camera location
     call vec_cpy, offset cam_loc, [@@loc]
     
+    ;; viewport_height = 2.0 * tan(radians(fov)/2);
+    fld [config_video_img_fov]
+    call fpu_degrees_to_radians
+    fdiv [float_2]
+    fptan
+    ;; For some reason fptan computes the tangent and then pushes 1.0 onto the 
+    ;; fpu stack? Meaning we have to pop that off first so I just pop it to an
+    ;; unused temp variable.
+    fstp [@@temp]
+    fmul [cam_viewport_height]
+    fstp [cam_viewport_height]
+
     ;; aspect_ratio = width/height
     fild [config_video_img_width]
     fild [config_video_img_height]
