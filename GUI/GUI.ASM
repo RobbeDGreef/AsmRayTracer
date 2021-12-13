@@ -19,6 +19,10 @@ proc gui_init
 
     call open_file, offset font_file_name, 0
     call read_file, eax, offset font_array, FONTFILE_SIZE
+
+    call open_file, offset cursor_file_name, 0
+    call read_file, eax, offset cursor_array, CURSORFILE_SIZE
+
     call mouse_init
 
     ret
@@ -42,16 +46,37 @@ endp gui_start
 PROC mouse_handler
     USES    eax, ebx, ecx, edx
 	
-	and bl, 3			; check for two mouse buttons (2 low end bits)
-	jz @@skipit			; only execute if a mousebutton is pressed
-
     movzx eax, dx		; get mouse height
 	sar cx, 1			; horizontal cursor position is doubled in input 
     movzx ebx, cx
+
+    call plot_cursor, eax, ebx, 0CD1818h ;; probably need to flip buffer too.  
+
+	and bl, 3			; check for two mouse buttons (2 low end bits)
+	jz @@skipit			; only execute if a mousebutton is pressed
+
+    ;; check clicks here
     
     ;;x in eax, y in ebx
-    call log_int, eax
-    call log_int, ebx
+    ;call log_int, eax
+    ;call log_int, ebx
+
+    ;cursor = {{1, 0, 0, 0, 0, 0, 0, 0},
+    ;          {1, 1, 0, 0, 0, 0, 0, 0},
+    ;          {1, 1, 1, 0, 0, 0, 0, 0},
+    ;          {1, 1, 1, 1, 0, 0, 0, 0},
+    ;          {1, 1, 1, 1, 1, 0, 0, 0},
+    ;          {1, 1, 1, 1, 1, 1, 0, 0},
+    ;          {1, 1, 1, 1, 1, 1, 1, 0},
+    ;          {1, 1, 1, 1, 1, 1, 1, 1},
+    ;          {1, 1, 1, 1, 1, 1, 1, 0},
+    ;          {1, 1, 1, 1, 1, 1, 0, 0},
+    ;          {1, 1, 1, 1, 1, 1, 1, 0},
+    ;          {1, 1, 1, 0, 1, 1, 1, 0},
+    ;          {1, 1, 0, 0, 1, 1, 1, 0},
+    ;          {0, 0, 0, 0, 0, 1, 1, 1},
+    ;          {0, 0, 0, 0, 0, 1, 1, 1},
+    ;          {0, 0, 0, 0, 0, 0, 1, 1}}
 
 	@@skipit:
     ret
@@ -253,7 +278,48 @@ proc draw_rect
 
     @@end:
     ret
-endp draw_rect   
+endp draw_rect  
+
+proc cursor_plot
+    arg @@c_coord:dword, @@y_coord:dword, @@color:dword
+    uses eax, ecx, edx, edi
+
+    xor eax, eax
+    lea edi, [cursor_array]
+
+    xor edx, edx
+@@height_loop:
+    cmp edx, CURSOR_HEIGHT
+    je @@end
+
+    mov ecx, (CURSOR_WIDTH - 1)
+    @@width_loop:
+        cmp ecx, 0
+        jl @@end_width_loop
+
+        movzx eax, [byte ptr edi]
+        shr eax, cl
+        and eax, 1
+        cmp eax, 1 
+        jne @@continue
+
+        call pixel_plot, [@@x_coord], [@@y_coord], [@@color] 
+
+        @@continue:
+        inc [@@x_coord]
+        dec ecx
+        jmp @@width_loop
+
+@@end_width_loop
+    inc [@@y_coord]
+    inc edi
+    inc edx
+    sub [@@x_coord], CURSOR_WIDTH
+    jmp @@height_loop
+
+@@end:
+    ret
+endp cursor_plot
 
 proc char_plot_double
     arg @@x_coord:dword, @@y_coord:dword, @@char:dword, @@color:dword
@@ -455,8 +521,13 @@ DATASEG
     highlighted_component dd (?)
 
     buf db 32 dup (0)
+
     font_file_name db "GUI\FONT.BIN", 0
     font_array db FONTFILE_SIZE dup (?)
+
+    cursor_file_name db "GUI\CURSOR.BIN", 0
+    cursor_array db CURSORFILE_SIZE dup (?)
+
     title_name_string db "Assembly Raytracer", 0
 
     sample_count_string_buffer db 16 dup (?)
