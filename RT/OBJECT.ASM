@@ -4,7 +4,7 @@ MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "rt/object.inc"
-include "rt/mat.inc"
+include "rt/mat/mat.inc"
 
 CODESEG
 
