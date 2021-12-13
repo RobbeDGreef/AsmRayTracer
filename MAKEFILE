@@ -8,8 +8,10 @@ renderer_objs = vec.obj ray.obj renderer.obj sphere.obj object.obj scene.obj cam
 material_objs = mat.obj lmbrtian.obj metal.obj unlit.obj emissive.obj
 texture_objs = solid.obj texture.obj tiles.obj image.obj
 output_objs = bmp.obj video.obj
-gui_objs = gui.obj
+gui_objs = mouse.obj gui.obj keyb.obj
 input_objs = bmpread.obj
+
+# keyb?
 
 testobjs = init.obj test.obj utils.obj vec.obj ray.obj
 
@@ -17,7 +19,7 @@ objs = $(main_objs) $(renderer_objs) $(material_objs) $(texture_objs) $(output_o
 
 dest = raytracer.exe
 
-# =============================================================================
+# ===========================================g==================================
 # Do NOT edit this section, unless you know what you are doing.
 # =============================================================================
 .asm: rt/

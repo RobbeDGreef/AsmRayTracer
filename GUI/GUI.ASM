@@ -6,6 +6,7 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 include "output/video.inc"
 include "utils.inc"
 include "config.inc"
+include "gui/mouse.inc"
 
 include "gui/gui.inc"
 
@@ -452,7 +453,7 @@ endp gui_progress_notify
 
 DATASEG
     highlighted_component dd (?)
-    
+
     buf db 32 dup (0)
     font_file_name db "GUI\FONT.BIN", 0
     font_array db FONTFILE_SIZE dup (?)
