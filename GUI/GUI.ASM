@@ -19,7 +19,7 @@ proc gui_init
 
     call open_file, offset font_file_name, 0
     call read_file, eax, offset font_array, FONTFILE_SIZE
-    ;;call mouse_init
+    call mouse_init
 
     ret
 endp gui_init
@@ -49,8 +49,9 @@ PROC mouse_handler
 	sar cx, 1			; horizontal cursor position is doubled in input 
     movzx ebx, cx
     
-    ;; x in eax, y in ebx
-
+    ;;x in eax, y in ebx
+    call log_int, eax
+    call log_int, ebx
 
 	@@skipit:
     ret

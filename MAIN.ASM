@@ -36,12 +36,14 @@ proc main
 
     call gui_start
 
-    call video_buffer_flip
+    ;;call video_buffer_flip
 
     call log_str, offset start_str
     call gettime_millis
     mov [@@begin_time], eax
     call video_set_mode, VIDEO_MODE_GRAPHICS
+
+    call video_buffer_flip
     
     ;; Setting up our scene
     lea ebx, [@@scene]
@@ -93,7 +95,7 @@ proc main
     ;;call renderer_render, ebx
     
 ifndef NASM
-   ;; call renderer_show_img
+    ;;call renderer_show_img
     call sleep_millis, 6000
 else
     call renderer_to_bmp, offset bmpout
