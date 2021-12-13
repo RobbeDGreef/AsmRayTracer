@@ -46,12 +46,12 @@ PROC mouse_handler
 	jz @@skipit			; only execute if a mousebutton is pressed
 
     movzx eax, dx		; get mouse height
-	
 	sar cx, 1			; horizontal cursor position is doubled in input 
     movzx ebx, cx
     
     ;; x in eax, y in ebx
-    
+    call log_int, eax
+    call log_int, ebx
 
 	@@skipit:
     ret

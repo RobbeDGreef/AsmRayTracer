@@ -28,19 +28,13 @@ CODESEG
 
 GLOBAL main:PROC
 
-proc main
+proc start_raytracer
     local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
           @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
           @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
           @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,\ 
           @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal
     uses eax, ebx, ecx, edx, edi, esi
-
-    call init
-    call gui_init
-    call mm_init
-
-    call gui_start
 
     call log_str, offset start_str
     call gettime_millis
@@ -231,6 +225,22 @@ endif
     call print_int, eax
     call print_str, offset finished_str2
     call print_newline
+    ret
+endp start_raytracer
+
+proc main
+    local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
+          @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
+          @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
+          @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,\ 
+          @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal
+    uses eax, ebx, ecx, edx, edi, esi
+
+    call init
+    call gui_init
+    call mm_init
+
+    call gui_start
 
     call exit, 0
 endp main
