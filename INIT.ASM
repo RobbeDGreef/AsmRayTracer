@@ -37,13 +37,13 @@ endif
     mov [@@temp], ax
     fldcw [@@temp]
 
-     call __keyb_install_keyboard_handler
+    call keyboard_install_handler
 
     ret
 endp init
 
 proc destruct 
-    call __keyb_uninstall_keyboard_handler
+    call keyboard_uninstall_handler
     ret
 endp destruct 
 

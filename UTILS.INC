@@ -66,6 +66,7 @@ GLOBAL float_1:DWORD
 GLOBAL float_minus_1:DWORD
 GLOBAL float_2:DWORD
 GLOBAL float_4:DWORD
+GLOBAL float_1000000:DWORD
 GLOBAL float_max_char:DWORD
 GLOBAL float_pos_inf:DWORD
 GLOBAL float_neg_inf:DWORD

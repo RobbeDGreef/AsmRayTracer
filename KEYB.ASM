@@ -18,7 +18,7 @@ PIC_PORT	EQU 20h			; the port of the peripheral
 CODESEG
 
 ; Installs the custom keyboard handler
-PROC __keyb_install_keyboard_handler
+PROC keyboard_install_handler
     push	ebp
     mov		ebp, esp
 
@@ -33,7 +33,7 @@ PROC __keyb_install_keyboard_handler
 	; clear state buffer and the two state bytes
 	cld
 	mov		ecx, (128 / 2) + 1
-	mov		edi, offset __keyb_keyboard_state
+	mov		edi, offset keyb_keyboard_state
 	xor		eax, eax
 	rep		stosw
 	
@@ -67,10 +67,10 @@ PROC __keyb_install_keyboard_handler
     mov		esp, ebp
     pop		ebp
     ret
-ENDP __keyb_install_keyboard_handler
+ENDP keyboard_install_handler
 
 ; Restores the original keyboard handler
-PROC __keyb_uninstall_keyboard_handler
+PROC keyboard_uninstall_handler
     push	ebp
     mov		ebp, esp
 
@@ -91,7 +91,7 @@ PROC __keyb_uninstall_keyboard_handler
     mov		esp, ebp
     pop		ebp
     ret
-ENDP __keyb_uninstall_keyboard_handler
+ENDP keyboard_uninstall_handler
 
 ; Keyboard handler (Interrupt function, DO NOT CALL MANUALLY!)
 PROC keyboard_handler
@@ -108,7 +108,7 @@ PROC keyboard_handler
 	sti							; re-enable CPU interrupts
 	in		al, KEY_BUFFER		; get the key that was pressed from the keyboard
 	mov		bl, al				; store scan code for later use
-	mov		[__keyb_raw_scan_code], al	; store the key in global variable
+	mov		[keyb_raw_scan_code], al	; store the key in global variable
 	in		al, KEY_CONTROL		; set the control register to reflect key was read
 	or		al, 82h				; set the proper bits to reset the keyboard flip flop
 	out		KEY_CONTROL, al		; send the new data back to the control register
@@ -126,13 +126,13 @@ PROC keyboard_handler
 	shr		al, 1				; al now contains the actual scan code ([0;127])
 	xor		ebx, ebx	
 	mov		bl, al				; bl now contains the actual scan code ([0;127])
-	lea		esi, [__keyb_keyboard_state + ebx]	; load address of key relative to __keyboardState in ebx
+	lea		esi, [keyb_keyboard_state + ebx]	; load address of key relative to __keyboardState in ebx
 	mov		al, [esi]			; load the keyboard state of the scan code in al
 	; al = tracked state (0 or 1) of pressed key (the value in memory)
 	; ah = physical state (0 or 1) of pressed key
 	neg		al
 	add		al, ah				; al contains -1, 0 or +1 (-1 on key release, 0 on no change and +1 on key press)
-	add		[__keyb_keys_active], al	; update __keysActive counter
+	add		[keyb_keys_active], al	; update __keysActive counter
 	mov		al, ah
 	mov		[esi], al			; update tracked state
 	
@@ -152,8 +152,8 @@ DATASEG
   original_keyboard_handler_s	dw ?			; SELECTOR of original keyboard handler
   original_keyboard_handler_o	dd ?			; OFFSET of original keyboard handler
 
-__keyb_keyboard_state			db 128 dup(?)	; state for all 128 keys
-__keyb_raw_scan_code			db ?			; scan code of last pressed key
-__keyb_keys_active				db ?			; number of actively pressed keys
+  keyb_keyboard_state			db 128 dup(?)	; state for all 128 keys
+  keyb_raw_scan_code			db ?			; scan code of last pressed key
+  keyb_keys_active				db ?			; number of actively pressed keys
 
 END

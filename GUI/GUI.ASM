@@ -18,7 +18,8 @@ proc gui_init
 
     call open_file, offset font_file_name, 0
     call read_file, eax, offset font_array, FONTFILE_SIZE
-    
+    call mouse_init
+
     ret
 endp gui_init
 
@@ -28,8 +29,46 @@ proc gui_start
     call text_plot, 10, 5, offset title_name_string, 0CD1818h 
     call draw_horizontal_line, 0, [config_video_img_width], 45, 0CD1818h 
 
+    call draw_start_button, 50, 475
+    call draw_sample_count, 100, 100
+    call draw_focal_length, 100, 130
+    call draw_video_height, 100, 160
+    call draw_video_width, 100, 190
+    
     ret
 endp gui_start
+
+PROC mouse_handler
+    USES    eax, ebx, ecx, edx
+	
+	and bl, 3			; check for two mouse buttons (2 low end bits)
+	jz @@skipit			; only execute if a mousebutton is pressed
+
+    movzx eax, dx		; get mouse height
+	
+	sar cx, 1			; horizontal cursor position is doubled in input 
+    movzx ebx, cx
+    
+    ;; x in eax, y in ebx
+    
+
+	@@skipit:
+    ret
+ENDP mouse_handler
+
+proc mouse_init ;; TODO UNINSTALL?
+    uses eax 
+
+    call    mouse_present
+    cmp     eax, 1
+    jne      @@end
+
+    call mouse_install, offset mouse_handler
+
+    @@end:
+
+    ret
+endp mouse_init
 
 proc fill_background
     arg @@color:dword
@@ -43,6 +82,78 @@ proc fill_background
     
 ret
 endp fill_background
+
+proc draw_focal_length
+    arg @@x:dword, @@y:dword
+    uses eax, ebx, ecx
+    mov ebx, [@@x]
+    mov ecx, [@@y]
+
+    add ecx, 12
+    call text_plot, ebx, ecx, offset focal_length_string, 0CD1818h
+    add ebx, 300
+
+    ;call itoa, [config_video_img_focal_length], offset focal_length_string_buffer, 10
+    ;call text_plot, ebx, ecx, eax, 0CD1818h
+    call float_plot, ebx, ecx, [config_video_img_focal_length], 0CD1818h 
+ret
+endp draw_focal_length
+
+proc draw_video_height
+    arg @@x:dword, @@y:dword
+    uses eax, ebx, ecx
+    mov ebx, [@@x]
+    mov ecx, [@@y]
+
+    add ecx, 12
+    call text_plot, ebx, ecx, offset video_height_string, 0CD1818h
+    add ebx, 300
+
+    call itoa, [config_video_img_height], offset video_height_string_buffer, 10
+    call text_plot, ebx, ecx, eax, 0CD1818h
+ret
+endp draw_video_height
+
+proc draw_video_width
+    arg @@x:dword, @@y:dword
+    uses eax, ebx, ecx
+    mov ebx, [@@x]
+    mov ecx, [@@y]
+
+    add ecx, 12
+    call text_plot, ebx, ecx, offset video_width_string, 0CD1818h
+    add ebx, 300
+
+    call itoa, [config_video_img_width], offset video_width_string_buffer, 10
+    call text_plot, ebx, ecx, eax, 0CD1818h
+ret
+endp draw_video_width
+
+proc draw_sample_count
+    arg @@x:dword, @@y:dword
+    uses eax, ebx, ecx
+    mov ebx, [@@x]
+    mov ecx, [@@y]
+
+    add ecx, 12
+    call text_plot, ebx, ecx, offset sample_count_string, 0CD1818h
+    add ebx, 300
+
+    call itoa, [config_render_samples], offset sample_count_string_buffer, 10
+    call text_plot, ebx, ecx, eax, 0CD1818h
+
+    ;call draw_rect, [@@x1], [@@y1], ebx, eax, [@@backgroundcolor]
+
+ret
+endp
+
+proc draw_start_button  
+    arg @@x:dword, @@y:dword
+    
+    call draw_button, [@@x], [@@y], 82, offset start_button_string, 0ff2540h 
+
+ret
+endp draw_start_button
 
 ;; todo: optimize, remove registers pushes and just trash some registers, essentially making it an inline function 
 proc pixel_plot
@@ -95,22 +206,32 @@ proc draw_vertical_line
 endp draw_vertical_line    
 
 proc draw_button
-    arg @@x1:dword, @@y1:dword, @@text:dword, @@backgroundcolor:dword
-    uses eax, ebx
+    arg @@x1:dword, @@y1:dword, @@width:dword, @@text:dword, @@backgroundcolor:dword
+    uses eax, ebx, ecx, edx
 
-    mov eax, [@@x1]
-    add eax, 200
+    mov ebx, [@@x1]
+    add ebx, [@@width]
 
-    mov ebx, [@@y1]
-    add ebx, 80
+    mov eax, [@@y1]
+    add eax, 40 ;; add height
 
-    call draw_rect, [@@x1], [@@y1], eax, ebx, [@@backgroundcolor]
-    call draw_vertical_line, [@@x1], [@@y1], ebx, 0ff2540h   ;;add these later for   3D effect
-    call draw_vertical_line, eax, [@@y1], ebx, 0ff2540h 
+    call draw_rect, [@@x1], [@@y1], ebx, eax, [@@backgroundcolor]
+    ;call draw_vertical_line, [@@x1], [@@y1], ebx, 0ff2540h   ;;add these later for   3D effect
+    ;call draw_vertical_line, eax, [@@y1], ebx, 0ff2540h 
 
-    sub ebx, 45
+    mov ebx, [@@x1] 
+    add ebx, 18
 
-    call text_plot, [@@x1], ebx, offset test_str, 000000h
+    sub eax, [@@y1]
+    xor edx, edx
+
+    mov ecx, 2
+    div ecx
+
+    sub eax, 15
+    add eax, [@@y1]
+
+    call text_plot, ebx, eax, [@@text], 000000h
     ret
 endp draw_button
 
@@ -225,6 +346,48 @@ proc char_plot
     ret
 endp char_plot
 
+proc float_plot
+    arg @@x_coord:dword, @@y_coord:dword, @@float:dword, @@color:dword
+    local @@temp:dword
+    uses eax, ebx
+
+    mov ebx, [@@x_coord]
+
+    xor eax, eax
+    fldz 
+    fld [@@float]
+    fcompp
+    fnstsw ax
+    fld [@@float]
+    shr eax, 8
+    and eax, 111B
+    cmp eax, 1
+    jne @@not_negative
+    call char_plot_double, ebx, [@@y_coord], '-', [@@color]
+    add ebx, 8
+    fld1
+    fchs
+    fmul ;; make the float positive
+
+@@not_negative:
+    fist [@@temp]
+    call itoa, [@@temp], offset focal_length_upper_string_buffer, 10
+    call text_plot, ebx, [@@y_coord], eax, 0CD1818h
+    add ebx, 16
+    call char_plot_double, ebx, [@@y_coord], ',', 0CD1818h 
+    fild [@@temp]
+    fsub
+    fld [float_1000000]
+    fmul 
+    fistp [@@temp]
+    add ebx, 16
+    call itoa, [@@temp], offset focal_length_lower_string_buffer, 10
+    call text_plot, ebx, [@@y_coord], eax, 0CD1818h
+
+    ret
+endp float_plot
+    
+
 proc text_plot
     arg @@x_coord:dword, @@y_coord:dword, @@text:dword, @@color:dword
     uses eax, ebx
@@ -246,9 +409,23 @@ proc text_plot
 endp text_plot
  
 DATASEG
-    highlighted_component dd, 0
-    font_file_name db "FONT.BIN", 0
+    highlighted_component dd (?)
+
+    font_file_name db "GUI\FONT.BIN", 0
     font_array db FONTFILE_SIZE dup (?)
     title_name_string db "Assembly Raytracer", 0
+
+    sample_count_string_buffer db 16 dup (?)
+    video_width_string_buffer db 16 dup (?)
+    video_height_string_buffer db 16 dup (?)
+    focal_length_upper_string_buffer db 16 dup (?)
+    focal_length_lower_string_buffer db 16 dup (?)
+
+
+    start_button_string db "Run", 0
+    sample_count_string db "Sample Count: ", 0
+    video_width_string db "Image Width: ", 0
+    video_height_string db "Image Height: ", 0
+    focal_length_string db "Focal Length: ", 0
     test_str db "Hello world!!", 0
 END

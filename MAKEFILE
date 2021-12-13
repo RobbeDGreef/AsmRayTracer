@@ -6,7 +6,7 @@
 main_objs = main.obj init.obj utils.obj config.obj mm.obj
 renderer_objs = vec.obj ray.obj renderer.obj sphere.obj object.obj scene.obj cam.obj
 output_objs = bmp.obj video.obj
-gui_objs = gui.obj
+gui_objs = gui.obj keyb.obj
 
 testobjs = init.obj test.obj utils.obj vec.obj ray.obj
 

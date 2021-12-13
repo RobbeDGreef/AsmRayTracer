@@ -27,6 +27,8 @@ proc main
     call gui_init
     call mm_init
 
+    call gui_start
+
     call log_str, offset start_str
     call gettime_millis
     mov [@@begin_time], eax
