@@ -30,10 +30,12 @@ proc video_set_bank
     arg @@bank_number:dword
     uses eax, ebx, edx
 
+    ;; 04f05h is the switch vesa banks BIOS function
     mov eax, 04f05h
     xor bx, bx
     mov edx, [@@bank_number]
 
+    ;; Only execute this function in dosbox
 ifndef NASM
     int 10h
 endif
@@ -41,6 +43,7 @@ endif
     ret
 endp video_set_bank
 
+;; Writes the video buffer to screen. (per vesa bank)
 proc video_buffer_flip
     uses eax, ecx, edi, esi
 
@@ -50,8 +53,10 @@ proc video_buffer_flip
 @@copy_loop:
     cmp eax, VESA_BANK_SWITCHES
     je @@end
+    ;; Set the video bank
     call video_set_bank, eax
 
+    ;; Copy all the data from the buffer into the vesa bank
     mov edi, VESA_VIDEO_ADDR
     mov ecx, VESA_BANK_SIZE/4
     rep movsd
@@ -64,6 +69,8 @@ proc video_buffer_flip
 endp video_buffer_flip
 
 UDATASEG
+
+;; Nasm handles reserving data differently then TASM
 ifdef NASM
     vesa_lfb: resb (VIDEO_FB_WIDTH*VIDEO_FB_WIDTH*VIDEO_FB_BPP)
 else

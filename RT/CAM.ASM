@@ -11,11 +11,14 @@ include "rt/cam.inc"
 
 CODESEG
 
+;; This function sets the location of the global camera. It also calculates all
+;; the necessary helper variables to go with it.
 proc cam_set_loc
     arg @@loc:PTR Point
     local @@temp:dword, @@temp_vec:Vec
     uses ebx
 
+    ;; Set the camera location
     call vec_cpy, offset cam_loc, [@@loc]
     
     ;; aspect_ratio = width/height
@@ -49,16 +52,11 @@ proc cam_set_loc
     ret
 endp cam_set_loc
 
-proc cam_init
-    ret
-endp cam_init
-
 proc cam_get_ray
     arg @@ray:PTR Ray, @@u:dword, @@v:dword
     local @@temp_vec:Vec, @@temp_vec2:Vec
     uses ebx, ecx
     
-    ;; ray = origin, ray_direction
     ;; ray_direction = lower_left_corner + u*horizontal + v*vertical 
     ;;                 - origin
     lea ebx, [@@temp_vec]
@@ -72,6 +70,7 @@ proc cam_get_ray
     call vec_add, ebx, ebx, ecx
     call vec_sub, ebx, ebx, offset cam_loc
 
+    ;; Set the ray with the calculated direction and the location of the camera
     call ray_set, [@@ray], offset cam_loc, ebx
 
     ret

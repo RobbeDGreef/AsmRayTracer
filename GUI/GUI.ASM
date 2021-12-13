@@ -408,9 +408,52 @@ proc text_plot
     ret
 endp text_plot
  
+proc gui_clear_line
+    arg @@line:dword
+    uses eax, ebx, ecx, edi
+
+    lea edi, [vesa_lfb]
+    xor ebx, ebx
+@@clear_loop:
+    cmp ebx, FONTCHAR_HEIGHT
+    je @@end
+
+    mov eax, 0
+    mov ecx, VIDEO_FB_WIDTH
+    rep stosd
+
+    inc ebx
+    jmp @@clear_loop
+
+@@end:
+    ret
+endp gui_clear_line
+
+proc gui_progress_notify
+    arg @@done:dword, @@total:dword
+    uses eax, edx
+
+    mov eax, 100
+    mul [@@done]
+    div [@@total]
+
+ifdef NASM
+    call print_int, eax
+    call print_newline
+else
+    call gui_clear_line, 0
+    call itoa, eax, offset buf, 10
+    call text_plot, 0, 0, offset buf, 0ffffffh
+    call video_buffer_flip
+endif
+
+    ret
+endp gui_progress_notify
+
 DATASEG
     highlighted_component dd (?)
-
+    
+    buf db 32 dup (0)
     font_file_name db "GUI\FONT.BIN", 0
     font_array db FONTFILE_SIZE dup (?)
     title_name_string db "Assembly Raytracer", 0

@@ -7,6 +7,7 @@ GLOBAL draw_horizontal_line:PROC   ;; void draw_horizontal_line (int x1, int x2,
 GLOBAL draw_rect:PROC              ;; void draw_rect(int x1, int y1, int x2, int y2, int color)
 GLOBAL draw_button:PROC            ;; void draw_button(int x1, int y1, int x2, int y2, String text, int color)
 GLOBAL gui_start:PROC              ;; void gui_start();
+GLOBAL gui_progress_notify:PROC ;; void gui_progress_notify(int done, int total)
 
 struc Coordinate
     x dw ? ; x position

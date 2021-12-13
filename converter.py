@@ -158,8 +158,9 @@ class Converter:
         if line.startswith("size ") or sizekwd != -1:
             t = line[sizekwd+2:].split(' ')[1]
             if t in self.typetable:
-                return " " + str(self.typetable[t]) + " "
-            print(f"Type '{t}' not found in typetable. Cannot get size") 
+                line = line[:sizekwd] + " " + str(self.typetable[t]) + " "
+            else:
+                print(f"Type '{t}' not found in typetable. Cannot get size") 
 
 
         if self.current_segment == "data":

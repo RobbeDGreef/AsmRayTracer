@@ -3,6 +3,7 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
+include "gui/gui.inc"
 include "output/video.inc"
 include "output/bmp.inc"
 include "utils.inc"
@@ -16,9 +17,11 @@ include "rt/object.inc"
 include "rt/hit.inc"
 include "rt/scene.inc"
 include "rt/cam.inc"
+include "rt/mat.inc"
 
 CODESEG
 
+;; Wrapper function to render the renderer buffer to a BMP image.
 proc renderer_to_bmp
     arg @@file_name:PTR byte
 
@@ -29,10 +32,37 @@ proc renderer_to_bmp
     ret
 endp renderer_to_bmp
 
+;; 
 proc renderer_to_rgbbuffer
     call renderer_to_buffer, [img_rgbbuf], [config_video_img_width], [config_video_img_height]
     ret
 endp renderer_to_rgbbuffer
+
+proc fclamp_0_to_1
+    arg @@value:dword
+    local @@temp:dword
+
+    fld [@@value]
+    fld1
+    faddp
+
+    fld [@@value]
+    fld1
+    fsubp
+    fabs
+
+    fsubp
+    fst [@@temp]
+    fld [@@temp]
+    fabs
+    faddp
+    fmul [float_0_25]
+
+    fst [@@temp]
+
+    ret
+endp fclamp_0_to_1
+
 
 proc renderer_to_buffer
     arg @@buffer:dword, @@buf_width:dword, @@buf_height:dword
@@ -102,15 +132,15 @@ proc renderer_to_buffer
         cmp edx, [@@buf_width]
         jge @@end_width_loop
     
-        fld [dword ptr ebx+8]
+        call fclamp_0_to_1, [dword ptr ebx+8]
         fmul [float_max_char]
         fistp [word ptr eax]
          
-        fld [dword ptr ebx+4]
+        call fclamp_0_to_1, [dword ptr ebx+4]
         fmul [float_max_char]
         fistp [word ptr eax+1]
 
-        fld [dword ptr ebx]
+        call fclamp_0_to_1, [dword ptr ebx]
         fmul [float_max_char]
         fistp [word ptr eax+2]
 
@@ -146,22 +176,12 @@ proc renderer_show_img
     ret
 endp renderer_show_img
 
-proc cast_ray
-    arg @@ray:PTR Ray, @@dest_color:PTR Color, @@scene:PTR Scene
-    local @@temp_vec:Vec, @@temp:dword, @@hit:Hit
-    uses eax, ebx, ecx, edx
+proc shade_normals
+    arg @@ray:PTR Ray, @@hit:PTR Hit, @@dest_color:PTR Vec
+    local @@temp_vec:Vec
+    uses ebx, ecx, edx
 
-    lea ecx, [@@hit]
-    call scene_hit, [@@scene], [@@ray], [float_0], [float_pos_inf], ecx
-    cmp eax, 0
-    je @@background
-
-    call flt, [float_0], [ecx+Hit.t]
-    cmp eax, 1
-    jne @@background
-
-    ;; Shading our normals. This is temporary since the material invocation
-    ;; code will come here. This is just to check if our normals are correct.
+    ;; Shading our normals. This is good for debugging
     mov ebx, [@@dest_color]
     call ray_at, [@@ray], ebx, [ecx+Hit.t]
     
@@ -179,9 +199,76 @@ proc cast_ray
     call vec_add, ebx, ebx, edx
     call vec_mul_float, ebx, [float_0_50]
 
+    ret
+endp shade_normals
+
+proc cast_ray
+    arg @@ray:PTR Ray, @@dest_color:PTR Color, @@bounces:dword, @@scene:PTR Scene
+    local @@temp_vec:Vec, @@target:Vec, @@temp:dword, @@hit:Hit, @@bounced:Ray,\
+          @@color:Color
+    uses eax, ebx, ecx, edx, edi, esi
+
+    cmp [@@bounces], 0
+    je @@emission
+
+@@continue:
+    lea ecx, [@@hit]
+    call scene_hit, [@@scene], [@@ray], [float_0_0_1], [float_pos_inf], ecx
+    cmp eax, 0
+    je @@background
+
+    call flt, [float_0], [ecx+Hit.t]
+    cmp eax, 1
+    jne @@background
+
+    ;; Usefull for debugging.
+    ;call shade_normals, [@@ray], ecx, [@@dest_color] 
+
+    mov edx, [ecx+Hit.hit_mat]
+    lea edi, [@@bounced]
+    mov edx, [edx]
+
+    ;; Calculate the material scatter and bounce the ray
+    call [edx+Mat.scatter], edx, [@@ray], ecx, [@@dest_color], edi
+    ;; If we return 0, we don't want to bounce again, just the emission
+    ;; if we return -1, don't bounce and don't do emission
+    cmp eax, 0
+    je @@emission
+    cmp eax, -1
+    je @@end
+
+    lea esi, [@@color]
+    dec [@@bounces]
+    call cast_ray, edi, esi, [@@bounces], [@@scene]
+    call vec_mul, [@@dest_color], [@@dest_color], esi
+
+@@emission:
+    cmp [edx+Mat.emission], 0
+    je @@end
+    call [edx+Mat.emission], edx, [@@ray], ecx, esi
+    call vec_add, [@@dest_color], esi
+
     jmp @@end
 
 @@background:
+    
+    ;lea eax, [@@color]
+    ;lea ebx, [@@temp_vec]
+    ;call vec_set, eax, [float_0_50], [float_0_75], [float_1]
+    ;call vec_set, ebx, [float_1], [float_1], [float_1]
+    ;call lerp, [@@dest_color], [@@ray], eax, ebx
+
+    ;; A little faster, but less pretty.
+    call vec_cpy, [@@dest_color], offset config_render_background
+
+@@end:
+    ret
+endp cast_ray
+
+proc lerp
+    arg @@dest_color:PTR Color, @@ray:PTR Ray, @@c1:PTR Color, @@c2:PTR Color
+    local @@temp:dword, @@temp_vec:Vec
+    uses ebx, ecx
     ;; Calculate a lerp from blue to white.
     ;; Because our direction Y component goes from -1.0 to 1.0 (after 
     ;; normalisation) we scale it to 0.0 - 1.0. This is easy enough. Just add
@@ -212,12 +299,13 @@ proc cast_ray
     fst [@@temp]
 
     ;; Set the blue value 
-    call vec_set, ecx, [float_0_50], [float_0_75], [float_1]
+    call vec_cpy, ecx, [@@c1]
     call vec_mul_float, ecx, [@@temp]
 
     ;; Set the white value and lerp
     mov ebx, [@@dest_color]
-    call vec_set, ebx, [float_1], [float_1], [float_1]
+    call vec_cpy, ebx, [@@c2]
+
     fld1
     fxch
     fsub
@@ -225,10 +313,8 @@ proc cast_ray
     call vec_mul_float, ebx, [@@temp]
     ;; Finally write it to the dest color by adding both of them together
     call vec_add, ebx, ecx, ebx
-
-@@end:
     ret
-endp cast_ray
+endp lerp
 
 ;; This will render the frame of the current scene.
 ;; Setting up the scene will happen through various other functions in the 
@@ -269,9 +355,13 @@ proc renderer_render
     cmp eax, 0
     jl @@end_height_loop
 
-    call print_int, eax
-    call print_newline
+    mov ebx, eax
+    and ebx, 0fh
+    cmp ebx, 0
+    jne @@start_width_loop
+    call gui_progress_notify, eax, [config_video_img_height]
 
+@@start_width_loop:
     mov ebx, 0
     @@width_loop:
         cmp ebx, [config_video_img_width]
@@ -308,7 +398,7 @@ proc renderer_render
             call cam_get_ray, ecx, [@@u], [@@v]
 
             ;; Cast a ray with esi:destination pixel
-            call cast_ray, ecx, edi, [@@scene]
+            call cast_ray, ecx, edi, [config_render_max_bounces], [@@scene]
             call vec_add, esi, esi, edi
 
             dec edx
@@ -317,6 +407,7 @@ proc renderer_render
         @@end_sample_loop:
 
         call vec_div_int, esi, [config_render_samples]
+        call vec_sqrt, esi
 
         add esi, VEC_SIZE
         inc ebx
@@ -332,6 +423,12 @@ proc renderer_render
 
     ret
 endp renderer_render
+
+proc renderer_denoise
+    local @@temp:dword
+    uses eax, ebx, ecx
+    ret
+endp renderer_denoise
 
 proc renderer_init
     uses eax, ebx, ecx

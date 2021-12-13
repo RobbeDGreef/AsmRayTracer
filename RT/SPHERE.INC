@@ -5,4 +5,4 @@ struc Sphere
     radius dd ?      ;; float radius
 ends Sphere
 
-GLOBAL sphere_set:PROC ;; sphere_set(Sphere* sphere, Point* location, float radius)
+GLOBAL sphere_set:PROC ;; sphere_set(Sphere* sphere, Point* location, float radius, Mat* mat)
