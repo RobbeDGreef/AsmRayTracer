@@ -8,6 +8,8 @@ include "utils.inc"
 include "config.inc"
 include "gui/mouse.inc"
 
+include "output/video.inc"
+
 include "gui/gui.inc"
 
 CODESEG
@@ -23,8 +25,6 @@ proc gui_init
     call open_file, offset cursor_file_name, 0
     call read_file, eax, offset cursor_array, CURSORFILE_SIZE
 
-    call mouse_init
-
     ret
 endp gui_init
 
@@ -39,6 +39,10 @@ proc gui_start
     call draw_focal_length, 100, 130
     call draw_video_height, 100, 160
     call draw_video_width, 100, 190
+
+    call video_buffer_flip
+
+    call mouse_init
     
     ret
 endp gui_start
@@ -47,38 +51,37 @@ PROC mouse_handler
     USES    eax, ebx, ecx, edx
 	
     movzx eax, dx		; get mouse height
-	sar cx, 1			; horizontal cursor position is doubled in input 
+    ; This was copied from the example. It gives a weird result 
+	;sar cx, 1			; horizontal cursor position is doubled in input 
     movzx ebx, cx
 
-    call plot_cursor, eax, ebx, 0CD1818h ;; probably need to flip buffer too.  
+    call log_int, eax ;; y
+    call log_int, ebx ;; x
+
+    ;; Check whether the old position wasn't set yet
+    mov edi, [last_cursor_position]
+    cmp edi, 0
+    je @@skip_old
+
+    ;; This won't fully work. What if the user hovered over something else than the background?
+    call cursor_plot, [edi + Coordinate.x], [edi + Coordinate.y], 0F2C67h ;;  remove old cursor
+
+@@skip_old:
+
+    lea esi, [edi + Coordinate.x]
+    mov [esi], ebx
+    lea esi, [edi + Coordinate.y]
+    mov [esi], eax
+
+    call cursor_plot, ebx, eax, 0CD1818h ;; probably need to flip buffer too.
+    call video_buffer_flip  
 
 	and bl, 3			; check for two mouse buttons (2 low end bits)
-	jz @@skipit			; only execute if a mousebutton is pressed
+	jz @@skip_click_handle			; only execute if a mousebutton is pressed
 
     ;; check clicks here
-    
-    ;;x in eax, y in ebx
-    ;call log_int, eax
-    ;call log_int, ebx
 
-    ;cursor = {{1, 0, 0, 0, 0, 0, 0, 0},
-    ;          {1, 1, 0, 0, 0, 0, 0, 0},
-    ;          {1, 1, 1, 0, 0, 0, 0, 0},
-    ;          {1, 1, 1, 1, 0, 0, 0, 0},
-    ;          {1, 1, 1, 1, 1, 0, 0, 0},
-    ;          {1, 1, 1, 1, 1, 1, 0, 0},
-    ;          {1, 1, 1, 1, 1, 1, 1, 0},
-    ;          {1, 1, 1, 1, 1, 1, 1, 1},
-    ;          {1, 1, 1, 1, 1, 1, 1, 0},
-    ;          {1, 1, 1, 1, 1, 1, 0, 0},
-    ;          {1, 1, 1, 1, 1, 1, 1, 0},
-    ;          {1, 1, 1, 0, 1, 1, 1, 0},
-    ;          {1, 1, 0, 0, 1, 1, 1, 0},
-    ;          {0, 0, 0, 0, 0, 1, 1, 1},
-    ;          {0, 0, 0, 0, 0, 1, 1, 1},
-    ;          {0, 0, 0, 0, 0, 0, 1, 1}}
-
-	@@skipit:
+	@@skip_click_handle:
     ret
 ENDP mouse_handler
 
@@ -281,7 +284,7 @@ proc draw_rect
 endp draw_rect  
 
 proc cursor_plot
-    arg @@c_coord:dword, @@y_coord:dword, @@color:dword
+    arg @@x_coord:dword, @@y_coord:dword, @@color:dword
     uses eax, ecx, edx, edi
 
     xor eax, eax
@@ -310,7 +313,7 @@ proc cursor_plot
         dec ecx
         jmp @@width_loop
 
-@@end_width_loop
+@@end_width_loop:
     inc [@@y_coord]
     inc edi
     inc edx
@@ -519,6 +522,8 @@ endp gui_progress_notify
 
 DATASEG
     highlighted_component dd (?)
+
+    last_cursor_position dd 0
 
     buf db 32 dup (0)
 

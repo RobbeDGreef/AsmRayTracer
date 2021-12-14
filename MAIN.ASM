@@ -43,7 +43,7 @@ proc main
     mov [@@begin_time], eax
     call video_set_mode, VIDEO_MODE_GRAPHICS
 
-    call video_buffer_flip
+    ;call video_buffer_flip
     
     ;; Setting up our scene
     lea ebx, [@@scene]
