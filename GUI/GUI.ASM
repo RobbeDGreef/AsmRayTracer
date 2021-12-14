@@ -48,11 +48,10 @@ proc gui_start
 endp gui_start
 
 PROC mouse_handler
-    USES    eax, ebx, ecx, edx
+    USES    eax, ebx, ecx, edx, edi, esi
 	
-    movzx eax, dx		; get mouse height
-    ; This was copied from the example. It gives a weird result 
-	;sar cx, 1			; horizontal cursor position is doubled in input 
+    movzx eax, dx		; get mouse height 
+	sar cx, 1			; horizontal cursor position is doubled in input 
     movzx ebx, cx
 
     call log_int, eax ;; y
