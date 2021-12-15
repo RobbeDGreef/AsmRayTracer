@@ -47,7 +47,50 @@ proc gui_start
     ret
 endp gui_start
 
-PROC mouse_handler
+proc handle_click
+    arg @@x_coord:dword, @@y_coord:dword
+
+    mov eax, [@@x_coord]
+    mov ebx, [@@y_coord]
+    xor ecx, ecx
+    jmp @@buttonloop
+
+@@nextbutton:
+    inc ecx
+
+@@buttonloop:
+    cmp ecx, [button_count]
+    je @@end
+
+    mov edx, [button_array + 4*ecx] ;; get button
+    mov esi, [edx + Button.upperleft]
+    mov edi, [edx + Button.bottomright]
+
+    mov edx, [esi + Coordinate.x]
+    cmp edx, [@@x_coord]
+    jl @@nextbutton ;; check whether it's not smaller than the starting x
+
+    mov edx, [edi + Coordinate.x]
+    cmp edx, [@@x_coord]
+    jg @@nextbutton ;; Check whether it's not bigger than the second x
+
+    mov edx, [esi + Coordinate.y]
+    cmp edx, [@@y_coord]
+    jl @@nextbutton ;; Check whether it's not smaller than the starting y
+
+    mov edx, [edi + Coordinate.y]
+    cmp edx, [@@y_coord]
+    jg @@nextbutton ;; Check whether it's not bigger than second y
+
+    ;; We clicked this button
+    mov edx, [button_array + 4 * ecx] 
+    call [edx + Button.onclick] ;; Call the corresponding action
+
+@@end:
+    ret
+endp handle_click
+
+proc mouse_handler
     USES    eax, ebx, ecx, edx, edi, esi
 	
     movzx eax, dx		; get mouse height 
@@ -79,10 +122,11 @@ PROC mouse_handler
 	jz @@skip_click_handle			; only execute if a mousebutton is pressed
 
     ;; check clicks here
+    ;; call handle_click, x, y <- should handle click
 
 	@@skip_click_handle:
     ret
-ENDP mouse_handler
+endp mouse_handler
 
 proc mouse_init ;; TODO UNINSTALL?
     uses eax 
@@ -175,10 +219,15 @@ proc draw_sample_count
 ret
 endp
 
+proc handle_run_click
+    ;; start renderer
+    ret
+endp handle_run_click
+
 proc draw_start_button  
     arg @@x:dword, @@y:dword
     
-    call draw_button, [@@x], [@@y], 82, offset start_button_string, 0ff2540h 
+    call draw_button, [@@x], [@@y], 82, offset start_button_string, 0ff2540h, handle_run_click 
 
 ret
 endp draw_start_button
