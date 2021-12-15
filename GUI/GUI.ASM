@@ -60,7 +60,7 @@ proc handle_click
 
 @@buttonloop:
     cmp ecx, [button_count]
-    je @@end
+    jge @@end
 
     mov edx, [button_array + 4*ecx] ;; get button
     mov esi, [edx + Button.upperleft]
@@ -221,6 +221,7 @@ endp
 
 proc handle_run_click
     ;; start renderer
+    call log_int, 6969
     ret
 endp handle_run_click
 
@@ -325,11 +326,11 @@ proc draw_button
     mov edi, [@@button]
 
     mov eax, [@@upper_left]
-    ;mov [edi + Button.upperleft], eax
+    mov [edi + Button.upperleft], eax
     mov eax, [@@bottom_right]
-    ;mov [edi + Button.bottomright], eax
+    mov [edi + Button.bottomright], eax
     mov eax, [@@action]
-    ;mov [edi + Button.onclick], eax
+    mov [edi + Button.onclick], eax
 
     ;; Write button to array
     mov eax, [button_count]
