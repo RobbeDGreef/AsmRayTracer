@@ -234,19 +234,29 @@ proc draw_vertical_line
 endp draw_vertical_line    
 
 proc draw_button
-    arg @@x1:dword, @@y1:dword, @@width:dword, @@text:dword, @@backgroundcolor:dword
-    uses eax, ebx, ecx, edx
+    arg @@x1:dword, @@y1:dword, @@width:dword, @@text:dword, @@backgroundcolor:dword, @@action:dword
+    uses eax, ebx, ecx, edx, edi
+    local @@upper_left:PTR Coordinate, @@bottom_right:PTR Coordinate, @@button:PTR Button
+
+    ;; Set coords 
+    mov edi, [@@upper_left]
 
     mov ebx, [@@x1]
+    mov [edi + Coordinate.x], ebx
     add ebx, [@@width]
 
     mov eax, [@@y1]
+    mov [edi + Coordinate.y], eax
     add eax, 40 ;; add height
 
-    call draw_rect, [@@x1], [@@y1], ebx, eax, [@@backgroundcolor]
-    ;call draw_vertical_line, [@@x1], [@@y1], ebx, 0ff2540h   ;;add these later for   3D effect
-    ;call draw_vertical_line, eax, [@@y1], ebx, 0ff2540h 
+    mov edi, [@@bottom_right]
+    mov [edi + Coordinate.x], ebx
+    mov [edi + Coordinate.y], eax
 
+    ;; Draw the rectangle
+    call draw_rect, [@@x1], [@@y1], ebx, eax, [@@backgroundcolor]
+
+    ;; Align the coords for the text
     mov ebx, [@@x1] 
     add ebx, 18
 
@@ -259,7 +269,28 @@ proc draw_button
     sub eax, 15
     add eax, [@@y1]
 
+    ;; Draw the text
     call text_plot, ebx, eax, [@@text], 000000h
+
+    ;; Initialise button
+    mov edi, [@@button]
+
+    mov eax, [@@upper_left]
+    ;mov [edi + Button.upperleft], eax
+    mov eax, [@@bottom_right]
+    ;mov [edi + Button.bottomright], eax
+    mov eax, [@@action]
+    ;mov [edi + Button.onclick], eax
+
+    ;; Write button to array
+    mov eax, [button_count]
+    inc eax
+    mov [button_count], eax
+
+    lea edi, [button_array + 4*eax]
+    mov eax, [@@button]
+    mov [edi], eax
+
     ret
 endp draw_button
 
@@ -521,6 +552,9 @@ endp gui_progress_notify
 
 DATASEG
     highlighted_component dd (?)
+
+    button_array dd 10 dup (?)
+    button_count dd 0
 
     last_cursor_position dd 0
 

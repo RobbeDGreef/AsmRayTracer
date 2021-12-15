@@ -10,16 +10,14 @@ GLOBAL gui_start:PROC              ;; void gui_start();
 GLOBAL gui_progress_notify:PROC ;; void gui_progress_notify(int done, int total)
 
 struc Coordinate
-    x dw ? ; x position
-    y dw ? ; y position
+    x dd ? ; x position
+    y dd ? ; y position
 ends Coordinate
 
 struc Button
-    upperleft   Coordinate ? 
-    bottomright Coordinate ?
-    text db ? ;; String
-    onclick dd ? ;;Pointer to label
-    inanimation db ?
+    upperleft   dd ? 
+    bottomright dd ?
+    onclick dd ? ;;procedure that should be called on click
 ends Button
 
 FONTCHAR_WIDTH  equ     8
