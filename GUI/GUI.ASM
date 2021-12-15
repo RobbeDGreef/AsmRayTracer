@@ -227,7 +227,7 @@ endp handle_run_click
 proc draw_start_button  
     arg @@x:dword, @@y:dword
     
-    call draw_button, [@@x], [@@y], 82, offset start_button_string, 0ff2540h, handle_run_click 
+    call draw_button, [@@x], [@@y], 82, offset start_button_string, 0ff2540h, offset handle_run_click 
 
 ret
 endp draw_start_button
