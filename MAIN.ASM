@@ -9,6 +9,7 @@ include "rt/renderer.inc"
 include "rt/scene.inc"
 include "rt/sphere.inc"
 include "gui/gui.inc"
+include "rt/triangle.inc"
 
 include "rt/mat/lmbrtian.inc"
 include "rt/mat/metal.inc"
@@ -18,6 +19,7 @@ include "rt/mat/emissive.inc"
 include "rt/texture/solid.inc"
 include "rt/texture/tiles.inc"
 include "rt/texture/image.inc"
+include "rt/texture/uv.inc"
 
 include "init.inc"
 include "utils.inc"
@@ -33,7 +35,8 @@ proc main
           @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
           @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
           @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,\ 
-          @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal
+          @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal,\
+          @@loc2:Vec, @@loc3:Vec, @@triangle:Triangle
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -48,7 +51,7 @@ proc main
     ;; Setting up our scene
     lea ebx, [@@scene]
     call scene_init, ebx
-    jmp @@setup_football_scene
+    jmp @@setup_triangle_test
 
     ;; =========================================================================
     ;; main scene
@@ -205,6 +208,35 @@ proc main
     call sphere_set, ecx, edx, [float_0_25], edi
     call scene_add, ebx, ecx
     
+    jmp @@start_renderer
+    
+    ;; =========================================================================
+    ;; Traingle test scene
+    ;; =========================================================================
+@@setup_triangle_test:
+
+    ;; Set color for solid texture
+    lea eax, [@@color]
+    call vec_set_rgb, eax, 255, 110, 55
+    
+    ;; Initialize solid texture
+    lea ecx, [@@texsolid]
+    call solid_init, ecx, eax
+
+    ;; Initialize the metal material
+    lea esi, [@@met]
+    call metal_init, esi, ecx
+
+    lea ecx, [@@triangle]
+    lea edi, [@@loc3]
+    lea edx, [@@loc2]
+    lea eax, [@@loc]
+    call vec_set, edi, [float_minus_1],[float_0],[float_0]
+    call vec_set, edx, [float_0],[float_1],[float_0]
+    call vec_set, eax, [float_0],[float_0],[float_0]
+    call triangle_set, ecx, eax, edx, edi, esi
+    call scene_add, ebx, ecx
+
     jmp @@start_renderer
 
     ;; End setting up scene

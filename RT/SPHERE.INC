@@ -2,6 +2,7 @@ include "rt/object.inc"
 
 struc Sphere
     obj Object ?
+    location Point ?
     radius dd ?      ;; float radius
 ends Sphere
 

@@ -315,10 +315,8 @@ proc vec_cross
     fmul [ecx+Vec.z]
     fld [ebx+Vec.z]
     fmul [ecx+Vec.y]
-    fsub
-    fstp [@@temp]
-    mov edx, [@@temp]
-    mov [eax+Vec.x], edx
+    fsubp
+    fstp [eax+Vec.x]
 
     fld [ebx+Vec.z]
     fmul [ecx+Vec.x]

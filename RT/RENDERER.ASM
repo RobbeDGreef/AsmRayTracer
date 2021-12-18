@@ -229,7 +229,6 @@ proc cast_ray
 
     mov edx, [ecx+Hit.hit_mat]
     lea edi, [@@bounced]
-    mov edx, [edx]
 
     ;; Calculate the material scatter and bounce the ray
     call [edx+Mat.scatter], edx, [@@ray], ecx, [@@dest_color], edi
