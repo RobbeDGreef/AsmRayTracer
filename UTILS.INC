@@ -10,6 +10,7 @@ GLOBAL print_hex_multiple:PROC  ;; void print_hex_multiple(dword amount, ...)
 GLOBAL print_hexdump:PROC       ;; void print_hexdump(char* loc, dword amount)
 
 GLOBAL log_str:PROC
+GLOBAL log_char:PROC
 GLOBAL log_int:PROC
 GLOBAL log_hex:PROC
 

@@ -1,5 +1,6 @@
 ;=============================================================================
 ; 32-bit Assembler Mouse library.
+; (Significantly modified by Robbe De Greef)
 ;
 ; For use under DMPI 0.9 protected mode.
 ;
@@ -42,56 +43,30 @@ P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-INCLUDE "gui/mouse.inc"
+include "gui/mouse.inc"
+include "utils.inc"
 
-;=============================================================================
-; Uninitialized DATA
-;=============================================================================
-UDATASEG
-
-;=============================================================================
-; DATA
-;=============================================================================
-DATASEG
-
-custom_mouse_handler    dd ?
-
-;=============================================================================
-; CODE
-;=============================================================================
 CODESEG
 
-;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; Test if mouse is present or not.
-;
-; ARGUMENTS:
-;   none
-; RETURNS:
-;   EAX     1 if mouse available
-;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PROC mouse_present
-    USES    ebx
-
+;; Checks whether or not the mouse driver is loaded in dos.
+;; Returns eax = 1 if it is, 0 otherwise
+proc mouse_present
     mov     eax, 0
     int     33h
-
     and     eax, 1
-
     ret
-ENDP mouse_present
+endp mouse_present
 
-;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; Internal mouse handler.
-;
-; Requires special attention, as this procedure gets called by the mouse
-; driver, through the DOS Protected Mode extender.
-;
-; ARGUMENTS:
-;   none
-; RETURNS:
-;   nothing
-;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PROC mouse_internal_handler NOLANGUAGE
+;; Resets the mouse driver
+proc mouse_reset
+    uses eax
+    mov eax, 0
+    int 33h
+    ret
+endp mouse_reset
+
+;; Internal mouse handler that is given to dos. 
+proc mouse_internal_handler
     push    ds
     push    es
     push    ax
@@ -109,66 +84,73 @@ PROC mouse_internal_handler NOLANGUAGE
     
     retf
 
-    ; Internal variable to keep track of DS
+    ;; Internal variable to keep track of DS
+    ;; I don't fully understand why it has to be saved in the code segment but
+    ;; it doesn't work otherwise so we'll just leave it here
     theDS   dw  ?
-ENDP mouse_internal_handler
+endp mouse_internal_handler
 
-;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; Install mouse handler.
-;
-; ARGUMENTS:
-;   address of the custom mouse handler
-; RETURNS:
-;   nothing
-;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PROC mouse_install
-    ARG     @@custom_handler
-    USES    eax, ecx, edx, es
+;; Installs the mouse handler
+proc mouse_install
+    arg @@custom_handler:dword, @@width:dword, @@height:dword
+    uses eax, ecx, edx, es
 
-    call    mouse_present
-    cmp     eax, 1
-    jne     @@no_mouse
+    call mouse_present
+    cmp eax, 1
+    jne @@no_mouse
 
-    mov     eax, [@@custom_handler]
-    mov     [custom_mouse_handler], eax
+    mov eax, [@@custom_handler]
+    mov [custom_mouse_handler], eax
 
-    push    ds
-    mov     ax, cs
-    mov     ds, ax
+    push ds
+    mov ax, cs
+    mov ds, ax
     ASSUME  ds:_TEXT
-    mov     [theDS], ax
+    mov [theDS], ax
     ASSUME  ds:FLAT
-    pop     ds
+    pop ds
 
-    mov     eax, 0ch
-    mov     ecx, 255
-    push    cs
-    pop     es
-    mov     edx, offset mouse_internal_handler
-    int     33h
+    mov eax, 0ch    ;; Install user defined mouse handler
+    mov ecx, 15h    ;; event mask: mouse movement, left released, right released
+    push cs
+    pop es
+    mov edx, offset mouse_internal_handler
+    int 33h
+
+    ;; Define the window size
+
+    mov ax, 7h
+    mov cx, 0
+    mov edx, [@@width]
+    sub edx, 8
+    int 33h
+    
+    mov ax, 8h
+    mov cx, 0
+    mov edx, [@@height]
+    sub edx, 8
+    int 33h
 
 @@no_mouse:
     ret
-ENDP mouse_install
+endp mouse_install
 
-;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; Uninstall mouse handler.
-;
-; ARGUMENTS:
-;   none
-; RETURNS:
-;   nothing
-;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PROC mouse_uninstall
-    USES    eax, ecx, edx
+;; Uninstalls the mouse handler
+proc mouse_uninstall
+    uses eax, ecx, edx
 
-    mov     eax, 0ch
-    mov     ecx, 0
-    mov     edx, 0
-    int     33h
+    ;; Reset the user defined mouse handler to 0
+    mov eax, 0ch
+    mov ecx, 0
+    mov edx, 0
+    int 33h
+    call mouse_reset
 
     ret
-ENDP mouse_uninstall
+endp mouse_uninstall
+
+DATASEG
+    custom_mouse_handler    dd ?
 
 END
 

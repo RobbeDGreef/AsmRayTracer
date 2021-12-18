@@ -240,6 +240,14 @@ proc log_str
     ret
 endp log_str
 
+proc log_char
+    arg @@char:dword
+    call log_prefix
+    call print_char, [@@char]
+    call print_newline
+    ret
+endp log_char
+
 proc log_int
     arg @@value:dword
     call log_prefix

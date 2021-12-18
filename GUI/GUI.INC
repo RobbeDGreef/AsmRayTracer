@@ -1,4 +1,5 @@
 GLOBAL gui_init:PROC               ;; void gui_init()
+GLOBAL gui_destruct:PROC           ;; void gui_destruct()
 GLOBAL pixel_plot:PROC             ;; void pixel_plot(int x, int y, int color)
 GLOBAL char_plot:PROC              ;; void draw_char(int x, int y, int char, int color)
 GLOBAL text_plot:PROC              ;; void text_plot(int x, int y, char* text, int color)

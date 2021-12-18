@@ -34,6 +34,8 @@ proc main
     call gui_init
     call mm_init
 
+    ;; Video mode needs to be set before gui_start is called
+    call video_set_mode, VIDEO_MODE_GRAPHICS
     call gui_start
 
     ;;call video_buffer_flip
@@ -41,7 +43,6 @@ proc main
     call log_str, offset start_str
     call gettime_millis
     mov [@@begin_time], eax
-    call video_set_mode, VIDEO_MODE_GRAPHICS
 
     ;call video_buffer_flip
     
@@ -97,6 +98,12 @@ proc main
 ifndef NASM
     ;;call renderer_show_img
     call sleep_millis, 6000
+    
+    ;; gui_destruct HAS TO BE CALLED before the program finishes, it will 
+    ;; disable the mouse and if we don't do that dos will try to dispatch
+    ;; mouse events to a program that doesn't exist anymore resulting in 
+    ;; crashes.
+    call gui_destruct
 else
     call renderer_to_bmp, offset bmpout
 endif
@@ -111,7 +118,10 @@ endif
     call print_str, offset finished_str2
     call print_newline
 
+    call destruct
+
     call exit, 0
+    ret
 endp main
 
 STACK 5000h

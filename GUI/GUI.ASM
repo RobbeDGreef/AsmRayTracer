@@ -17,19 +17,27 @@ CODESEG
 ;; GUI COLOR PALETTE https://colorhunt.co/palette/0f2c67cd1818f3950df4e185
 
 proc gui_init
-    uses eax
+    uses eax, ebx
 
     call open_file, offset font_file_name, 0
-    call read_file, eax, offset font_array, FONTFILE_SIZE
+    mov ebx, eax
+    call read_file, ebx, offset font_array, FONTFILE_SIZE
+    call close_file, ebx
 
     call open_file, offset cursor_file_name, 0
-    call read_file, eax, offset cursor_array, CURSORFILE_SIZE
+    mov ebx, eax
+    call read_file, ebx, offset cursor_array, CURSORFILE_SIZE
+    call close_file, ebx
 
     ret
 endp gui_init
 
-proc gui_start
+proc gui_destruct
+    call mouse_uninstall
+    ret
+endp gui_destruct
 
+proc gui_start
     call fill_background, 0F2C67h
     call text_plot, 10, 5, offset title_name_string, 0CD1818h 
     call draw_horizontal_line, 0, [config_video_img_width], 45, 0CD1818h 
@@ -91,31 +99,27 @@ proc handle_click
 endp handle_click
 
 proc mouse_handler
-    USES    eax, ebx, ecx, edx, edi, esi
-	
+    uses eax, ebx, ecx, edx, edi, esi
+
     movzx eax, dx		; get mouse height 
-	sar cx, 1			; horizontal cursor position is doubled in input 
+	
+    ;; This isn't true as far as i can tell ??
+    ;sar cx, 1			; horizontal cursor position is doubled in input 
     movzx ebx, cx
 
     call log_int, eax ;; y
     call log_int, ebx ;; x
 
-    ;; Check whether the old position wasn't set yet
-    mov edi, [last_cursor_position]
-    cmp edi, 0
-    je @@skip_old
-
+    lea edi, [last_cursor_position]
     ;; This won't fully work. What if the user hovered over something else than the background?
     call cursor_plot, [edi + Coordinate.x], [edi + Coordinate.y], 0F2C67h ;;  remove old cursor
-
-@@skip_old:
 
     lea esi, [edi + Coordinate.x]
     mov [esi], ebx
     lea esi, [edi + Coordinate.y]
     mov [esi], eax
 
-    call cursor_plot, ebx, eax, 0CD1818h ;; probably need to flip buffer too.
+    call cursor_plot, ebx, eax, 0CD1818h
     call video_buffer_flip  
 
 	and bl, 3			; check for two mouse buttons (2 low end bits)
@@ -130,21 +134,13 @@ endp mouse_handler
 
 proc mouse_init ;; TODO UNINSTALL?
     uses eax 
-
-    call    mouse_present
-    cmp     eax, 1
-    jne      @@end
-
-    call mouse_install, offset mouse_handler
-
-    @@end:
-
+    call mouse_install, offset mouse_handler, VIDEO_FB_WIDTH, VIDEO_FB_HEIGHT
     ret
 endp mouse_init
 
 proc fill_background
     arg @@color:dword
-    uses eax, ebx, ecx, edx, edi
+    uses eax, ecx, edi
 
     mov eax, [@@color]
     mov ecx, VIDEO_MAX_FB_SIZE / 4
@@ -152,7 +148,7 @@ proc fill_background
     lea edi, [vesa_lfb]
     rep stosd
     
-ret
+    ret
 endp fill_background
 
 proc draw_focal_length
@@ -168,7 +164,7 @@ proc draw_focal_length
     ;call itoa, [config_video_img_focal_length], offset focal_length_string_buffer, 10
     ;call text_plot, ebx, ecx, eax, 0CD1818h
     call float_plot, ebx, ecx, [config_video_img_focal_length], 0CD1818h 
-ret
+    ret
 endp draw_focal_length
 
 proc draw_video_height
@@ -250,7 +246,7 @@ endp
 
 proc draw_horizontal_line
     arg @@x1:dword, @@x2:dword, @@y:dword, @@color:dword
-    uses eax, ebx, ecx, edx
+    uses eax, ebx
 
     mov eax, [@@x1]
     mov ebx, [@@x2]
@@ -606,7 +602,7 @@ DATASEG
     button_array dd 10 dup (?)
     button_count dd 0
 
-    last_cursor_position dd 0
+    last_cursor_position dd 0, 0
 
     buf db 32 dup (0)
 
