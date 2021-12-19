@@ -39,7 +39,8 @@ WSL 1 is not able to do this you will need WSL 2**.
 linux mode but this bug will soon be fixed*
 
 ## Current state of things
-![Sphere render](saved/metal_test.bmp?raw=true "First sphere render")
+![Suzanne render](saved/metal_suzanne.bmp?raw=true "Loaded object")
+![Sphere reflections](saved/positional_camera.bmp?raw=true "Reflections")
 
 ## Coding style
 ### Line limit
@@ -78,9 +79,9 @@ Assembly language is case insensitive but try to leave everything lowercase.
 - [x] Compatability mode for easier debugging and profiling
 - [x] Multiple samples
 - [x] Shading
-- [ ] Camera
+- [x] Camera
   - [x] Positioned
-  - [ ] ViewAt
+  - [x] ViewAt
 - [ ] Materials
   - [ ] Diffuse materials
     - [x] Simple perfect diffuse
@@ -89,7 +90,12 @@ Assembly language is case insensitive but try to leave everything lowercase.
     - [x] Simple perfect metallic
     - [ ] Configurable metallic
   - [x] Unlit
+  - [x] UV
+  - [ ] Dielectric (maybe)
 - [ ] Scene system
   - [x] Simple linked list
   - [ ] BVH trees (maybe)
-- [ ] Loading objects other than spheres (maybe)
+- [x] Objects
+  - [x] Spheres
+  - [x] Triangles
+  - [x] Loading wavefront OBJ files
