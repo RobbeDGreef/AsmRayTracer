@@ -1,4 +1,4 @@
-eIDEAL
+IDEAL
 P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
@@ -162,7 +162,7 @@ proc hit_triangle
     call vec_length, edi
     call vec_div_float, edi, eax
     call hit_calc_hit_front, [@@hit], [@@ray]
-
+    
     mov eax, 1
     jmp @@end
 
