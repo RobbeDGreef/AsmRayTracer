@@ -21,6 +21,8 @@ include "rt/texture/tiles.inc"
 include "rt/texture/image.inc"
 include "rt/texture/uv.inc"
 
+include "input/objload.inc"
+
 include "init.inc"
 include "utils.inc"
 include "bmp.inc"
@@ -36,7 +38,7 @@ proc main
           @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
           @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,\ 
           @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal,\
-          @@loc2:Vec, @@loc3:Vec, @@triangle:Triangle
+          @@loc2:Vec, @@loc3:Vec, @@triangle:Triangle, @@uv:Uv
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -51,7 +53,7 @@ proc main
     ;; Setting up our scene
     lea ebx, [@@scene]
     call scene_init, ebx
-    jmp @@setup_triangle_test
+    jmp @@setup_cube_test
 
     ;; =========================================================================
     ;; main scene
@@ -211,7 +213,7 @@ proc main
     jmp @@start_renderer
     
     ;; =========================================================================
-    ;; Traingle test scene
+    ;; Triangle test scene
     ;; =========================================================================
 @@setup_triangle_test:
 
@@ -231,12 +233,27 @@ proc main
     lea edi, [@@loc3]
     lea edx, [@@loc2]
     lea eax, [@@loc]
-    call vec_set, edi, [float_minus_1],[float_0],[float_0]
-    call vec_set, edx, [float_0],[float_1],[float_0]
-    call vec_set, eax, [float_0],[float_0],[float_0]
+    call vec_set, edi, [float_1],[float_minus_1],[float_1]
+    call vec_set, edx, [float_1],[float_1],[float_1]
+    call vec_set, eax, [float_minus_1],[float_minus_1],[float_1]
     call triangle_set, ecx, eax, edx, edi, esi
     call scene_add, ebx, ecx
 
+    jmp @@start_renderer
+
+@@setup_cube_test:
+    ;; Gray blender color for fun
+    lea eax, [@@color]
+    call vec_set_rgb, eax, 140, 140, 140
+    
+    lea ecx, [@@texsolid]
+    call solid_init, ecx, eax
+
+    ;; Initialize the lambertian material
+    lea esi, [@@met]
+    call metal_init, esi, ecx
+
+    call obj_load, ebx, esi, offset cube_path
     jmp @@start_renderer
 
     ;; End setting up scene
@@ -276,6 +293,7 @@ DATASEG
     test_str db "Hello world!!", 0
     
     football_texture db "IMAGES/FOOTBALL.BMP", 0
+    cube_path db "OBJS/MONKEY.OBJ"
 
     sphere2_radius dd 100.0
     sphere2_y dd -100.5

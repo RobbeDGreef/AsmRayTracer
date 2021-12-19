@@ -9,7 +9,7 @@ material_objs = mat.obj lmbrtian.obj metal.obj unlit.obj emissive.obj
 texture_objs = solid.obj texture.obj tiles.obj image.obj
 output_objs = bmp.obj video.obj
 gui_objs = gui.obj
-input_objs = bmpread.obj
+input_objs = bmpread.obj objload.obj
 
 testobjs = init.obj test.obj utils.obj vec.obj ray.obj
 
