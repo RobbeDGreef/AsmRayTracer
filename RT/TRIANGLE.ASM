@@ -46,11 +46,6 @@ proc hit_triangle
     call vec_dot, ebx, edx
     mov ebx, eax
 
-    ;; Double sided, return
-    call flt, ebx, [float_0]
-    cmp eax, 1
-    ;je @@end
-
 @@check_parallel:
     mov [@@temp], ebx
     fld [@@temp]
