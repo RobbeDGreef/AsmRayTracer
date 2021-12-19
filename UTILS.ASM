@@ -1025,6 +1025,34 @@ proc flt
     ret
 endp flt
 
+proc fmin
+    arg @@v1:dword, @@v2:dword
+    uses ebx
+    mov ebx, [@@v1]
+    call flt, [@@v1], [@@v2]
+    cmp eax, 1
+    je @@end
+    mov ebx, [@@v2]
+
+@@end:
+    mov eax, ebx
+    ret
+endp fmin
+
+proc fmax
+    arg @@v1:dword, @@v2:dword
+    uses ebx
+    mov ebx, [@@v1]
+    call flt, [@@v2], [@@v1]
+    cmp eax, 1
+    je @@end
+    mov ebx, [@@v2]
+
+@@end:
+    mov eax, ebx
+    ret
+endp fmax
+
 ;; Calculates the arccos(x). Takes answer on the fpu stack and 
 ;; returns the answer on the fpu stack.
 proc fpu_arccos

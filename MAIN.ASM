@@ -293,7 +293,7 @@ DATASEG
     test_str db "Hello world!!", 0
     
     football_texture db "IMAGES/FOOTBALL.BMP", 0
-    cube_path db "OBJS/MONKEY.OBJ"
+    cube_path db "OBJS/CUBE.OBJ"
 
     sphere2_radius dd 100.0
     sphere2_y dd -100.5
