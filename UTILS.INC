@@ -12,6 +12,7 @@ GLOBAL print_hexdump:PROC       ;; void print_hexdump(char* loc, dword amount)
 GLOBAL log_str:PROC
 GLOBAL log_int:PROC
 GLOBAL log_hex:PROC
+GLOBAL log_char:PROC
 
 ;; General 
 GLOBAL exit:PROC                ;; void exit(dword exit_code)

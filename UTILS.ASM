@@ -256,6 +256,14 @@ proc log_hex
     ret
 endp log_hex
 
+proc log_char
+    arg @@char:dword
+    call log_prefix
+    call print_char, [@@char]
+    call print_newline
+    ret
+endp log_char
+
 ;; Exits the program with the given statuscode 
 proc exit
     arg @@exitcode:dword
