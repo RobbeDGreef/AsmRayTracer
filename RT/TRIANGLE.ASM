@@ -175,7 +175,8 @@ endp hit_triangle
 
 proc triangle_set
     arg @@triangle:PTR Triangle, @@p1:PTR Point, @@p2:PTR Point, @@p3:PTR Point, @@mat:PTR Mat
-    uses eax, ebx
+    local @@min_vec:Vec, @@max_vec:Vec, @@pad_vec:Vec
+    uses eax, ebx, ecx, edx, edi
 
     call object_set, [@@triangle], offset hit_triangle, [@@mat]
 
@@ -187,6 +188,57 @@ proc triangle_set
     mov [eax+Triangle.p2], ebx
     mov ebx, [@@p3]
     mov [eax+Triangle.p3], ebx
+
+    ;; Now calculate the bounding box of a triangle
+    ;; Essentially we will just find the minimum and maximum x,y,z values of the
+    ;; three coords. Its pretty simple code, its just a lot
+    mov ebx, [@@p1]
+    mov ecx, [@@p2]
+    mov edx, [@@p3]
+    lea edi, [@@min_vec]
+
+    call fmin, [ebx+Vec.x], [ecx+Vec.x]
+    call fmin, [edx+Vec.x], eax
+    call vec_set_x, edi, eax
+    
+    call fmin, [ebx+Vec.y], [ecx+Vec.y]
+    call fmin, [edx+Vec.y], eax
+    call vec_set_y, edi, eax
+    
+    call fmin, [ebx+Vec.z], [ecx+Vec.z]
+    call fmin, [edx+Vec.z], eax
+    call vec_set_z, edi, eax
+
+    lea edi, [@@max_vec]
+
+    call fmax, [ebx+Vec.x], [ecx+Vec.x]
+    call fmax, [edx+Vec.x], eax
+    call vec_set_x, edi, eax
+    
+    call fmax, [ebx+Vec.y], [ecx+Vec.y]
+    call fmax, [edx+Vec.y], eax
+    call vec_set_y, edi, eax
+    
+    call fmax, [ebx+Vec.z], [ecx+Vec.z]
+    call fmax, [edx+Vec.z], eax
+    call vec_set_z, edi, eax
+
+    ;; Now we will add a little bit of padding to the bounding box. We
+    ;; have to do this because otherwise the box might have 0 width
+    ;; or other weird things when triangles are perfectly aligned with the box
+
+    lea eax, [@@pad_vec]
+    call vec_set, eax, [float_0_0_1], [float_0_0_1], [float_0_0_1]
+
+    lea ebx, [@@min_vec]
+    lea ecx, [@@max_vec]
+    call vec_sub, ebx, ebx, eax
+    call vec_add, ecx, ecx, eax
+
+    mov eax, [@@triangle]
+    lea eax, [eax+Object.bounding_box]
+
+    call aabb_set, eax, ebx, ecx
 
     ret
 endp triangle_set
