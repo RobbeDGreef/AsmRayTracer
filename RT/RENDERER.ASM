@@ -475,7 +475,7 @@ proc renderer_init
 
     call memset, [img_framebuffer], 0, [img_framebuffer_size]
 
-    cmp [config_render_hdri_path], 0
+    cmp [byte ptr config_render_hdri_path], 0
     je @@end
     call alloc, size Image
     mov [img_hdri_texture], eax
