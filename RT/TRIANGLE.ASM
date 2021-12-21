@@ -1,4 +1,4 @@
-eIDEAL
+IDEAL
 P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
@@ -45,11 +45,6 @@ proc hit_triangle
     ;; d = dot(edge1, pvec)
     call vec_dot, ebx, edx
     mov ebx, eax
-
-    ;; Double sided, return
-    call flt, ebx, [float_0]
-    cmp eax, 1
-    ;je @@end
 
 @@check_parallel:
     mov [@@temp], ebx
@@ -164,8 +159,10 @@ proc hit_triangle
     lea edx, [@@edge2]
     lea edi, [ebx+Hit.normal]
     call vec_cross, edi, ecx, edx
+    call vec_length, edi
+    call vec_div_float, edi, eax
     call hit_calc_hit_front, [@@hit], [@@ray]
-
+    
     mov eax, 1
     jmp @@end
 

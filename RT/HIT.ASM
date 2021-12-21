@@ -27,15 +27,17 @@ endp hit_cpy
 ;; Calculate whether or not we hit the front of the face or the back
 proc hit_calc_hit_front
     arg @@hit:PTR Hit, @@ray:PTR Ray
+    uses eax, ebx, ecx
 
     mov ebx, [@@hit]
     mov [ebx+Hit.hit_front], 1
 
-    ;; If our ray_direction * normal > 0 we hit the inside of the sphere and we
-    ;; need to flip our normal (we want our normal to always point out).
+    ;; If our ray_direction * normal > 0 we hit the inside of our object and we
+    ;; need to flip it. (we want normals to always point out)
     mov eax, [@@ray]
     lea eax, [eax+Ray.direction]
-    call vec_dot, eax, edx
+    lea ecx, [ebx+Hit.normal]
+    call vec_dot, eax, ecx
     call flt, eax, [float_0]
     cmp eax, 1
     jne @@flip_normals
@@ -48,6 +50,6 @@ proc hit_calc_hit_front
 
 @@end:
     ret
-endp hit_set_face_normal
+endp hit_calc_hit_front
 
 END
