@@ -1164,7 +1164,8 @@ DATASEG
     float_10        dd 10.0
     float_max_char  dd 255.0
     float_1000000   dd 1000000.0
-    float_pos_inf   dd 07F800000h   ; the bytes for +inf
+    float_pos_inf   dd 100000000.0
+    ;float_pos_inf   dd 07F800000h   ; the bytes for +inf
     float_neg_inf   dd 0FF800000h   ; the bytes for -inf
     degrees_to_radians_magic dd 0.017453292
 END

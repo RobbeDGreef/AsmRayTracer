@@ -61,7 +61,7 @@ proc hit_sphere
     arg @@object:PTR Object, @@ray:PTR Ray, @@t_min:dword, @@t_max:dword,\
         @@hit:PTR Hit
     local @@ac:Vec, @@temp:dword, @@a:dword, @@half_b:dword, @@c:dword,\
-          @@half_b:dword, @@root:dword, @@hit_point:Point, @@sqrt:dword
+          @@root:dword, @@hit_point:Point, @@sqrt:dword
     uses ebx, ecx, edx, edi
 
     ;; Yay math. To check if we hit a function we are making use of the good old
@@ -147,7 +147,7 @@ proc hit_sphere
     fmul [@@half_b]
     fxch
     fsubp
-    fstp [@@temp]                   ;; D = b^2 - 4 * a * c
+    fstp [@@temp]                   ;; D = half_b*half_b - a * c 
 
     call flt, [@@temp], [float_0]   ;; If our discriminant is smaller than 0
                                     ;; return false. (we can't sqrt negatives)

@@ -67,57 +67,6 @@ proc image_init
     call bmp_read, [@@image_path], ecx, edx
     mov [ebx+Image.buffer], eax
 
-;    mov ebx, [@@tex]
-;    mov [ebx+Image.width], 40
-;    mov [ebx+Image.height], 20
-;
-;    call alloc, 40*20*12
-;    mov [ebx+Image.buffer], eax
-;    call print_hex, [ebx+Image.buffer]
-;    call print_newline
-;
-;    mov ebx, 19
-;@@h_loop:
-;    cmp ebx, 0
-;    jl @@end
-;
-;    mov ecx, 39
-;    @@w_loop:
-;        cmp ecx, 0
-;        jl @@end_w_loop
-;
-;        push [float_0_25]
-;        mov [@@temp], ebx
-;        fild [@@temp]
-;        mov [@@temp], 19
-;        fild [@@temp]
-;        fdivp
-;        fstp [@@temp]
-;        push [@@temp]
-;
-;        mov [@@temp], ecx
-;        fild [@@temp]
-;        mov [@@temp], 39
-;        fild [@@temp]
-;        fdivp
-;        fstp [@@temp]
-;        push [@@temp]
-;
-;        push eax
-;        call vec_set
-;        add esp, 16
-;
-;        dec ecx
-;        add eax, 12
-;        jmp @@w_loop
-;    
-;    @@end_w_loop:
-;    dec ebx
-;    jmp @@h_loop
-;
-;@@end:
-;    mov ebx, [@@tex]
-;
     ret
 
 endp image_init
