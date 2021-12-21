@@ -111,7 +111,7 @@ proc mouse_install
     pop ds
 
     mov eax, 0ch    ;; Install user defined mouse handler
-    mov ecx, 15h    ;; event mask: mouse movement, left released, right released
+    mov ecx, 255    ;; event mask: mouse movement, left released, right released
     push cs
     pop es
     mov edx, offset mouse_internal_handler
