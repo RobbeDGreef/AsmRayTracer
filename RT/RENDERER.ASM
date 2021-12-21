@@ -5,7 +5,7 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "gui/gui.inc"
 include "output/video.inc"
-include "output/bmp.inc"
+include "bmp.inc"
 include "utils.inc"
 include "config.inc"
 include "mm.inc"
@@ -17,7 +17,9 @@ include "rt/object.inc"
 include "rt/hit.inc"
 include "rt/scene.inc"
 include "rt/cam.inc"
-include "rt/mat.inc"
+include "rt/mat/mat.inc"
+include "rt/texture/image.inc"
+include "rt/sphere.inc"
 
 CODESEG
 
@@ -66,7 +68,7 @@ endp fclamp_0_to_1
 
 proc renderer_to_buffer
     arg @@buffer:dword, @@buf_width:dword, @@buf_height:dword
-    local @@lineadd_vm:dword, @@lineadd_buf:dword
+    local @@lineadd_vm:dword, @@lineadd_buf:dword, @@temp:dword
     uses eax, ebx, ecx
 
     ;; Pseudo for width (the same goes for height)
@@ -182,21 +184,16 @@ proc shade_normals
     uses ebx, ecx, edx
 
     ;; Shading our normals. This is good for debugging
+    ;; (normal + (1, 1, 1)) * 0.5
+    
     mov ebx, [@@dest_color]
-    call ray_at, [@@ray], ebx, [ecx+Hit.t]
-    
-    mov edx, [@@ray]
-    lea edx, [edx+Ray.direction]
-    
-    lea edx, [@@temp_vec]
-    call vec_set, edx, [float_0], [float_0], [float_minus_1]
-    call vec_sub, ebx, ebx, edx
-    
-    call vec_length, ebx
-    call vec_div_float, ebx, eax
-    
-    call vec_set, edx, [float_1], [float_1], [float_1]
-    call vec_add, ebx, ebx, edx
+    mov ecx, [@@hit]
+    lea ecx, [ecx+Hit.normal]
+
+    call vec_cpy, ebx, ecx
+    lea ecx, [@@temp_vec]
+    call vec_set, ecx, [float_1], [float_1], [float_1]
+    call vec_add, ebx, ebx, ecx
     call vec_mul_float, ebx, [float_0_50]
 
     ret
@@ -205,13 +202,18 @@ endp shade_normals
 proc cast_ray
     arg @@ray:PTR Ray, @@dest_color:PTR Color, @@bounces:dword, @@scene:PTR Scene
     local @@temp_vec:Vec, @@target:Vec, @@temp:dword, @@hit:Hit, @@bounced:Ray,\
-          @@color:Color
+          @@color:Color, @@u:dword, @@v:dword
     uses eax, ebx, ecx, edx, edi, esi
 
-    cmp [@@bounces], 0
-    je @@emission
+    ;; This line is veryyyyy important. We want to make sure that our return 
+    ;; color is at least black. Otherwise we might have garbage in this memory
+    ;; space and get garbage colors. (believe me i trakced a hard bug on this,
+    ;; we don't want stack values in our colors).
+    call vec_set, [@@dest_color], [float_0], [float_0], [float_0]
 
-@@continue:
+    cmp [@@bounces], 0
+    je @@background
+
     lea ecx, [@@hit]
     call scene_hit, [@@scene], [@@ray], [float_0_0_1], [float_pos_inf], ecx
     cmp eax, 0
@@ -223,10 +225,10 @@ proc cast_ray
 
     ;; Usefull for debugging.
     ;call shade_normals, [@@ray], ecx, [@@dest_color] 
+    ;jmp @@end
 
     mov edx, [ecx+Hit.hit_mat]
     lea edi, [@@bounced]
-    mov edx, [edx]
 
     ;; Calculate the material scatter and bounce the ray
     call [edx+Mat.scatter], edx, [@@ray], ecx, [@@dest_color], edi
@@ -252,14 +254,23 @@ proc cast_ray
 
 @@background:
     
-    ;lea eax, [@@color]
-    ;lea ebx, [@@temp_vec]
-    ;call vec_set, eax, [float_0_50], [float_0_75], [float_1]
-    ;call vec_set, ebx, [float_1], [float_1], [float_1]
-    ;call lerp, [@@dest_color], [@@ray], eax, ebx
-
-    ;; A little faster, but less pretty.
+    cmp [img_hdri_texture], 0
+    jne @@hdri_texture
     call vec_cpy, [@@dest_color], offset config_render_background
+    jmp @@end
+
+@@hdri_texture:
+    lea ebx, [@@u]
+    lea ecx, [@@v]
+    mov edx, [@@ray]
+    lea edx, [edx+Ray.direction]
+    lea edi, [@@temp_vec]
+    call vec_cpy, edi, edx
+    call vec_length, edi
+    call vec_div_float, edi, eax
+
+    call sphere_calc_coords, edi, ebx, ecx
+    call image_get_color, [img_hdri_texture], [ebx], [ecx], [@@dest_color]
 
 @@end:
     ret
@@ -341,9 +352,9 @@ proc renderer_render
     fstp [@@float_height_minus_1]
 
     ;; Set the camera location to (0, 0, 0)
-    lea eax, [@@temp_vec]
-    call vec_set, eax, [float_0], [float_0], [float_0]
-    call cam_set_loc, eax
+    lea eax, [config_render_cam_pos]
+    lea ebx, [config_render_cam_look_at]
+    call cam_set_loc, eax, ebx
 
     mov esi, [img_framebuffer]
     mov eax, [config_video_img_height]
@@ -407,6 +418,8 @@ proc renderer_render
         @@end_sample_loop:
 
         call vec_div_int, esi, [config_render_samples]
+        
+        ;; Do gamma correction
         call vec_sqrt, esi
 
         add esi, VEC_SIZE
@@ -449,16 +462,6 @@ proc renderer_init
     mul ebx
     mov [img_framebuffer_size], eax
 
-ifndef NASM
-    mov ebx, 0500000h                     ;; Load the video framebuffer at 5 MB
-    mov [img_framebuffer], ebx
-    add ebx, eax
-
-    ;; Make sure it is 16bytes aligned (for optimalisation reasons)
-    and ebx, ecx
-    add ebx, 16
-    mov [img_rgbbuf], ebx
-else
     add eax, [img_rgbbuf_size]
     add eax, 64                     ;; Some extra padding bytes
     
@@ -469,9 +472,16 @@ else
     and eax, ecx
     add eax, 16
     mov [img_rgbbuf], eax
-endif
 
     call memset, [img_framebuffer], 0, [img_framebuffer_size]
+
+    cmp [config_render_hdri_path], 0
+    je @@end
+    call alloc, size Image
+    mov [img_hdri_texture], eax
+    call image_init, eax, offset config_render_hdri_path
+
+@@end:
     ret
 endp renderer_init
 
@@ -483,6 +493,7 @@ DATASEG
     img_rgbbuf            dd 0
     img_framebuffer_size  dd 0
     img_rgbbuf_size       dd 0
+    img_hdri_texture      dd 0
 
     render_start_str db "Render start", 0
 

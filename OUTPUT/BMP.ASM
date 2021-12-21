@@ -4,38 +4,9 @@ MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "utils.inc"
-include "output/bmp.inc"
+include "bmp.inc"
 
 CODESEG
-
-BMP_HDR_ID                  equ 4d42h
-BMP_HDR_SIZE                equ 14
-BMP_DIB_SIZE                equ 40
-BMP_DIB_PLANES              equ 1
-BMP_DIB_BPP                 equ 32
-BMP_DIB_COMPRESSION_TYPE    equ 0
-BMP_DIB_COMPRESSION_SIZE    equ 0
-
-struc bmp_hdr
-    id              dw ?
-    size            dd ?
-    reserved        dd ?
-    img_data_off    dd ?
-ends bmp_hdr
-
-struc bmp_dip_hdr
-    size                    dd ?
-    img_width               dd ?
-    img_height              dd ?
-    places_cnt              dw ?
-    bpp                     dw ?
-    compression_type        dd ?
-    compression_size        dd ?
-    x_ppm                   dd ?
-    y_ppm                   dd ?
-    used_colors_cnt         dd ?
-    important_colors_cnt    dd ? 
-ends bmp_dip_hdr
 
 proc bmp_write
     arg @@file_name:PTR byte, @@buf:PTR byte, @@buf_size:dword, @@width:dword, @@height:dword 

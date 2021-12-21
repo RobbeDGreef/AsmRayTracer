@@ -4,21 +4,15 @@ MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "rt/object.inc"
-include "rt/mat.inc"
+include "rt/mat/mat.inc"
 
 CODESEG
 
 proc object_set
-    arg @@obj:PTR Object, @@point:PTR Point, @@hit_function:dword, @@mat:PTR Mat
+    arg @@obj:PTR Object, @@hit_function:dword, @@mat:PTR Mat
     uses eax, ebx
 
     ;; Simply sets the values in the object struct.
-
-    mov eax, [@@obj]
-    lea eax, [eax+Object.location]
-    mov ebx, [@@point]
-    call vec_cpy, eax, ebx
-
     mov eax, [@@obj]
     mov ebx, [@@hit_function]
     mov [eax+Object.hit_function], ebx

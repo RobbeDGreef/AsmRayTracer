@@ -21,6 +21,22 @@ proc vec_set
     ret
 endp vec_set
 
+proc vec_set_rgb
+    arg @@v:dword, @@r:dword, @@g:dword, @@b:dword 
+    uses eax
+    mov eax, [@@v]
+    fild [@@r]
+    fdiv [float_max_char]
+    fstp [eax+Vec.x]
+    fild [@@g]
+    fdiv [float_max_char]
+    fstp [eax+Vec.y]
+    fild [@@b]
+    fdiv [float_max_char]
+    fstp [eax+Vec.z]
+    ret
+endp vec_set_rgb
+
 ;; Copy the src vector into the destination vector
 proc vec_cpy
     arg @@dest:PTR Vec, @@src:PTR Vec
@@ -299,10 +315,8 @@ proc vec_cross
     fmul [ecx+Vec.z]
     fld [ebx+Vec.z]
     fmul [ecx+Vec.y]
-    fsub
-    fstp [@@temp]
-    mov edx, [@@temp]
-    mov [eax+Vec.x], edx
+    fsubp
+    fstp [eax+Vec.x]
 
     fld [ebx+Vec.z]
     fmul [ecx+Vec.x]

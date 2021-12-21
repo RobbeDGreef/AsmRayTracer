@@ -9,9 +9,53 @@ include "rt/ray.inc"
 include "rt/sphere.inc"
 include "rt/object.inc"
 include "rt/hit.inc"
-include "rt/mat.inc"
+include "rt/mat/mat.inc"
 
 CODESEG
+
+proc sphere_calc_coords
+    arg @@normal:PTR Vec, @@u:PTR dword, @@v:PTR dword
+    local @@temp:dword
+    uses eax, ebx, ecx
+
+    mov ecx, [@@normal]
+
+    ;; u = (atan2(-normal.z, normal.x) + pi) / (2*pi)
+    call vec_get_z, ecx
+    mov [@@temp], eax
+    fld [@@temp]
+    fchs
+    call vec_get_x, ecx
+    mov [@@temp], eax
+    fld [@@temp]
+    fpatan          ;; arctan(st(1) / st(0))
+    fldpi
+    faddp
+
+    fldpi
+    fldpi
+    faddp
+    fdivp
+    fstp [@@temp]
+    mov ebx, [@@u]
+    mov eax, [@@temp]
+    mov [ebx], eax
+
+    ;; v = acos(-normal.y) / pi
+    call vec_get_y, ecx
+    mov [@@temp], eax
+    fld [@@temp]
+    fchs
+    call fpu_arccos
+    fldpi
+    fdiv 
+    fstp [@@temp]
+    mov ebx, [@@v]
+    mov eax, [@@temp]
+    mov [ebx], eax
+
+    ret
+endp sphere_calc_coords
 
 proc hit_sphere
     arg @@object:PTR Object, @@ray:PTR Ray, @@t_min:dword, @@t_max:dword,\
@@ -74,7 +118,7 @@ proc hit_sphere
     mov edi, [edx+Sphere.radius]
     mov [@@temp], edi
     
-    lea edi, [edx+Object.location]
+    lea edi, [edx+Sphere.location]
     call vec_sub, ecx, ebx, edi     ;; (A - C) = Ray.origin - Sphere.location
     
     mov ebx, [@@ray]
@@ -160,42 +204,48 @@ proc hit_sphere
     jmp @@end
 
 @@set_hit:
+    ;; Set the t value in our hit struct.
     mov ebx, [@@hit]
     mov eax, [@@root]
     mov [ebx+Hit.t], eax
 
+    ;; Calculate the hit point with our t value
     lea ecx, [ebx+Hit.hit_point]
     call ray_at, [@@ray], ecx, [@@root]
     
+    ;; Set the material we hit
     mov eax, [@@object]
-    lea edi, [eax+Object.location]
+    mov eax, [eax+Object.material]
+    mov [ebx+Hit.hit_mat], eax
+
+    ;; Calculate the hit normal
+    ;; The normal on a sphere can easily be calculated with the following 
+    ;; formula:
+    ;;
+    ;;      (hit_point - center) / radius
+    ;;
+    ;; We divide by radius to get a unit vector
+    mov eax, [@@object]
+    lea edi, [eax+Sphere.location]
     mov eax, [eax+Sphere.radius]
     lea edx, [ebx+Hit.normal]
     call vec_sub, edx, ecx, edi
     call vec_div_float, edx, eax
 
-    mov eax, [@@object]
-    lea eax, [eax+Object.material]
-    mov [ebx+Hit.hit_mat], eax
+    ;; Calculate the UV coordinates of a sphere. We are going to use spherical
+    ;; cooridnates. Those are the simplest.
+    ;;
+    ;;      todo: write out math 
 
-    mov [ebx+Hit.hit_front], 1
-
-    mov eax, [@@ray]
-    lea eax, [eax+Ray.direction]
-    call vec_dot, eax, edx
-    mov [@@temp], eax
-    call flt, [@@temp], [float_0]
-    cmp eax, 1
-    jne @@flip_normals
-    jmp @@end_set_hit
-
-@@flip_normals:
-    mov [ebx+Hit.hit_front], 0
-    lea eax, [ebx+Hit.normal]
-    call vec_mul_float, eax, [float_minus_1]
+    lea ecx, [ebx+Hit.normal]
+    lea eax, [ebx+Hit.u]
+    lea edi, [ebx+Hit.v]
+    call sphere_calc_coords, ecx, eax, edi
+    call hit_calc_hit_front, [@@hit], [@@ray]
 
 @@end_set_hit:
     mov eax, 1
+
 @@end:
     ret
 endp hit_sphere
@@ -204,11 +254,15 @@ proc sphere_set
     arg @@sphere:PTR Sphere, @@location:PTR Point, @@radius:dword, @@mat:PTR Mat
     uses eax, ebx
 
-    call object_set, [@@sphere], [@@location], offset hit_sphere, [@@mat]
+    call object_set, [@@sphere], offset hit_sphere, [@@mat]
     
     mov eax, [@@sphere]
     mov ebx, [@@radius]
     mov [eax+Sphere.radius], ebx
+
+    lea eax, [eax+Sphere.location]
+    mov ebx, [@@location]
+    call vec_cpy, eax, ebx
 
     ret
 endp sphere_set

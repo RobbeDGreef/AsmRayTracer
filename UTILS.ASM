@@ -404,7 +404,7 @@ proc write_str
 endp write_str
 
 proc lseek_file
-    arg @@file_handle:dword, @@origin:dword, @@offset:dword
+    arg @@file_handle:dword, @@offset:dword, @@origin:dword
     uses ebx, ecx, edx
 
 ifndef NASM
@@ -761,6 +761,29 @@ proc flt
     ret
 endp flt
 
+;; Calculates the arccos(x). Takes answer on the fpu stack and 
+;; returns the answer on the fpu stack.
+proc fpu_arccos
+    local @@temp:dword
+    ;; arccos(x) = 2arctan(sqrt(1-x^2) / (1+x))
+    fst [@@temp]
+    fmul [@@temp]
+    fld1
+    fsubrp
+    fsqrt
+    fld1
+    fadd [@@temp]
+    fpatan         ;; this instruction does arctan(st(1) / st(0)) 
+    fmul [float_2]
+
+    ret
+endp fpu_arccos
+
+proc fpu_degrees_to_radians
+    fmul [degrees_to_radians_magic]
+    ret
+endp fpu_degrees_to_radians
+
 ;; Returns a random integer between 0 and int32_max (e.i. all positive integers)
 ;; High performance random generator. The algorithm is based on Xoroshiro128 
 ;; but is tweaked to be 32 bit, so essentially you could call it xoroshiro64
@@ -842,4 +865,5 @@ DATASEG
     float_1000000   dd 1000000.0
     float_pos_inf   dd 07F800000h   ; the bytes for +inf
     float_neg_inf   dd 0FF800000h   ; the bytes for -inf
+    degrees_to_radians_magic dd 0.017453292
 END
