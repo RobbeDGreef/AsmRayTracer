@@ -209,16 +209,15 @@ proc vec_dot
 
     fld [eax+Vec.x]
     fld [ebx+Vec.x]
-    fmul
+    fmulp
     fld [eax+Vec.y]
     fld [ebx+Vec.y]
-    fmul 
+    fmulp
+    faddp
     fld [eax+Vec.z]
     fld [ebx+Vec.z]
-    fmul 
-
-    fadd
-    fadd
+    fmulp
+    faddp
 
     fstp [@@temp]
     mov eax, [@@temp]

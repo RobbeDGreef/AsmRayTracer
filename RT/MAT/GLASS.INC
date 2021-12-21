@@ -2,10 +2,10 @@ include "rt/mat/mat.inc"
 include "rt/vec.inc"
 include "rt/texture/texture.inc"
 
-struc Metal
+struc Glass
     mat Mat ?
     texture dd ?    ;; texture pointer
-ends Metal
+    refraction_index dd ?
+ends Glass
 
-GLOBAL metal_init:PROC ;; void metal_init(Metal* lam, Texture* tex)
-GLOBAL reflect:PROC
+GLOBAL glass_init:PROC ;; void glass_init(Glass* lam, Texture* tex)

@@ -38,12 +38,13 @@ proc hit_calc_hit_front
     lea eax, [eax+Ray.direction]
     lea ecx, [ebx+Hit.normal]
     call vec_dot, eax, ecx
-    call flt, eax, [float_0]
+    call flt, [float_0], eax
     cmp eax, 1
-    jne @@flip_normals
+    je @@flip_normals
     jmp @@end
 
 @@flip_normals:
+    ;call log_char, 'F'
     mov [ebx+Hit.hit_front], 0
     lea eax, [ebx+Hit.normal]
     call vec_mul_float, eax, [float_minus_1]

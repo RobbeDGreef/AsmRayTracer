@@ -15,6 +15,7 @@ include "rt/mat/lmbrtian.inc"
 include "rt/mat/metal.inc"
 include "rt/mat/unlit.inc"
 include "rt/mat/emissive.inc"
+include "rt/mat/glass.inc"
 
 include "rt/texture/solid.inc"
 include "rt/texture/tiles.inc"
@@ -38,7 +39,7 @@ proc main
           @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
           @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,\ 
           @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal,\
-          @@loc2:Vec, @@loc3:Vec, @@triangle:Triangle, @@uv:Uv
+          @@loc2:Vec, @@loc3:Vec, @@triangle:Triangle, @@uv:Uv, @@glass:Glass
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -53,19 +54,26 @@ proc main
     ;; Setting up our scene
     lea ebx, [@@scene]
     call scene_init, ebx
-    jmp @@setup_cube_test
+    jmp @@setup_simple_scene
 
     ;; =========================================================================
     ;; Simple scene
     ;; =========================================================================
 @@setup_simple_scene:
     ;; A very simple scene with just 1 lambertian sphere of radius 1 at (0,0,0)
+    ;lea eax, [@@color]
+    ;call vec_set_rgb, eax, 255, 0, 0
+    ;lea ecx, [@@texsolid]
+    ;call solid_init, ecx, eax
+    ;lea edi, [@@lam]
+    ;call lambertian_init, edi, ecx
+
     lea eax, [@@color]
-    call vec_set_rgb, eax, 255, 0, 0
+    call vec_set_rgb, eax, 255, 255, 255
     lea ecx, [@@texsolid]
     call solid_init, ecx, eax
-    lea edi, [@@lam]
-    call lambertian_init, edi, ecx
+    lea edi, [@@glass]
+    call glass_init, edi, ecx, [float_1_50]
 
     lea edx, [@@loc]
     lea ecx, [@@sphere]
@@ -264,14 +272,15 @@ proc main
 @@setup_cube_test:
     ;; Gray blender color for fun
     lea eax, [@@color]
-    call vec_set_rgb, eax, 140, 140, 140
+    call vec_set_rgb, eax, 255, 255, 255
     
     lea ecx, [@@texsolid]
     call solid_init, ecx, eax
 
     ;; Initialize the lambertian material
-    lea esi, [@@met]
-    call metal_init, esi, ecx
+    ;lea esi, [@@met]
+    ;call metal_init, esi, ecx
+    call glass_init, esi, ecx, [float_1_50]
 
     call obj_load, ebx, esi, offset cube_path
     jmp @@start_renderer
@@ -324,5 +333,6 @@ DATASEG
     float_minus_2       dd -2.0
     float_0_80          dd 0.80
     float_0_60          dd 0.60
+    float_1_50          dd 1.50
 
 END main
