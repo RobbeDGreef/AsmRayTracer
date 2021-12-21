@@ -99,3 +99,7 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [x] Spheres
   - [x] Triangles
   - [x] Loading wavefront OBJ files
+
+## License
+This project contains no license file for a good reason, this is not a mistake. 
+ALL files in the repository are copyrighted to the authors of this repository.
