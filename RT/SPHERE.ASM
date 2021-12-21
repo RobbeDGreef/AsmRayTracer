@@ -252,7 +252,8 @@ endp hit_sphere
 
 proc sphere_set
     arg @@sphere:PTR Sphere, @@location:PTR Point, @@radius:dword, @@mat:PTR Mat
-    uses eax, ebx
+    local @@min_point:Point, @@max_point:Point, @@radius_vec:Vec
+    uses eax, ebx, ecx
 
     call object_set, [@@sphere], offset hit_sphere, [@@mat]
     
@@ -263,6 +264,32 @@ proc sphere_set
     lea eax, [eax+Sphere.location]
     mov ebx, [@@location]
     call vec_cpy, eax, ebx
+
+    ;; Now we calculate the AABB for this object. Spheres are pretty easy
+    ;; we just do 
+    ;; minPoint = (center - radius) 
+    ;; maxPoint = (center + radius)
+
+    lea eax, [@@min_point]
+    call vec_cpy, eax, [@@location]
+    
+    lea ebx, [@@radius_vec]
+    call vec_set, ebx, [@@radius], [@@radius], [@@radius]
+
+    call vec_sub, eax, eax, ebx
+
+    ;; And now do the same for the max point
+    lea eax, [@@max_point]
+    call vec_cpy, eax, [@@location]
+    
+    call vec_add, eax, eax, ebx
+
+    ;; Create the bounding box with min_point and max_point 
+    ;; (ebx and eax respectively)
+    lea ebx, [@@min_point]
+    mov ecx, [@@sphere]
+    lea ecx, [ecx+Object.bounding_box]
+    call aabb_set, ecx, ebx, eax
 
     ret
 endp sphere_set

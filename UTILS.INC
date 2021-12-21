@@ -12,6 +12,7 @@ GLOBAL print_hexdump:PROC       ;; void print_hexdump(char* loc, dword amount)
 GLOBAL log_str:PROC
 GLOBAL log_int:PROC
 GLOBAL log_hex:PROC
+GLOBAL log_char:PROC
 
 ;; General 
 GLOBAL exit:PROC                ;; void exit(dword exit_code)
@@ -59,6 +60,8 @@ GLOBAL feq:PROC                 ;; dword feq(float arg1, float arg2)
 GLOBAL flt:PROC                 ;; dword flt(float arg1, float arg2)
 GLOBAL fpu_arccos:PROC          ;; void fpu_arccos(void) (st0->st0)
 GLOBAL fpu_degrees_to_radians: PROC ;; void fpu_degrees_to_radians(void) (st0->st0)
+GLOBAL fmin:PROC                ;; float fmin(float x, float y)
+GLOBAL fmax:PROC                ;; float fmax(float x, float y)
 
 GLOBAL random_int:PROC              ;; dword random_int()
 GLOBAL random_float:PROC            ;; void random_float() -> st0

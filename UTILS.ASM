@@ -256,6 +256,14 @@ proc log_hex
     ret
 endp log_hex
 
+proc log_char
+    arg @@char:dword
+    call log_prefix
+    call print_char, [@@char]
+    call print_newline
+    ret
+endp log_char
+
 ;; Exits the program with the given statuscode 
 proc exit
     arg @@exitcode:dword
@@ -1024,6 +1032,34 @@ proc flt
     sete al
     ret
 endp flt
+
+proc fmin
+    arg @@v1:dword, @@v2:dword
+    uses ebx
+    mov ebx, [@@v1]
+    call flt, [@@v1], [@@v2]
+    cmp eax, 1
+    je @@end
+    mov ebx, [@@v2]
+
+@@end:
+    mov eax, ebx
+    ret
+endp fmin
+
+proc fmax
+    arg @@v1:dword, @@v2:dword
+    uses ebx
+    mov ebx, [@@v1]
+    call flt, [@@v2], [@@v1]
+    cmp eax, 1
+    je @@end
+    mov ebx, [@@v2]
+
+@@end:
+    mov eax, ebx
+    ret
+endp fmax
 
 ;; Calculates the arccos(x). Takes answer on the fpu stack and 
 ;; returns the answer on the fpu stack.

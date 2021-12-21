@@ -56,6 +56,26 @@ proc main
     jmp @@setup_cube_test
 
     ;; =========================================================================
+    ;; Simple scene
+    ;; =========================================================================
+@@setup_simple_scene:
+    ;; A very simple scene with just 1 lambertian sphere of radius 1 at (0,0,0)
+    lea eax, [@@color]
+    call vec_set_rgb, eax, 255, 0, 0
+    lea ecx, [@@texsolid]
+    call solid_init, ecx, eax
+    lea edi, [@@lam]
+    call lambertian_init, edi, ecx
+
+    lea edx, [@@loc]
+    lea ecx, [@@sphere]
+    call vec_set, edx, [float_0], [float_0], [float_0]
+    call sphere_set, ecx, edx, [float_1], edi
+    call scene_add, ebx, ecx
+
+    jmp @@start_renderer
+
+    ;; =========================================================================
     ;; main scene
     ;; =========================================================================
 @@setup_scene_main:
@@ -259,6 +279,7 @@ proc main
     ;; End setting up scene
     ;; Start renderer
 @@start_renderer:
+    call scene_build_bvh, ebx
     call renderer_init
     call renderer_render, ebx
     

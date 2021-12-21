@@ -1,9 +1,11 @@
 include "rt/vec.inc"
+include "rt/aabb.inc"
 
 struc Object
     ;; hit_function is a function pointer to the start of a function that has 
     ;; prototype: int hit_function(Object* this, Ray* r, float t_min, float t_max, Hit*)
     hit_function dd ?
+    bounding_box Aabb ?
     material dd ?
 ends Object
 
