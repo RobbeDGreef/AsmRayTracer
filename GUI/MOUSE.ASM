@@ -77,6 +77,10 @@ proc mouse_internal_handler
 
     pop     ax
 
+    ;; We divide the mouse height by 2 when setting it originally. We do this
+    ;; because for some reason dos' mouse moves left and right twice as fast as
+    ;; up and down. So by multiplying by 2 we speed the y axis up by 2
+    shl     dx, 1 ; * 2
     call    [custom_mouse_handler]
     
     pop     es
@@ -128,6 +132,10 @@ proc mouse_install
     mov ax, 8h
     mov cx, 0
     mov edx, [@@height]
+    ;; We divide the height by 2 because dos's mouse y is twice as slow as 
+    ;; its mouse x. In the mouse handler we will multiply the value by 2 again
+    ;; to get the desired uniform mouse speed
+    shr edx, 1 ;; / 2
     sub edx, 8
     int 33h
 
