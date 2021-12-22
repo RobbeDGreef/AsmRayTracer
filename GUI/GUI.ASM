@@ -552,6 +552,8 @@ proc draw_field
 
     call text_plot, ecx, edx, ebx, 0CD1818h 
 
+    call video_buffer_flip
+
     ret
 endp draw_field
 
