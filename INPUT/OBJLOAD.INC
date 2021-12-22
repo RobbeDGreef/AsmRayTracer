@@ -1,0 +1,1 @@
+GLOBAL obj_load:PROC ;; void object_load(Scene* scene, Material* mat char* object)

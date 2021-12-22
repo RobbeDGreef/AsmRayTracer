@@ -2,6 +2,7 @@ debug/
 DELETED/
 compat/
 *.OBJ
+!OBJS/*.OBJ
 *.EXE
 debug.log
 OUTPUT.LOG

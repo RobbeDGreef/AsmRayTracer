@@ -61,7 +61,7 @@ proc hit_sphere
     arg @@object:PTR Object, @@ray:PTR Ray, @@t_min:dword, @@t_max:dword,\
         @@hit:PTR Hit
     local @@ac:Vec, @@temp:dword, @@a:dword, @@half_b:dword, @@c:dword,\
-          @@half_b:dword, @@root:dword, @@hit_point:Point, @@sqrt:dword
+          @@root:dword, @@hit_point:Point, @@sqrt:dword
     uses ebx, ecx, edx, edi
 
     ;; Yay math. To check if we hit a function we are making use of the good old
@@ -118,7 +118,7 @@ proc hit_sphere
     mov edi, [edx+Sphere.radius]
     mov [@@temp], edi
     
-    lea edi, [edx+Object.location]
+    lea edi, [edx+Sphere.location]
     call vec_sub, ecx, ebx, edi     ;; (A - C) = Ray.origin - Sphere.location
     
     mov ebx, [@@ray]
@@ -147,7 +147,7 @@ proc hit_sphere
     fmul [@@half_b]
     fxch
     fsubp
-    fstp [@@temp]                   ;; D = b^2 - 4 * a * c
+    fstp [@@temp]                   ;; D = half_b*half_b - a * c 
 
     call flt, [@@temp], [float_0]   ;; If our discriminant is smaller than 0
                                     ;; return false. (we can't sqrt negatives)
@@ -215,7 +215,7 @@ proc hit_sphere
     
     ;; Set the material we hit
     mov eax, [@@object]
-    lea eax, [eax+Object.material]
+    mov eax, [eax+Object.material]
     mov [ebx+Hit.hit_mat], eax
 
     ;; Calculate the hit normal
@@ -226,7 +226,7 @@ proc hit_sphere
     ;;
     ;; We divide by radius to get a unit vector
     mov eax, [@@object]
-    lea edi, [eax+Object.location]
+    lea edi, [eax+Sphere.location]
     mov eax, [eax+Sphere.radius]
     lea edx, [ebx+Hit.normal]
     call vec_sub, edx, ecx, edi
@@ -241,27 +241,7 @@ proc hit_sphere
     lea eax, [ebx+Hit.u]
     lea edi, [ebx+Hit.v]
     call sphere_calc_coords, ecx, eax, edi
-
-    ;; Calculate whether or not we hit the front of the face or the back
-    mov [ebx+Hit.hit_front], 1
-
-    ;; If our ray_direction * normal > 0 we hit the inside of the sphere and we
-    ;; need to flip our normal (we want our normal to always point out).
-    ;; To be honest I don't think we need this since I don't know if we will 
-    ;; implement glass spheres and other translucent materials. The inside bool
-    ;; will probably be handy for other objects though.
-    mov eax, [@@ray]
-    lea eax, [eax+Ray.direction]
-    call vec_dot, eax, edx
-    call flt, eax, [float_0]
-    cmp eax, 1
-    jne @@flip_normals
-    jmp @@end_set_hit
-
-@@flip_normals:
-    mov [ebx+Hit.hit_front], 0
-    lea eax, [ebx+Hit.normal]
-    call vec_mul_float, eax, [float_minus_1]
+    call hit_calc_hit_front, [@@hit], [@@ray]
 
 @@end_set_hit:
     mov eax, 1
@@ -272,13 +252,44 @@ endp hit_sphere
 
 proc sphere_set
     arg @@sphere:PTR Sphere, @@location:PTR Point, @@radius:dword, @@mat:PTR Mat
-    uses eax, ebx
+    local @@min_point:Point, @@max_point:Point, @@radius_vec:Vec
+    uses eax, ebx, ecx
 
-    call object_set, [@@sphere], [@@location], offset hit_sphere, [@@mat]
+    call object_set, [@@sphere], offset hit_sphere, [@@mat]
     
     mov eax, [@@sphere]
     mov ebx, [@@radius]
     mov [eax+Sphere.radius], ebx
+
+    lea eax, [eax+Sphere.location]
+    mov ebx, [@@location]
+    call vec_cpy, eax, ebx
+
+    ;; Now we calculate the AABB for this object. Spheres are pretty easy
+    ;; we just do 
+    ;; minPoint = (center - radius) 
+    ;; maxPoint = (center + radius)
+
+    lea eax, [@@min_point]
+    call vec_cpy, eax, [@@location]
+    
+    lea ebx, [@@radius_vec]
+    call vec_set, ebx, [@@radius], [@@radius], [@@radius]
+
+    call vec_sub, eax, eax, ebx
+
+    ;; And now do the same for the max point
+    lea eax, [@@max_point]
+    call vec_cpy, eax, [@@location]
+    
+    call vec_add, eax, eax, ebx
+
+    ;; Create the bounding box with min_point and max_point 
+    ;; (ebx and eax respectively)
+    lea ebx, [@@min_point]
+    mov ecx, [@@sphere]
+    lea ecx, [ecx+Object.bounding_box]
+    call aabb_set, ecx, ebx, eax
 
     ret
 endp sphere_set

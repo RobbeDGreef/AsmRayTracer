@@ -8,3 +8,4 @@ struc Metal
 ends Metal
 
 GLOBAL metal_init:PROC ;; void metal_init(Metal* lam, Texture* tex)
+GLOBAL reflect:PROC

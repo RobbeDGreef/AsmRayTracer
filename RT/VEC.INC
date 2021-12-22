@@ -37,5 +37,9 @@ GLOBAL vec_mul:PROC         ;; void vec_mul(Vec* dest, Vec* v1, Vec* v2)
 GLOBAL vec_random:PROC      ;; void vec_random(Vec* vec, float min, float max)
 GLOBAL vec_random_unit_vec:PROC ;; void vec_random_unit_vec(Vec* vec)
 GLOBAL vec_random_in_hemisphere:PROC ;; void vec_random_in_hemisphere(Vec* vec, Vec* normal)
+GLOBAL vec_min_values:PROC  ;; void vec_min_values(Vec* res, Vec* v1, Vec* v2) 
+GLOBAL vec_max_values:PROC  ;; void vec_min_values(Vec* res, Vec* v1, Vec* v2)
+GLOBAL vec_get_idx:PROC     ;; float vec_get_idx(Vec* v, dword index)
+GLOBAL vec_set_idx:PROC     ;; void vec_get_idx(Vec* v, dword index, float val)
 
 GLOBAL nullvec:Vec

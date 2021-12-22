@@ -11,3 +11,4 @@ struc Hit
 ends Hit
 
 GLOBAL hit_cpy:PROC     ;; void hit_cpy(Hit* dest, Hit* src)
+GLOBAL hit_calc_hit_front:PROC ;; void hit_calc_hit_front(Hit* hit, Ray* r)
