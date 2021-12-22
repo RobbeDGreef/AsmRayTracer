@@ -73,6 +73,39 @@ endp gui_start
 ;; ---------------------------------------------------------------
 
 proc set_config_values
+    uses eax
+
+    mov eax, [max_bounces_string_buffer]
+    call atoi, eax
+    mov [config_render_max_bounces], eax
+
+    mov eax, [sample_count_string_buffer]
+    call atoi, eax
+    mov [config_render_samples], eax
+
+    mov eax, [fov_string_buffer]
+    call atof, eax
+    mov [config_video_img_fov], eax
+
+    mov eax, [video_height_string_buffer]
+    call atoi, eax
+    mov [config_video_img_height], eax
+
+    mov eax, [video_width_string_buffer]
+    call atoi, eax
+    mov [config_video_img_width], eax
+
+    mov eax, [cam_pos_x_string_buffer]
+    call atoi, eax
+    mov [config_render_cam_pos], eax
+
+    mov eax, [cam_pos_y_string_buffer]
+    call atoi, eax
+    mov [config_render_cam_pos + 4], eax
+
+    mov eax, [cam_pos_z_string_buffer]
+    call atoi, eax
+    mov [config_render_cam_pos + 8], eax
 
     ret
 endp set_config_values
