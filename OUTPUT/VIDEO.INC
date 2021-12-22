@@ -18,3 +18,9 @@ VIDEO_MAX_FB_HEIGHT     equ 600
 VIDEO_MAX_FB_SIZE       equ (VIDEO_MAX_FB_HEIGHT*VIDEO_MAX_FB_WIDTH*VIDEO_FB_BPP)
 
 GLOBAL vesa_lfb:dword
+
+CURSOR_WIDTH    equ 8
+CURSOR_HEIGHT   equ 16
+CURSOR_SIZE     equ 16
+GLOBAL video_set_mouse_bitmap:PROC
+GLOBAL video_update_mouse:PROC

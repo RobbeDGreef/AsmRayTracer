@@ -73,7 +73,7 @@ proc main_loop
     mov eax, 0Eh ;; backspace scan code
 	mov bl, [offset keyb_keyboard_state + eax]	; obtain corresponding key state
 	movzx ebx, bl
-    call log_int, ebx
+    
     xor ax, ax
 	sub ax, bx	; if key is pressed, AX = FFFF, otherwise AX = 0000
     
@@ -145,18 +145,17 @@ proc mouse_handler
     movzx ecx, cx
 
     lea edi, [last_cursor_position]
-    ;; This won't fully work. What if the user hovered over something else than the background?
-    call cursor_plot, [edi + Coordinate.x], [edi + Coordinate.y], 0F2C67h ;;  remove old cursor
-
+    
     lea esi, [edi + Coordinate.x]
     mov [esi], ecx
     lea esi, [edi + Coordinate.y]
     mov [esi], edx
 
-    call cursor_plot, ecx, edx, 0CD1818h
-    call video_buffer_flip 
+    ;; Call this function to draw the mouse on screen (will undraw the previous
+    ;; mouse pointer for you)
+    call video_update_mouse, ecx, edx, 0CD1818h
 
-	cmp ebx, 1			; check for left button press
+	cmp ebx, 1			            ; check for left button press
 	jne @@skip_click_handle			; only execute if a mousebutton is pressed
 
     ;; Handle the click
@@ -169,6 +168,7 @@ endp mouse_handler
 proc mouse_init 
     uses eax 
     call mouse_install, offset mouse_handler, VIDEO_FB_WIDTH, VIDEO_FB_HEIGHT
+    call video_set_mouse_bitmap, offset cursor_array
     ret
 endp mouse_init
 
@@ -481,47 +481,6 @@ proc draw_rect
     @@end:
     ret
 endp draw_rect  
-
-proc cursor_plot
-    arg @@x_coord:dword, @@y_coord:dword, @@color:dword
-    uses eax, ecx, edx, edi
-
-    xor eax, eax
-    lea edi, [cursor_array]
-
-    xor edx, edx
-@@height_loop:
-    cmp edx, CURSOR_HEIGHT
-    je @@end
-
-    mov ecx, (CURSOR_WIDTH - 1)
-    @@width_loop:
-        cmp ecx, 0
-        jl @@end_width_loop
-
-        movzx eax, [byte ptr edi]
-        shr eax, cl
-        and eax, 1
-        cmp eax, 1 
-        jne @@continue
-
-        call pixel_plot, [@@x_coord], [@@y_coord], [@@color] 
-
-        @@continue:
-        inc [@@x_coord]
-        dec ecx
-        jmp @@width_loop
-
-@@end_width_loop:
-    inc [@@y_coord]
-    inc edi
-    inc edx
-    sub [@@x_coord], CURSOR_WIDTH
-    jmp @@height_loop
-
-@@end:
-    ret
-endp cursor_plot
 
 proc char_plot_double
     arg @@x_coord:dword, @@y_coord:dword, @@char:dword, @@color:dword
