@@ -1149,7 +1149,10 @@ DATASEG
                         db 002h,  003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh
                         db 039h,  034h, 033h
 
-    character_mapping: db 10h dup (0)       ;; padding
+    character_mapping: 
+                      db 2 dup (0)       ;; padding
+                      db '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'
+                      db 4 dup (0)
                       db 'A', 'Z', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'
                       db 4 dup (0)
                       db 'Q', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M'
