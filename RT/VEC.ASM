@@ -209,16 +209,15 @@ proc vec_dot
 
     fld [eax+Vec.x]
     fld [ebx+Vec.x]
-    fmul
+    fmulp
     fld [eax+Vec.y]
     fld [ebx+Vec.y]
-    fmul 
+    fmulp
+    faddp
     fld [eax+Vec.z]
     fld [ebx+Vec.z]
-    fmul 
-
-    fadd
-    fadd
+    fmulp
+    faddp
 
     fstp [@@temp]
     mov eax, [@@temp]
@@ -315,10 +314,8 @@ proc vec_cross
     fmul [ecx+Vec.z]
     fld [ebx+Vec.z]
     fmul [ecx+Vec.y]
-    fsub
-    fstp [@@temp]
-    mov edx, [@@temp]
-    mov [eax+Vec.x], edx
+    fsubp
+    fstp [eax+Vec.x]
 
     fld [ebx+Vec.z]
     fmul [ecx+Vec.x]
@@ -446,6 +443,77 @@ proc vec_random_in_hemisphere
 @@end:
     ret
 endp vec_random_in_hemisphere
+
+proc vec_get_idx
+    arg @@v:PTR Vec, @@idx:dword
+    uses ebx, ecx
+
+    mov ebx, [@@v]
+    mov ecx, [@@idx]
+    mov eax, [ebx+ecx*4]
+
+    ret
+endp vec_get_idx
+
+proc vec_set_idx
+    arg @@v:PTR Vec, @@idx:dword, @@value:dword
+    uses eax, ebx, ecx
+
+    mov eax, [@@value]
+    mov ebx, [@@v]
+    mov ecx, [@@idx]
+    mov [ebx+ecx*4], eax
+
+    ret
+endp vec_set_idx
+
+proc vec_min_values
+    arg @@res:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
+    uses eax, ebx, ecx
+
+    mov ecx, 0
+@@min_loop:
+    cmp ecx, 3
+    je @@end
+
+    ;; Essentially what we do here is:
+    ;; res[i] = fmin(v1[i], v2[i])
+    call vec_get_idx, [@@v1], ecx
+    mov ebx, eax
+    call vec_get_idx, [@@v2], ecx
+    call fmin, ebx, eax
+    call vec_set_idx, [@@res], ecx, eax 
+
+    inc ecx
+    jmp @@min_loop
+
+@@end:
+    ret
+endp vec_min_values
+
+proc vec_max_values
+    arg @@res:PTR Vec, @@v1:PTR Vec, @@v2:PTR Vec
+    uses eax, ebx, ecx
+
+    mov ecx, 0
+@@min_loop:
+    cmp ecx, 3
+    je @@end
+
+    ;; Essentially what we do here is:
+    ;; res[i] = fmax(v1[i], v2[i])
+    call vec_get_idx, [@@v1], ecx
+    mov ebx, eax
+    call vec_get_idx, [@@v2], ecx
+    call fmax, ebx, eax
+    call vec_set_idx, [@@res], ecx, eax 
+
+    inc ecx
+    jmp @@min_loop
+
+@@end:
+    ret
+endp vec_max_values
 
 DATASEG
     ;; Kinda breaks abstraction but it has enough padding to handle future 

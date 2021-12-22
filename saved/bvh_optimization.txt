@@ -1,0 +1,41 @@
+Settings for all these:
+	width: 800
+	height: 600
+	samples: 16
+	bounces: 12
+
+None of these runs were cold runs (meaning all of the runs were
+ran at least once before to make sure the OS had time to cache the
+application)
+
+Cube:
+before:
+	real    0m5.111s
+	user    0m4.916s
+	sys     0m0.030s
+
+after:
+	real    0m3.278s
+	user    0m3.061s
+	sys     0m0.050s
+
+1.56 times faster!
+
+Monkey:
+before:
+real    4m56.464s (296,464 seconds)
+user    4m49.797s
+sys     0m0.321s
+
+after:
+real    0m11.271s
+user    0m5.090s
+sys     0m0.246s
+
+a whopping 26.3 times faster!
+
+notable: the most of the time was spent on loading the model
+into memory. This is incredibly slow because we do a lot of 
+malloc and realloc calls. This only happens on linux so only
+linux is slow. Since dosbox is our main priority we focus on
+optimizing only for dosbox

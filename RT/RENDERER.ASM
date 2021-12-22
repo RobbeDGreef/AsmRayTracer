@@ -219,17 +219,33 @@ proc cast_ray
     cmp eax, 0
     je @@background
 
+    cmp [@@bounces], 49
+    jne @@c
+    call log_char, 'b'
+    call print_float, [ecx+Hit.t]
+    call print_newline
+@@c:
+
     call flt, [float_0], [ecx+Hit.t]
     cmp eax, 1
     jne @@background
 
-    ;; Usefull for debugging.
-    ;call shade_normals, [@@ray], ecx, [@@dest_color] 
-    ;jmp @@end
+
+    ;; Usefull for debugging
+    ;; will display face orientation
+;    cmp [ecx+Hit.hit_front], 1
+;    jne @@hit_back
+;
+;    call vec_set, [@@dest_color], [float_1],[float_0],[float_0]
+;
+;    jmp @@end
+;
+;@@hit_back:
+;    call vec_set, [@@dest_color], [float_0],[float_0],[float_1]
+;    jmp @@end
 
     mov edx, [ecx+Hit.hit_mat]
     lea edi, [@@bounced]
-    mov edx, [edx]
 
     ;; Calculate the material scatter and bounce the ray
     call [edx+Mat.scatter], edx, [@@ray], ecx, [@@dest_color], edi
@@ -272,6 +288,7 @@ proc cast_ray
 
     call sphere_calc_coords, edi, ebx, ecx
     call image_get_color, [img_hdri_texture], [ebx], [ecx], [@@dest_color]
+    ;call vec_mul_float, [@@dest_color], [float_2]
 
 @@end:
     ret
@@ -476,7 +493,7 @@ proc renderer_init
 
     call memset, [img_framebuffer], 0, [img_framebuffer_size]
 
-    cmp [config_render_hdri_path], 0
+    cmp [byte ptr config_render_hdri_path], 0
     je @@end
     call alloc, size Image
     mov [img_hdri_texture], eax

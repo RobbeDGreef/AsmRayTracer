@@ -1,127 +1,156 @@
-;;-----------------------------------------------------------
-;; 32-bit Keyboard functionality.
-;;-----------------------------------------------------------
+;-----------------------------------------------------------
+; 32-bit Keyboard functionality.
+;-----------------------------------------------------------
 IDEAL
 P386
 MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
-include "keyb.inc"
+INCLUDE "keyb.inc"
 
-KEY_BUFFER	EQU 60h			;; the port of the keyboard buffer
-KEY_CONTROL	EQU 61h			;; the port of the keyboard controller
-PIC_PORT	EQU 20h			;; the port of the peripheral
-
-;;-----------------------------------------------------------
-;; CODE
-;;-----------------------------------------------------------
+;-----------------------------------------------------------
+; CODE
+;-----------------------------------------------------------
 CODESEG
 
-;; Installs the custom keyboard handler
-proc keyboard_install_handler
-	uses eax, ebx, ecx, edx, edi
+; Installs the custom keyboard handler
+PROC keyboard_install_handler
+    push	ebp
+    mov		ebp, esp
 
-	;; clear state buffer and the two state bytes
-	mov	ecx, (128 / 2) + 1
-	mov	edi, offset keyb_keyboard_state
-	xor	eax, eax
-	rep	stosw
-	
-	;; store current handler
-	push es
-	mov al, 35h		 						;; get interrupt handler
-	mov ah, 09h 							;; interrupt handler 9
-	int	21h									;; in ES:EBX
-	mov	[original_keyboard_handler_s], es	;; store SELECTOR
-	mov	[original_keyboard_handler_o], ebx	;; store OFFSET
-	pop	es
+	push	eax
+	push	ebx
+	push	ecx
+	push	edx
+	push	edi
+	push	ds
+	push	es
 		
-	;; set new handler
-	push ds
-	mov	ax, cs
-	mov	ds, ax
-	mov	edx, offset keyboard_handler	;; new OFFSET
-	mov al, 25h 						;; set interrupt vector
-	mov ah, 09h 						;; vector 9
-	int	21h								;; uses DS:EDX
-	pop	ds
+	; clear state buffer and the two state bytes
+	cld
+	mov		ecx, (128 / 2) + 1
+	mov		edi, offset keyb_keyboard_state
+	xor		eax, eax
+	rep		stosw
+	
+	; store current handler
+	push	es			
+	mov		eax, 3509h			; get current interrupt handler 09h
+	int		21h					; in ES:EBX
+	mov		[originalKeyboardHandlerS], es	; store SELECTOR
+	mov		[originalKeyboardHandlerO], ebx	; store OFFSET
+	pop		es
+		
+	; set new handler
+	push	ds
+	mov		ax, cs
+	mov		ds, ax
+	mov		edx, offset keyboardHandler			; new OFFSET
+	mov		eax, 2509h							; set custom interrupt handler 09h
+	int		21h									; uses DS:EDX
+	pop		ds
+	
+	pop		es
+	pop		ds
+	pop		edi
+	pop		edx
+	pop		ecx
+	pop		ebx
+	pop		eax	
     
+    mov		esp, ebp
+    pop		ebp
     ret
-endp keyboard_install_handler
+ENDP keyboard_install_handler
 
-;; Restores the original keyboard handler
-proc keyboard_uninstall_handler
-	uses eax, ebx
+; Restores the original keyboard handler
+PROC keyboard_uninstall_handler
+    push	ebp
+    mov		ebp, esp
 
-	push ds
-	mov	edx, [original_keyboard_handler_o]		;; retrieve OFFSET
-	mov	ds, [original_keyboard_handler_s]		;; retrieve SELECTOR
-	mov ah, 25h
-	mov al, 09h
-	int	21h										;; uses DS:EDX
-	pop	ds										;; Restore data selector
+	push	eax
+	push	edx
+	push	ds
+		
+	mov		edx, [originalKeyboardHandlerO]		; retrieve OFFSET
+	mov		ds, [originalKeyboardHandlerS]		; retrieve SELECTOR
+	mov		eax, 2509h							; set original interrupt handler 09h
+	int		21h									; uses DS:EDX
 	
+	pop		ds
+	pop		edx
+	pop		eax
+	
+    mov		esp, ebp
+    pop		ebp
     ret
-endp keyboard_uninstall_handler
+ENDP keyboard_uninstall_handler
 
-;; Keyboard handler (Interrupt function, DO NOT CALL MANUALLY!)
-proc keyboard_handler
-	uses eax, ebx, esi
+; Keyboard handler (Interrupt function, DO NOT CALL MANUALLY!)
+PROC keyboardHandler
+	KEY_BUFFER	EQU 60h			; the port of the keyboard buffer
+	KEY_CONTROL	EQU 61h			; the port of the keyboard controller
+	PIC_PORT	EQU 20h			; the port of the peripheral
 
-
-	;; setup DS for access to data variables
-	;; Im semi certain the data selector already contains this address but it 
-	;; can't hurt to be sure
-	push ds
-	mov	ax, _DATA
-	mov ds, ax
+	push	eax
+	push	ebx
+	push	esi
+	push	ds
 	
-	;; handle the keyboard input
-	in al, KEY_BUFFER				;; get the key that was pressed from the keyboard
-	mov	bl, al
-	mov	[keyb_raw_scan_code], al	;; store the key in global variable
-	in al, KEY_CONTROL				;; set the control register to reflect key was read
-	or al, 82h						;; set the proper bits to reset the keyboard flip flop
-	out KEY_CONTROL, al				;; send the new data back to the control register
-	and al, 7fh						;; mask off high bit
-	out KEY_CONTROL, al				;; complete the reset
-	mov al, 20h						;; reset command
-	out PIC_PORT, al				;; tell PIC to re-enable interrupts
-
-	;; process the retrieved scan code and update __keyboardState and __keysActive
-	;; scan codes of 128 or larger are key release codes
-	mov al, bl								;; put scan code in al
-	shl ax, 1								;; bit 7 is now bit 0 in ah
-	not ah				
-	and ah, 1								;; ah now contains 0 if key released, and 1 if key pressed
-	shr al, 1								;; al now contains the actual scan code ([0:127])
-	xor ebx, ebx					
-	mov bl, al								;; bl now contains the actual scan code ([0:127])
-	lea esi, [keyb_keyboard_state + ebx]	;; load address of key relative to __keyboardState in ebx
-	mov al, [esi]							;; load the keyboard state of the scan code in al
-	;; al = tracked state (0 or 1) of pressed key (the value in memory)
-	;; ah = physical state (0 or 1) of pressed key
-	neg al
-	add al, ah					;; al contains -1, 0 or +1 (-1 on key release, 0 on no change and +1 on key press)
-	add [keyb_keys_active], al	;; update __keysActive counter
-	mov al, ah
-	mov [esi], al				;; update tracked state
+	; setup DS for access to data variables
+	mov		ax, _DATA
+	mov		ds, ax
 	
-	pop ds
+	; handle the keyboard input
+	sti							; re-enable CPU interrupts
+	in		al, KEY_BUFFER		; get the key that was pressed from the keyboard
+	mov		bl, al				; store scan code for later use
+	mov		[keyb_raw_scan_code], al	; store the key in global variable
+	in		al, KEY_CONTROL		; set the control register to reflect key was read
+	or		al, 82h				; set the proper bits to reset the keyboard flip flop
+	out		KEY_CONTROL, al		; send the new data back to the control register
+	and		al, 7fh				; mask off high bit
+	out		KEY_CONTROL, al		; complete the reset
+	mov		al, 20h				; reset command
+	out		PIC_PORT, al		; tell PIC to re-enable interrupts
+
+	; process the retrieved scan code and update __keyboardState and __keysActive
+	; scan codes of 128 or larger are key release codes
+	mov		al, bl				; put scan code in al
+	shl		ax, 1				; bit 7 is now bit 0 in ah
+	not		ah
+	and		ah, 1				; ah now contains 0 if key released, and 1 if key pressed
+	shr		al, 1				; al now contains the actual scan code ([0;127])
+	xor		ebx, ebx	
+	mov		bl, al				; bl now contains the actual scan code ([0;127])
+	lea		esi, [keyb_keyboard_state + ebx]	; load address of key relative to __keyboardState in ebx
+	mov		al, [esi]			; load the keyboard state of the scan code in al
+	; al = tracked state (0 or 1) of pressed key (the value in memory)
+	; ah = physical state (0 or 1) of pressed key
+	neg		al
+	add		al, ah				; al contains -1, 0 or +1 (-1 on key release, 0 on no change and +1 on key press)
+	add		[keyb_keys_active], al	; update __keysActive counter
+	mov		al, ah
+	mov		[esi], al			; update tracked state
+	
+	pop		ds
+	pop		esi
+	pop		ebx
+	pop		eax
 	
 	iretd
-endp keyboard_handler
+ENDP keyboardHandler
 
-;;-----------------------------------------------------------
-;; DATA
-;;-----------------------------------------------------------
+;-----------------------------------------------------------
+; DATA
+;-----------------------------------------------------------
 DATASEG
 
-  original_keyboard_handler_s	dw ?			;; SELECTOR of original keyboard handler
-  original_keyboard_handler_o	dd ?			;; OFFSET of original keyboard handler
+  originalKeyboardHandlerS	dw ?			; SELECTOR of original keyboard handler
+  originalKeyboardHandlerO	dd ?			; OFFSET of original keyboard handler
 
-  keyb_keyboard_state			db 128 dup(?)	;; state for all 128 keys
-  keyb_raw_scan_code			db ?			;; scan code of last pressed key
-  keyb_keys_active				db ?			;; number of actively pressed keys
+  keyb_keyboard_state		db 128 dup(?)	; state for all 128 keys
+  keyb_raw_scan_code			db ?			; scan code of last pressed key
+  keyb_keys_active			db ?			; number of actively pressed keys
 
 END

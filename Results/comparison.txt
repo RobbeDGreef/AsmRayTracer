@@ -1,0 +1,42 @@
+Blender settings:
+- 128 samples
+- 16 bounces (for all materials)
+- 800x600 image size
+- cycles 1 cpu
+
+Sphere test:
+blender took: 37.96 seconds
+our raytracer: 17.199
+
+our raytracer is about 2.2 times faster?? win for us?? No
+this is because we use a sphere primitive and blender a sphere
+model. If we load the sphere model from blender to our raytracer 
+we get: 3 minutes 8.569 seconds!
+Wow that is quite a long time. It is interesting to see that
+loading the model actually took quite a long time. After timing
+it we see that loading the model itself actually takes 1 minute
+and 53 seconds. So when we account for that the actual render 
+only took 75 seconds. Still slower than blender but at a lot
+closer to the 2 times mark we see in other tests.
+
+Monkey test:
+blender took: 50.19 seconds
+our raytracer: 1 minute 40.782 seconds (100.782 seconds)
+
+blender is about 2 times faster (1.8 if we account for model loading)
+
+final:
+
+These comparisons were not completely fair since blender has already
+loaded the models in and our raytracer has to load them in at the beginning
+(which is included in the time and takes about 13 seconds). On top of that our renderer ran in WSL2 
+so this is not running at maximum speed. But it is still a good metric
+to have a basic idea.
+
+Noteable is that blender was very fast at rendering background
+that doesn't contain any objects. This is not the case in our
+raytracer. This is probably due to some optimizations which
+we have not yet made. One that comes to mind would be doing
+basic addaptive sampling of 5 points and if none hit, go to the
+next pixel.
+
