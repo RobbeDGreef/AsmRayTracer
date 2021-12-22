@@ -13,6 +13,7 @@ GLOBAL log_str:PROC
 GLOBAL log_char:PROC
 GLOBAL log_int:PROC
 GLOBAL log_hex:PROC
+GLOBAL log_char:PROC
 
 ;; General 
 GLOBAL exit:PROC                ;; void exit(dword exit_code)
@@ -31,7 +32,8 @@ GLOBAL close_file:PROC          ;; void close_file(dword file_handle)
 GLOBAL write_file:PROC          ;; void write_file(dword file_handle, char* buffer, dword byte_count)
 GLOBAL read_file:PROC           ;; dword read_file(dword file_handle, char* buffer, dword byte_count)
 GLOBAL write_str:PROC           ;; void write_str(dword file_handle, char* str)
-GLOBAL lseek_file:PROC         ;; dword write_lseek(dword file_handle, dword offset, dword origin)
+GLOBAL lseek_file:PROC          ;; dword write_lseek(dword file_handle, dword offset, dword origin)
+GLOBAL read_line_from_file:PROC ;; void read_line_from_file(dword file_handle, char* buffer, dword max_bytes)
 
 LSEEK_ORIGIN_START      equ 0
 LSEEK_ORIGIN_CUR        equ 1
@@ -45,17 +47,22 @@ GLOBAL sleep_millis:PROC        ;; void sleep_millis(dword millis)
 GLOBAL strlen:PROC              ;; dword strlen(char* str)
 GLOBAL itoa:PROC                ;; void itoa(dword value, char* buffer, dword base)
 GLOBAL strrev:PROC              ;; void strrev(char* str)
+GLOBAL strchr:PROC              ;; char* strchr(char* str, dword c)
 GLOBAL strcmp:PROC              ;; dword strcmp(char* s1, char* s2)
 GLOBAL memcmp:PROC              ;; dword memcmp(void *d1, void *d2, dword length)
 GLOBAL memset:PROC              ;; void* memset(void *d, dword val, dword length)
 GLOBAL memcpy:PROC              ;; void* memcpy(void *d, void *s, dword length)
 GLOBAL memmove:PROC             ;; void* memmove(void *d, void *s, dword length)
+GLOBAL atof:PROC                ;; float atof(char* str)
+GLOBAL atoi:PROC                ;; dword atoi(char* str)
 
 ;; Float functions
 GLOBAL feq:PROC                 ;; dword feq(float arg1, float arg2)
 GLOBAL flt:PROC                 ;; dword flt(float arg1, float arg2)
 GLOBAL fpu_arccos:PROC          ;; void fpu_arccos(void) (st0->st0)
 GLOBAL fpu_degrees_to_radians: PROC ;; void fpu_degrees_to_radians(void) (st0->st0)
+GLOBAL fmin:PROC                ;; float fmin(float x, float y)
+GLOBAL fmax:PROC                ;; float fmax(float x, float y)
 
 GLOBAL random_int:PROC              ;; dword random_int()
 GLOBAL random_float:PROC            ;; void random_float() -> st0

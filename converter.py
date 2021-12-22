@@ -125,6 +125,10 @@ class Converter:
         return None
 
     def parse_inline(self, line):
+        # Remove the offset keyword since NASM doesn't need that
+        if line.find("offset ") != -1:
+            line = line.replace("offset", "")
+        
         # replace local references
         local = line.find("@@")
         if local != -1:
@@ -150,9 +154,6 @@ class Converter:
 
                 return line[:local].replace("ptr ", " ") + typespecifier + " ebp"  + loc + line[end:] + NEWLINE
 
-        # Remove the offset keyword since NASM doesn't need that
-        if line.find("offset ") != -1:
-            return line.replace("offset", "")
         
         sizekwd = line.find(" size ")
         if line.startswith("size ") or sizekwd != -1:

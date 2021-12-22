@@ -264,6 +264,14 @@ proc log_hex
     ret
 endp log_hex
 
+proc log_char
+    arg @@char:dword
+    call log_prefix
+    call print_char, [@@char]
+    call print_newline
+    ret
+endp log_char
+
 ;; Exits the program with the given statuscode 
 proc exit
     arg @@exitcode:dword
@@ -378,6 +386,73 @@ else
 endif
     ret
 endp read_file
+
+;; Reads 1 byte from a file, incredibly inefficient but it is easier than 
+;; buffering large files in memory, especially since we have so little memory in 
+;; dosbox.
+proc read_file_char
+    arg @@file_handle:dword
+    local @@buf:dword
+    uses ebx, ecx, edx
+    mov [@@buf], 0
+ifndef NASM
+    mov ah, 3Fh
+    mov ebx, [@@file_handle]
+    mov ecx, 1
+    lea edx, [@@buf]
+    int 21h
+else
+    mov eax, 3
+    mov ebx, [@@file_handle]
+    lea ecx, [@@buf]
+    mov edx, 1
+    int 80h
+endif
+    cmp eax, 0
+    je @@end
+    mov eax, [@@buf]
+@@end:
+    ret
+endp read_file_char
+
+proc read_line_from_file
+    arg @@file_handle:dword, @@buffer:dword, @@max:dword
+    uses eax, ebx, ecx
+
+    ;; Space for the nullbyte
+    dec [@@max]
+
+    mov ebx, [@@buffer]
+    xor ecx, ecx
+@@read_loop:
+    cmp ecx, [@@max]
+    je @@end
+
+    call read_file_char, [@@file_handle]
+
+    ;; EOF
+    cmp eax, 0
+    je @@end
+    
+    ;; Save the read byte
+    mov [byte ptr ebx+ecx], al
+    
+    ;; If we hit the end of the line (windows files have a CRLF lineending,
+    ;; wheras linux has LF. To make sure the files we use work on both we will 
+    ;; check for both.
+    cmp al, 13 ;; carriage return (cr)
+    je @@end
+    cmp al, 10 ;; newline (lf)
+    je @@end
+
+    inc ecx
+    jmp @@read_loop
+
+@@end:
+    ;; Set the nullbyte
+    mov [byte ptr ebx+ecx], 0
+    ret
+endp read_line_from_file
 
 ;; Writes bytes to a file.
 proc write_file
@@ -517,6 +592,33 @@ proc strcmp
     ret
 endp strcmp
 
+;; ASM version of C's strchr() function. Finds a needle (character) in a 
+;; haystack (string). Returns NULL if not found otherwise a pointer to the
+;; first occurance of the character in the string.
+proc strchr
+    arg @@str:PTR byte, @@char:dword
+    uses ebx
+
+    mov eax, [@@str]
+    mov ebx, [@@char]
+
+@@search_loop:
+    cmp [byte ptr eax], 0 
+    je @@end_fail
+
+    cmp [byte ptr eax], bl
+    je @@end
+
+    inc eax
+    jmp @@search_loop
+
+@@end_fail:
+    mov eax, 0
+
+@@end:
+    ret
+endp strchr
+
 ;; ASM version of C's itoa() function. Converts an integer value to a 
 ;; null terminated string using the specified base.
 proc itoa
@@ -576,6 +678,176 @@ proc itoa
     mov eax, [@@buffer]
     ret
 endp itoa
+
+;; ASM implementation of C's atof. Will read a float from a string and return
+;; it will return 0.f on failure.
+proc atof
+    arg @@str:dword
+    local @@mantissa:dword, @@exponent:dword, @@negative:dword, @@divide_by:dword, @@res:dword
+    uses ebx, ecx, edx
+
+    ;; Little bit of pseudo code for the function
+    ;;
+    ;; mantissa = 0
+    ;; exponent = 0
+    ;; negative = false
+    ;; divide_by = 0
+    ;; 
+    ;; if line[0] == '-':
+    ;;     negative = true
+    ;;     line = line++
+    ;; 
+    ;; for x in line:
+    ;;     if x == '.':
+    ;;         jmp read_mantissa
+    ;;     if x not in 0123456789:
+    ;;         jmp assemble_and_exit
+    ;;     exponent *= 10
+    ;;     exponent += x - '0'
+    ;; 
+    ;; read_mantissa:
+    ;; for x in line
+    ;;     if x not in 012456789
+    ;;         jmp assemble_and_exit
+    ;;     
+    ;;     divide_by += 1
+    ;;     mantissa *= 10
+    ;;     mantissa += x - '0'
+    ;; 
+    ;; assemble_and_exit:
+    ;; fld mantissa 
+    ;; for i in range(divide_by):
+    ;;     fdiv 10
+    ;; fild exponent
+    ;; fadd
+    ;; if negate:
+    ;;     fchs
+    ;; 
+
+    mov [@@mantissa], 0
+    mov [@@exponent], 0
+    mov [@@negative], 0
+    mov [@@divide_by], 0
+    mov ecx, [@@str]
+
+    cmp [byte ptr ecx], '-'
+    jne @@exponent_loop
+    mov [@@negative], 1
+    inc ecx
+
+@@exponent_loop:
+    movzx ebx, [byte ptr ecx]
+
+    ;; When we read a '.' we have to start interpreting the mantissa 
+    cmp bl, '.'
+    je @@read_mantissa
+
+    ;; If we read a character out of range (0-9), we simply return 
+    cmp bl, '0'
+    jl @@assemble_and_exit
+    cmp bl, '9'
+    jg @@assemble_and_exit
+
+    ;; Add the next number to the exponent
+    mov eax, 10
+    mul [@@exponent]
+    mov [@@exponent], eax
+
+
+    sub ebx, '0'
+    add [@@exponent], ebx
+
+    inc ecx
+    jmp @@exponent_loop
+
+@@read_mantissa:
+    ;; Skip over the '.' symbol
+    inc ecx
+
+@@mantissa_loop:
+    movzx ebx, [byte ptr ecx]
+    ;; If we read a character out of range (0-9), we simply return 
+    cmp bl, '0'
+    jl @@assemble_and_exit
+    cmp bl, '9'
+    jg @@assemble_and_exit
+
+    ;; Will later be used to calculate the actual mantissa 
+    inc [@@divide_by]
+        
+    ;; Add the next number to the mantissa
+    mov eax, 10
+    mul [@@mantissa]
+    mov [@@mantissa], eax
+
+    sub ebx, '0'
+    add [@@mantissa], ebx
+
+    inc ecx
+    jmp @@mantissa_loop
+
+@@assemble_and_exit:
+    fild [@@mantissa]
+    mov ebx, [@@divide_by]
+
+@@divide_loop:
+    cmp ebx, 0
+    je @@after_divide
+
+    fdiv [float_10]
+    fst [@@res]
+
+    dec ebx
+    jmp @@divide_loop
+
+@@after_divide:
+    fild [@@exponent]
+    fadd
+
+    fst [@@res]
+
+    cmp [@@negative], 0
+    je @@end
+    fchs
+
+@@end:
+    fstp [@@res]
+    mov eax, [@@res]
+    ret
+endp atof
+
+proc atoi
+    arg @@str:PTR byte
+    uses ebx, ecx, edx
+
+    ;; eax will contain the int we are extracting
+    mov eax, 0
+    mov ebx, [@@str]
+
+@@convert_loop:
+    cmp [byte ptr ebx], 0
+    je @@end
+
+    ;; If the character is out of range (0-9) return from the function
+    cmp [byte ptr ebx], '0'
+    jl @@end
+    cmp [byte ptr ebx], '9'
+    jg @@end
+
+    ;; Multiply by 10 and add the next value
+    mov edx, 10
+    mul edx
+
+    movzx ecx, [byte ptr ebx]
+    sub ecx, '0'
+    add eax, ecx
+
+    inc ebx
+    jmp @@convert_loop
+
+@@end:
+    ret
+endp atoi
 
 ;; ASM version of C's strrev() function. Reverses a null-terminated string
 proc strrev
@@ -769,6 +1041,34 @@ proc flt
     ret
 endp flt
 
+proc fmin
+    arg @@v1:dword, @@v2:dword
+    uses ebx
+    mov ebx, [@@v1]
+    call flt, [@@v1], [@@v2]
+    cmp eax, 1
+    je @@end
+    mov ebx, [@@v2]
+
+@@end:
+    mov eax, ebx
+    ret
+endp fmin
+
+proc fmax
+    arg @@v1:dword, @@v2:dword
+    uses ebx
+    mov ebx, [@@v1]
+    call flt, [@@v2], [@@v1]
+    cmp eax, 1
+    je @@end
+    mov ebx, [@@v2]
+
+@@end:
+    mov eax, ebx
+    ret
+endp fmax
+
 ;; Calculates the arccos(x). Takes answer on the fpu stack and 
 ;; returns the answer on the fpu stack.
 proc fpu_arccos
@@ -869,9 +1169,11 @@ DATASEG
     float_minus_0_75 dd -0.75
     float_2         dd 2.0
     float_4         dd 4.0
+    float_10        dd 10.0
     float_max_char  dd 255.0
     float_1000000   dd 1000000.0
-    float_pos_inf   dd 07F800000h   ; the bytes for +inf
+    float_pos_inf   dd 100000000.0
+    ;float_pos_inf   dd 07F800000h   ; the bytes for +inf
     float_neg_inf   dd 0FF800000h   ; the bytes for -inf
     degrees_to_radians_magic dd 0.017453292
 END
