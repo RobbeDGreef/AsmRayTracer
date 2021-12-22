@@ -128,6 +128,9 @@ proc main_loop
     movzx ebx, [keyb_raw_scan_code]
     movzx eax, [byte ptr character_mapping + ebx] ;; character
 
+    cmp ebx, 0Eh
+    je @@handlebackspace
+
     mov ebx, [selected_field] ;; field pointer
     cmp ebx, 0
     je @@nofieldselected
@@ -146,6 +149,17 @@ proc main_loop
     mov [key_reset], 1
 
     jmp @@run
+
+@@handlebackspace:
+    mov ebx, [selected_field]
+    cmp ebx, 0 
+    je @@nofieldselected
+
+    mov ecx, [ebx + Field.value]
+    call shorten, ecx
+    call draw_field, ebx, 0F4E185h
+    call video_buffer_flip
+    jmp @@nofieldselected 
 
 @@end:
     call set_config_values
@@ -1103,7 +1117,10 @@ DATASEG
                         db 002h,  003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh
                         db 039h,  034h, 033h
 
-    character_mapping: db 10h dup (0)       ;; padding
+    character_mapping: 
+                      db 2 dup (0)       ;; padding
+                      db '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'
+                      db 4 dup (0)
                       db 'A', 'Z', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'
                       db 4 dup (0)
                       db 'Q', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M'
