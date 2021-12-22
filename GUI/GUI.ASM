@@ -55,6 +55,91 @@ proc gui_start
     ret
 endp gui_start
 
+;; ---------------------------------------------------------------
+;;                        MAIN FUNCTIONALITY
+;; ---------------------------------------------------------------
+
+proc set_config_values
+    uses eax
+
+    lea eax, [max_bounces_string_buffer]
+    call atoi, eax
+    mov [config_render_max_bounces], eax
+
+    lea eax, [sample_count_string_buffer]
+    call atoi, eax
+    mov [config_render_samples], eax
+
+    lea eax, [fov_string_buffer]
+    call atof, eax
+    mov [config_video_img_fov], eax
+
+    lea eax, [video_height_string_buffer]
+    call atoi, eax
+    mov [config_video_img_height], eax
+
+    lea eax, [video_width_string_buffer]
+    call atoi, eax
+    mov [config_video_img_width], eax
+
+    lea eax, [cam_pos_x_string_buffer]
+    call atof, eax
+    mov [config_render_cam_pos], eax
+
+    lea eax, [cam_pos_y_string_buffer]
+    call atof, eax
+    mov [config_render_cam_pos + 4], eax
+
+    lea eax, [cam_pos_z_string_buffer]
+    call atof, eax
+    mov [config_render_cam_pos + 8], eax
+
+    ret
+endp set_config_values
+
+proc main_loop
+
+    @@run:
+    ;; check whether running_main_loop is 1
+    cmp [running_main_loop], 1
+    jne @@end
+
+    mov bl, [keyb_keys_active]
+
+    cmp bl, 0
+    je @@skipkeyhandle
+
+    cmp [key_reset], 1
+    jne @@run
+
+    movzx ebx, [keyb_raw_scan_code]
+    movzx eax, [byte ptr character_mapping + ebx] ;; character
+
+    mov ebx, [selected_field] ;; field pointer
+    cmp ebx, 0
+    je @@nofieldselected
+
+    mov ecx, [ebx + Field.value] ;; value pointer
+    call append, ecx, eax
+    call draw_field, ebx, 0F4E185h 
+    call video_buffer_flip
+
+@@nofieldselected:
+
+    mov [key_reset], 0
+    jmp @@run
+
+    @@skipkeyhandle:
+    mov [key_reset], 1
+
+    jmp @@run
+
+@@end:
+    call set_config_values
+
+ret
+endp main_loop
+
 proc handle_click
     arg @@x_coord:dword, @@y_coord:dword
 
