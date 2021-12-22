@@ -48,6 +48,7 @@ proc main
     ;; Video mode needs to be set before gui_start is called
     call video_set_mode, VIDEO_MODE_GRAPHICS
     call gui_start
+    ;; Once gui is over we start the raytracer
 
     ;;call video_buffer_flip
 
@@ -60,7 +61,7 @@ proc main
     ;; Setting up our scene
     lea ebx, [@@scene]
     call scene_init, ebx
-    jmp @@start_renderer ;; skip raytracer
+    jmp @@setup_simple_scene ;; skip raytracer
 
     ;; =========================================================================
     ;; Simple scene
@@ -271,13 +272,13 @@ proc main
 
     ;; Start renderer
 @@start_renderer:
-    ;call scene_build_bvh, ebx
-    ;call renderer_init
-    ;call renderer_render, ebx
+    call scene_build_bvh, ebx
+    call renderer_init
+    call renderer_render, ebx
     
 ifndef NASM
-    ;;call renderer_show_img
-    ;call sleep_millis, 6000
+    call renderer_show_img
+    call sleep_millis, 6000
     
     ;; gui_destruct HAS TO BE CALLED before the program finishes, it will 
     ;; disable the mouse and if we don't do that dos will try to dispatch
