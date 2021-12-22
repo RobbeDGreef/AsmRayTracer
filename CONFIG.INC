@@ -8,3 +8,4 @@ GLOBAL config_render_background:dword ;; vec
 GLOBAL config_render_hdri_path:PTR byte
 GLOBAL config_render_cam_pos:dword ;; vec
 GLOBAL config_render_cam_look_at:dword ;; vec
+GLOBAL config_render_scene_file:dword ;; path
