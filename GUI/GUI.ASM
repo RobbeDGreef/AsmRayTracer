@@ -473,56 +473,27 @@ proc create_field
     ret
 endp create_field
 
+;; Remove 1 character from the end of a string
 proc shorten 
-    uses eax, ebx, ecx
     arg @@string:dword
+    
+    call strend, [@@string]
+    mov [byte ptr eax-1], 0
 
-    mov eax, [@@string]
-    xor ecx, ecx
-
-    @@donext:
-        inc ecx
-    @@loopstring:
-        mov ebx, [eax + ecx]
-
-        call log_int, ebx
-
-        cmp bl, 0
-        jne @@donext
-
-        ;; ebx is 0
-        cmp ecx, 0
-        je @@end
-
-        dec ecx 
-        mov [eax + ecx], 0
-
-@@end:
-ret
+    ret
 endp shorten
 
+;; Append 1 character to the end of a string
 proc append
-    uses eax, ebx, ecx 
-    arg @@string:dword, @@character:byte
+    arg @@string:dword, @@character:dword
+    uses eax, ebx
 
-    xor ecx, ecx
-    mov eax, [@@string]
+    call strend, [@@string]
+    mov ebx, [@@character]
+    mov [byte ptr eax], bl
+    mov [byte ptr eax+1], 0
 
-    @@donext:
-        inc ecx
-
-    @@doloop:
-        mov ebx, [eax + ecx]
-
-        cmp bl, 0
-        jne @@donext
-
-        mov bl, [byte ptr @@character]
-        mov [eax + ecx], ebx
-        inc eax 
-        mov [eax + ecx], 0
-
-ret
+    ret
 endp append
 
 ;; ---------------------------------------------------------------
@@ -1036,27 +1007,6 @@ proc text_plot
 @@end:
     ret
 endp text_plot
- 
-proc gui_clear_line
-    arg @@line:dword
-    uses eax, ebx, ecx, edi
-
-    lea edi, [vesa_lfb]
-    xor ebx, ebx
-@@clear_loop:
-    cmp ebx, FONTCHAR_HEIGHT
-    je @@end
-
-    mov eax, 0
-    mov ecx, VIDEO_FB_WIDTH
-    rep stosd
-
-    inc ebx
-    jmp @@clear_loop
-
-@@end:
-    ret
-endp gui_clear_line
 
 proc gui_progress_notify
     arg @@done:dword, @@total:dword
@@ -1065,14 +1015,18 @@ proc gui_progress_notify
     mov eax, 100
     mul [@@done]
     div [@@total]
+    mov ebx, 100
+    sub ebx, eax
 
 ifdef NASM
-    call print_int, eax
+    call print_int, ebx
     call print_newline
 else
-    call gui_clear_line, 0
-    call itoa, eax, offset buf, 10
-    call text_plot, 0, 0, offset buf, 0ffffffh
+    ;; Clear the previous update
+    call draw_rect, 50, 475, 50+80, 475+40, 0ff2540h
+    call itoa, ebx, offset buf, 10
+    call append, offset buf, '%'
+    call text_plot, 50+18, 475+5, offset buf, 00000000h
     call video_buffer_flip
 endif
 
