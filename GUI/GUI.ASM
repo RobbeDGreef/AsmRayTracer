@@ -55,9 +55,10 @@ proc gui_start
     call draw_sample_count, 100, 100
     call draw_max_bounces, 100, 70
     call draw_hdri_path, 100, 220
-    call draw_cam_pos_x, 100, 250
-    call draw_cam_pos_y, 100, 280
-    call draw_cam_pos_z, 100, 310
+    call draw_scene_file, 100, 250
+    call draw_cam_pos_x, 100, 280
+    call draw_cam_pos_y, 100, 310
+    call draw_cam_pos_z, 100, 340
 
     call video_buffer_flip
 
@@ -388,6 +389,25 @@ proc draw_hdri_path
 ret
 endp draw_hdri_path
 
+proc draw_scene_file
+    arg @@x:dword, @@y:dword
+
+    mov ebx, [@@x]
+    mov ecx, [@@y]
+
+    call memcpy, offset config_render_scene_file, offset scene_file_default, 17
+
+    add ecx, 12
+    call text_plot, ebx, ecx, offset scene_file_string, 0CD1818h
+    add ebx, 300
+
+    call text_plot, ebx, ecx, offset config_render_scene_file, 0CD1818h
+
+    call register_field_data, [@@x], [@@y], offset config_render_scene_file, offset handle_scene_file_click, offset scene_file_field
+
+ret
+endp draw_scene_file
+
 proc draw_cam_pos_x
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx, edx, esi
@@ -646,6 +666,20 @@ proc handle_hdri_path_click
 
     ret
 endp handle_hdri_path_click
+
+proc handle_scene_file_click
+    uses eax
+
+    call deselect_current
+
+    ;; Select
+    mov eax, [scene_file_field] ;; pointer to fov field
+    mov [selected_field], eax ;; Mark fov field as selected 
+    ;; F4E185
+    call draw_field, eax, 0F4E185h
+
+    ret
+endp handle_scene_file_click
 
 proc handle_cam_pos_x_click
     uses eax
@@ -1075,6 +1109,7 @@ DATASEG
     sample_count_field dd (?)
     max_bounces_field dd (?)
     hdri_path_field dd (?)
+    scene_file_field dd (?)
     cam_pos_x_field dd (?)
     cam_pos_y_field dd (?)
     cam_pos_z_field dd (?)
@@ -1095,7 +1130,8 @@ DATASEG
     fov_string db "FOV: ", 0
     sample_count_string db "Sample Count: ", 0
     max_bounces_string db "Max Bounces: ", 0
-    hdri_path_string db "HDRI path: ", 0
+    hdri_path_string db "HDRI Path: ", 0
+    scene_file_string db "Scene File Path: ", 0
     cam_pos_x_string db "Cam Pos x: ", 0
     cam_pos_y_string db "Cam Pos y: ", 0
     cam_pos_z_string db "Cam Pos z: ", 0
@@ -1105,6 +1141,7 @@ DATASEG
     cam_pos_y_default db "0.0", 0
     cam_pos_z_default db "2.0", 0
     hdri_path_default db "IMAGES/SNOWY.BMP", 0
+    scene_file_default db "SCENES/EX1.TXT", 0 
 
     ;;                       a      z     e     r   t      y    u      i     o    p
     ;;                       q      s     d     f   g      h    j      k     l    m
