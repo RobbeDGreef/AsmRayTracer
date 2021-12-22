@@ -21,6 +21,12 @@ struc Button
     onclick dd ? ;;procedure that should be called on click
 ends Button
 
+struc Field 
+    upperleft dd ?
+    bottomright dd ?
+    value dd ?
+ends Field
+
 FONTCHAR_WIDTH  equ     8
 FONTCHAR_HEIGHT equ     16 
 FONTCHAR_SIZE   equ     16

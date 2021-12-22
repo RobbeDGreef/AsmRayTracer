@@ -97,7 +97,7 @@ proc main
     
 ifndef NASM
     ;;call renderer_show_img
-    call sleep_millis, 6000
+    ;call sleep_millis, 6000
     
     ;; gui_destruct HAS TO BE CALLED before the program finishes, it will 
     ;; disable the mouse and if we don't do that dos will try to dispatch

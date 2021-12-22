@@ -38,13 +38,13 @@ endif
     mov [@@temp], ax
     fldcw [@@temp]
 
-    ;call keyboard_install_handler
+    call keyboard_install_handler
 
     ret
 endp init
 
 proc destruct 
-    ;call keyboard_uninstall_handler
+    call keyboard_uninstall_handler
     ret
 endp destruct 
 
