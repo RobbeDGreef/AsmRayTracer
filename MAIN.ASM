@@ -35,7 +35,7 @@ GLOBAL main:PROC
 proc main
     local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
           @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
-          @@color2:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
+          @@color2:Color, @@color3:Color, @@color4:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
           @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,\ 
           @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal,\
           @@loc2:Vec, @@loc3:Vec, @@triangle:Triangle, @@uv:Uv, @@glass:Glass
@@ -60,7 +60,7 @@ proc main
     ;; Setting up our scene
     lea ebx, [@@scene]
     call scene_init, ebx
-    jmp @@setup_simple_scene
+    jmp @@start_renderer ;; skip raytracer
 
     ;; =========================================================================
     ;; Simple scene
