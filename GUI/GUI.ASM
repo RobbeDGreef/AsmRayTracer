@@ -300,7 +300,7 @@ endp draw_fov
 
 proc draw_video_height
     arg @@x:dword, @@y:dword
-    uses eax, ebx, ecx, edx, esi
+    uses eax, ebx, ecx 
     mov ebx, [@@x]
     mov ecx, [@@y]
 
@@ -318,7 +318,7 @@ endp draw_video_height
 
 proc draw_video_width
     arg @@x:dword, @@y:dword
-    uses eax, ebx, ecx, edx, esi
+    uses eax, ebx, ecx 
     mov ebx, [@@x]
     mov ecx, [@@y]
 
@@ -336,7 +336,7 @@ endp draw_video_width
 
 proc draw_sample_count
     arg @@x:dword, @@y:dword
-    uses eax, ebx, ecx, edx, esi
+    uses eax, ebx, ecx 
     mov ebx, [@@x]
     mov ecx, [@@y]
 
@@ -354,7 +354,8 @@ endp draw_sample_count
 
 proc draw_max_bounces
     arg @@x:dword, @@y:dword
-    uses eax, ebx, ecx, edx, esi
+    uses eax, ebx, ecx 
+
     mov ebx, [@@x]
     mov ecx, [@@y]
 
@@ -372,7 +373,7 @@ endp draw_max_bounces
 
 proc draw_hdri_path
     arg @@x:dword, @@y:dword
-    uses eax, ebx, ecx, edx, esi
+    uses eax, ebx, ecx 
     mov ebx, [@@x]
     mov ecx, [@@y]
 
@@ -391,6 +392,7 @@ endp draw_hdri_path
 
 proc draw_scene_file
     arg @@x:dword, @@y:dword
+    uses eax, ebx, ecx 
 
     mov ebx, [@@x]
     mov ecx, [@@y]
@@ -410,7 +412,7 @@ endp draw_scene_file
 
 proc draw_cam_pos_x
     arg @@x:dword, @@y:dword
-    uses eax, ebx, ecx, edx, esi
+    uses eax, ebx, ecx 
     mov ebx, [@@x]
     mov ecx, [@@y]
 
@@ -430,7 +432,7 @@ endp draw_cam_pos_x
 
 proc draw_cam_pos_y
     arg @@x:dword, @@y:dword
-    uses eax, ebx, ecx, edx, esi
+    uses eax, ebx, ecx 
     mov ebx, [@@x]
     mov ecx, [@@y]
     
@@ -441,7 +443,6 @@ proc draw_cam_pos_y
     call text_plot, ebx, ecx, offset cam_pos_y_string, 0CD1818h
     add ebx, 300
 
-    ;call itoa, [config_render_cam_pos + 4], offset cam_pos_y_string_buffer, 10
     call text_plot, ebx, ecx, offset cam_pos_y_string_buffer, 0CD1818h
 
     call register_field_data, [@@x], [@@y], offset cam_pos_y_string_buffer, offset handle_cam_pos_y_click, offset cam_pos_y_field
@@ -451,7 +452,7 @@ endp draw_cam_pos_y
 
 proc draw_cam_pos_z
     arg @@x:dword, @@y:dword
-    uses eax, ebx, ecx, edx, esi
+    uses eax, ebx, ecx 
     mov ebx, [@@x]
     mov ecx, [@@y]
 
