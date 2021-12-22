@@ -611,6 +611,21 @@ proc strchr
     ret
 endp strchr
 
+;; Returns a pointer to the nullbyte of the string
+proc strend
+    arg @@str:PTR byte
+
+    mov eax, [@@str]
+@@search_loop:
+    cmp [byte ptr eax], 0
+    je @@end
+
+    inc eax
+    jmp @@search_loop
+@@end:
+    ret
+endp strend
+
 ;; ASM version of C's itoa() function. Converts an integer value to a 
 ;; null terminated string using the specified base.
 proc itoa

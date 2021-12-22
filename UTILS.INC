@@ -45,6 +45,7 @@ GLOBAL sleep_millis:PROC        ;; void sleep_millis(dword millis)
 
 ;; Standard library fakes
 GLOBAL strlen:PROC              ;; dword strlen(char* str)
+GLOBAL strend:PROC              ;; char* stren(char* str)
 GLOBAL itoa:PROC                ;; void itoa(dword value, char* buffer, dword base)
 GLOBAL strrev:PROC              ;; void strrev(char* str)
 GLOBAL strchr:PROC              ;; char* strchr(char* str, dword c)
