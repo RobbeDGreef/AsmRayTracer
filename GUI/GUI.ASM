@@ -265,7 +265,7 @@ proc register_field_data
     add ebx, 16
 
     mov esi, ebx
-    add esi, 23
+    add esi, 27
 
     call create_button, edx, ebx, ecx, esi, [@@action]
     call register_button, eax
