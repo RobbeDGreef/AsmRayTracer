@@ -39,7 +39,6 @@ proc main
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
-    call gui_init
     call mm_init
 
     ;; Video mode needs to be set before gui_start is called
@@ -47,12 +46,24 @@ proc main
 
     ;; Gui aspect should only run in dosbox
 ifndef NASM
+    call gui_init
     call gui_start
     ;; gui_destruct HAS TO BE CALLED before the program finishes, it will 
     ;; disable the mouse and if we don't do that dos will try to dispatch
     ;; mouse events to a program that doesn't exist anymore resulting in 
     ;; crashes.
     call gui_destruct
+else
+    call strlen, offset render_scene_file
+    inc eax
+    call memcpy, offset config_render_scene_file, offset render_scene_file, eax
+    
+    call strlen, offset render_hdri_file
+    inc eax
+    call memcpy, offset config_render_hdri_path, offset render_hdri_file, eax
+    
+    call log_str, offset config_render_hdri_path
+
 endif
     ;; Once gui is over we start the raytracer
 
@@ -76,15 +87,13 @@ endif
     call renderer_init
     call renderer_render, ebx
     
-
+    ;; On linux we just output the BMP
+    call renderer_to_bmp, offset bmpout
 ifndef NASM
     call renderer_show_img
     call wait_for_keypress
     
     call video_set_mode, VIDEO_MODE_TEXT
-else
-    ;; On linux we just output the BMP
-    call renderer_to_bmp, offset bmpout
 endif
 
     mov ebx, [@@begin_time]
@@ -106,6 +115,9 @@ DATASEG
     start_str db "Ray tracer started", 0
     finished_str db "Ray tracer finished in ", 0
     finished_str2 db " milliseconds", 0
-    bmpout db "test.bmp", 0
+    bmpout db "TEST.BMP", 0
+
+    render_scene_file db "SCENES/ALLMAT.TXT", 0
+    render_hdri_file db "IMAGES/SNOWY_H.BMP", 0
 
 END main
