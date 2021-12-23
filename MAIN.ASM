@@ -115,7 +115,7 @@ DATASEG
     start_str db "Ray tracer started", 0
     finished_str db "Ray tracer finished in ", 0
     finished_str2 db " milliseconds", 0
-    bmpout db "TEST.BMP", 0
+    bmpout db "RENDERED.BMP", 0
 
     render_scene_file db "SCENES/ALLMAT.TXT", 0
     render_hdri_file db "IMAGES/SNOWY_H.BMP", 0
