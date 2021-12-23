@@ -232,6 +232,8 @@ proc mouse_handler
     ;; mouse pointer for you)
     call video_update_mouse, ecx, edx, 0CD1818h
 
+    cmp [running_main_loop], 1
+    jne @@skip_click_handle
 	cmp ebx, 1			            ; check for left button press
 	jne @@skip_click_handle			; only execute if a mousebutton is pressed
 
@@ -1089,7 +1091,7 @@ DATASEG
 
     running_main_loop dd 1
 
-    button_array dd 10 dup (?)
+    button_array dd 12 dup (?)
     button_count dd 0
 
     last_cursor_position dd 0, 0
