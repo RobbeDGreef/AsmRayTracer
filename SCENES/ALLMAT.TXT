@@ -38,7 +38,7 @@ object
   0.50
   lambertian
    image
-    IMAGES/EARTH.BMP
+    IMAGES/EARTH_L.BMP
 object
  sphere
   -1.2 -1.2 0.0
