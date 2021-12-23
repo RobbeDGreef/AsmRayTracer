@@ -17,5 +17,5 @@ DATASEG
     config_render_hdri_path             db 32 dup (0) ;
     config_render_cam_pos               dd 0.0, 0.0, -10.0 ;
     config_render_cam_look_at           dd 0.0, 0.0, 0.0
-    config_render_scene_file            dd "SCENES/EX1.TXT"
+    config_render_scene_file            db "SCENES/ALLMAT.TXT", 0
 END

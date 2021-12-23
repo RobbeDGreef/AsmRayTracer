@@ -1,0 +1,7 @@
+object
+ model
+  OBJS/MONKEY.OBJ
+  glass
+   solid
+    1.0 1.0 1.0
+   1.5
