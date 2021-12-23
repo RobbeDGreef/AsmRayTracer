@@ -21,7 +21,7 @@ proc uv_get_color
 endp uv_get_color
 
 proc uv_init
-    arg @@tex:PTR Uv, @@color:PTR Color
+    arg @@tex:PTR Uv
     call texture_init, [@@tex], offset uv_get_color
     ret
 endp uv_init

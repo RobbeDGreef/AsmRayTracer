@@ -23,10 +23,12 @@ include "rt/texture/image.inc"
 include "rt/texture/uv.inc"
 
 include "input/objload.inc"
+include "input/sloader.inc"
 
 include "init.inc"
 include "utils.inc"
 include "mm.inc"
+include "config.inc"
 
 CODESEG
 
@@ -47,232 +49,28 @@ proc main
 
     ;; Video mode needs to be set before gui_start is called
     call video_set_mode, VIDEO_MODE_GRAPHICS
-    call gui_start
-    ;; Once gui is over we start the raytracer
 
-    ;;call video_buffer_flip
+    ;; Gui aspect should only run in dosbox
+ifndef NASM
+    call gui_start
+endif
+    ;; Once gui is over we start the raytracer
 
     call log_str, offset start_str
     call gettime_millis
     mov [@@begin_time], eax
-
-    ;call video_buffer_flip
-    
+ 
     ;; Setting up our scene
     lea ebx, [@@scene]
     call scene_init, ebx
-    jmp @@setup_simple_scene ;; skip raytracer
-
-    ;; =========================================================================
-    ;; Simple scene
-    ;; =========================================================================
-@@setup_simple_scene:
-    ;; A very simple scene with just 1 lambertian sphere of radius 1 at (0,0,0)
-    ;lea eax, [@@color]
-    ;call vec_set_rgb, eax, 255, 0, 0
-    ;lea ecx, [@@texsolid]
-    ;call solid_init, ecx, eax
-    ;lea edi, [@@lam]
-    ;call lambertian_init, edi, ecx
-
-    lea eax, [@@color]
-    call vec_set_rgb, eax, 255, 255, 255
-    lea ecx, [@@texsolid]
-    call solid_init, ecx, eax
-    lea edi, [@@glass]
-    call glass_init, edi, ecx, [float_1_50]
-
-    lea edx, [@@loc]
-    lea ecx, [@@sphere]
-    call vec_set, edx, [float_0], [float_0], [float_0]
-    call sphere_set, ecx, edx, [float_1], edi
-    call scene_add, ebx, ecx
-
-    jmp @@start_renderer
-
-    lea eax, [@@color]
-    call vec_set, eax, [float_0_75], [float_0_25], [float_0_25]
-    lea edi, [@@lam]
-    call lambertian_init, edi, eax
-
-    lea eax, [@@color2]
-    call vec_set, eax, [float_0], [float_0_50], [float_0_75]
-    lea edi, [@@met]
-    call metal_init, edi, eax
-
-    lea eax, [@@color3]
-    call vec_set, eax, [float_0_20], [float_0_25], [float_0_90]
-    lea edi, [@@unlit]
-    call unlit_init, edi, eax
-
-    lea eax, [@@color4]
-    call vec_set, eax, [float_1], [float_1], [float_1]
-    lea edi, [@@emission]
-    call emissive_init, edi, eax, [float_2]
-
-    lea edx, [@@loc]
-    lea ecx, [@@sphere2]
-    lea edi, [@@lam]
-    call vec_set, edx, [float_0], [sphere2_y], [float_minus_1]
-    call sphere_set, ecx, edx, [sphere2_radius], edi
-    call scene_add, ebx, ecx
-
-    lea ecx, [@@sphere]
-    lea edi, [@@lam]
-    call vec_set, edx, [float_0], [float_0], [float_minus_1]
-    call sphere_set, ecx, edx ,[float_0_50], edi
-    call scene_add, ebx, ecx
-
-    lea ecx, [@@sphere3]
-    lea edi, [@@emission]
-    call vec_set, edx, [float_0_75], [float_0_25], [float_minus_0_75]
-    call sphere_set, ecx, edx, [float_0_25], edi
-    call scene_add, ebx, ecx
-    jmp @@start_renderer
-
-    ;; =========================================================================
-    ;; HDRI test scene
-    ;; =========================================================================
-@@setup_scene_hdri_test:
-    ;; -------------------------------------------------------------------------
-    ;; Ball in the middle (copper)
-    ;; -------------------------------------------------------------------------
-    ;; Set color for solid texture
-    lea eax, [@@color]
-    call vec_set_rgb, eax, 176, 110, 55
     
-    ;; Initialize solid texture
-    lea ecx, [@@texsolid3]
-    call solid_init, ecx, eax
+    ;; Load the scene from file
+    call scene_load, ebx, offset config_render_scene_file
 
-    ;; Initialize the metal material
-    lea edi, [@@met3]
-    call metal_init, edi, ecx
-
-    ;; Now finally set up the sphere
-    lea ecx, [@@sphere3]
-    lea edx, [@@loc]
-    call vec_set, edx, [float_minus_0_75], [float_minus_0_25], [float_minus_2]
-    call sphere_set, ecx, edx, [float_0_25], edi
-    call scene_add, ebx, ecx
-
-    ;; -------------------------------------------------------------------------
-    ;; Ball in the middle (gold)
-    ;; -------------------------------------------------------------------------
-    ;; Set color for solid texture
-    lea eax, [@@color]
-    call vec_set_rgb, eax, 165, 125, 0
-    
-    ;; Initialize solid texture
-    lea ecx, [@@texsolid2]
-    call solid_init, ecx, eax
-
-    ;; Initialize the metal material
-    lea edi, [@@met2]
-    call metal_init, edi, ecx
-
-    ;; Now finally set up the sphere
-    lea ecx, [@@sphere2]
-    lea edx, [@@loc]
-    call vec_set, edx, [float_0], [float_minus_0_25], [float_minus_2]
-    call sphere_set, ecx, edx, [float_0_25], edi
-    call scene_add, ebx, ecx
-
-    ;; -------------------------------------------------------------------------
-    ;; Ball on the right (silver)
-    ;; -------------------------------------------------------------------------
-    ;; Set color for solid texture
-    lea eax, [@@color]
-    call vec_set_rgb, eax, 192, 192, 192
-    
-    ;; Initialize solid texture
-    lea ecx, [@@texsolid]
-    call solid_init, ecx, eax
-
-    ;; Initialize the metal material
-    lea edi, [@@met]
-    call metal_init, edi, ecx
-
-    ;; Now finally set up the sphere
-    lea ecx, [@@sphere]
-    lea edx, [@@loc]
-    call vec_set, edx, [float_0_75], [float_minus_0_25], [float_minus_2]
-    call sphere_set, ecx, edx, [float_0_25], edi
-    call scene_add, ebx, ecx
-
-    jmp @@start_renderer
-
-    ;; =========================================================================
-    ;; Football scene
-    ;; =========================================================================
-@@setup_football_scene:
-    ;; Initialize solid texture
-    lea ecx, [@@teximage]
-    call image_init, ecx, offset football_texture
-
-    ;; Initialize the metal material
-    lea edi, [@@lam]
-    call lambertian_init, edi, ecx
-
-    ;; Now finally set up the sphere
-    lea ecx, [@@sphere3]
-    lea edx, [@@loc]
-    call vec_set, edx, [float_0], [float_minus_0_25], [float_minus_2]
-    call sphere_set, ecx, edx, [float_0_25], edi
-    call scene_add, ebx, ecx
-    
-    jmp @@start_renderer
-    
-    ;; =========================================================================
-    ;; Triangle test scene
-    ;; =========================================================================
-@@setup_triangle_test:
-
-    ;; Set color for solid texture
-    lea eax, [@@color]
-    call vec_set_rgb, eax, 255, 110, 55
-    
-    ;; Initialize solid texture
-    lea ecx, [@@texsolid]
-    call solid_init, ecx, eax
-
-    ;; Initialize the metal material
-    lea esi, [@@met]
-    call metal_init, esi, ecx
-
-    lea ecx, [@@triangle]
-    lea edi, [@@loc3]
-    lea edx, [@@loc2]
-    lea eax, [@@loc]
-    call vec_set, edi, [float_1],[float_minus_1],[float_1]
-    call vec_set, edx, [float_1],[float_1],[float_1]
-    call vec_set, eax, [float_minus_1],[float_minus_1],[float_1]
-    call triangle_set, ecx, eax, edx, edi, esi
-    call scene_add, ebx, ecx
-
-    jmp @@start_renderer
-
-@@setup_cube_test:
-    ;; Gray blender color for fun
-    lea eax, [@@color]
-    call vec_set_rgb, eax, 255, 255, 255
-    
-    lea ecx, [@@texsolid]
-    call solid_init, ecx, eax
-
-    ;; Initialize the lambertian material
-    ;lea esi, [@@met]
-    ;call metal_init, esi, ecx
-    call glass_init, esi, ecx, [float_1_50]
-
-    call obj_load, ebx, esi, offset cube_path
-    jmp @@start_renderer
-
-    ;; End setting up scene
-
-    ;; Start renderer
-@@start_renderer:
+    ;; Build the scene BVH
     call scene_build_bvh, ebx
+    
+    ;; And run the renderer
     call renderer_init
     call renderer_render, ebx
     
@@ -285,11 +83,11 @@ ifndef NASM
     ;; mouse events to a program that doesn't exist anymore resulting in 
     ;; crashes.
     call gui_destruct
+    call video_set_mode, VIDEO_MODE_TEXT
 else
+    ;; On linux we just output the BMP
     call renderer_to_bmp, offset bmpout
 endif
-
-    call video_set_mode, VIDEO_MODE_TEXT
 
     mov ebx, [@@begin_time]
     call gettime_millis
