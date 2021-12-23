@@ -117,7 +117,7 @@ proc main_loop
     cmp [running_main_loop], 1
     jne @@end
 
-    mov bl, [keyb_keys_active]
+    mov bl, [byte keyb_keys_active]
 
     cmp bl, 0
     je @@skipkeyhandle
@@ -125,7 +125,7 @@ proc main_loop
     cmp [key_reset], 1
     jne @@run
 
-    movzx ebx, [keyb_raw_scan_code]
+    movzx ebx, [byte keyb_raw_scan_code]
     movzx eax, [byte ptr character_mapping + ebx] ;; character
 
     cmp ebx, 0Eh
@@ -1069,15 +1069,15 @@ DATASEG
 
     title_name_string db "Assembly Raytracer", 0
 
-    video_width_field dd (?)
-    video_height_field dd (?)
-    fov_field dd (?)
-    sample_count_field dd (?)
-    max_bounces_field dd (?)
-    hdri_path_field dd (?)
-    cam_pos_x_field dd (?)
-    cam_pos_y_field dd (?)
-    cam_pos_z_field dd (?)
+    video_width_field dd 0
+    video_height_field dd 0
+    fov_field dd 0
+    sample_count_field dd 0
+    max_bounces_field dd 0
+    hdri_path_field dd 0
+    cam_pos_x_field dd 0
+    cam_pos_y_field dd 0
+    cam_pos_z_field dd 0
 
     video_width_string_buffer db 16 dup (?)
     video_height_string_buffer db 16 dup (?)
@@ -1117,7 +1117,7 @@ DATASEG
                         db 002h,  003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh
                         db 039h,  034h, 033h
 
-    character_mapping: 
+    character_mapping:
                       db 2 dup (0)       ;; padding
                       db '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '_'
                       db 2 dup (0)

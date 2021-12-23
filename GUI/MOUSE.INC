@@ -37,6 +37,6 @@
 ;
 ;=============================================================================
 
-GLOBAL 	mouse_install:PROC, \
-       	mouse_uninstall:PROC, \
-       	mouse_present:PROC
+GLOBAL mouse_install:PROC
+GLOBAL mouse_uninstall:PROC
+GLOBAL mouse_present:PROC

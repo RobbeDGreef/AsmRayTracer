@@ -71,7 +71,7 @@ proc mouse_internal_handler
     push    es
     push    ax
 
-    mov     ax, [cs:theDS]
+    mov     ax, [word cs:theDS]
     mov     ds, ax
     mov     es, ax
 
@@ -91,7 +91,7 @@ proc mouse_internal_handler
     ;; Internal variable to keep track of DS
     ;; I don't fully understand why it has to be saved in the code segment but
     ;; it doesn't work otherwise so we'll just leave it here
-    theDS   dw  ?
+    theDS   dw  0
 endp mouse_internal_handler
 
 ;; Installs the mouse handler
@@ -110,7 +110,7 @@ proc mouse_install
     mov ax, cs
     mov ds, ax
     ASSUME  ds:_TEXT
-    mov [theDS], ax
+    mov [word theDS], ax
     ASSUME  ds:FLAT
     pop ds
 
@@ -158,7 +158,7 @@ proc mouse_uninstall
 endp mouse_uninstall
 
 DATASEG
-    custom_mouse_handler    dd ?
+    custom_mouse_handler    dd 0
 
 END
 

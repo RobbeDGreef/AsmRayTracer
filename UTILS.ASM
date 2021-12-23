@@ -433,10 +433,18 @@ proc read_line_from_file
     ;; wheras linux has LF. To make sure the files we use work on both we will 
     ;; check for both.
     cmp al, 13 ;; carriage return (cr)
-    je @@end
+    je @@cr_newline
     cmp al, 10 ;; newline (lf)
     je @@end
 
+    ;; When we have a CRLF we want don't want to include the CR in our line so
+    ;; we decrement ecx with one to make sure we overwrite it with a null byte
+    ;; in the next iteration
+    jmp @@continue
+@@cr_newline:
+    dec ecx
+
+@@continue:
     inc ecx
     jmp @@read_loop
 
