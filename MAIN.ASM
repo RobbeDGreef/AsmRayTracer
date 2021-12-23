@@ -35,12 +35,7 @@ CODESEG
 GLOBAL main:PROC
 
 proc main
-    local @@begin_time:dword, @@scene:Scene, @@sphere:Sphere, @@loc:Vec,\
-          @@sphere2:Sphere, @@lam:Lambertian, @@color:Color, @@met:Metal,\
-          @@color2:Color, @@color3:Color, @@color4:Color, @@sphere3:Sphere, @@unlit:Unlit, @@emission:Emissive,\
-          @@texsolid:Solid, @@textiles:Tiles, @@teximage:Image,\ 
-          @@texsolid2:Solid, @@met2:Metal, @@texsolid3:Solid, @@met3:Metal,\
-          @@loc2:Vec, @@loc3:Vec, @@triangle:Triangle, @@uv:Uv, @@glass:Glass
+    local @@begin_time:dword, @@scene:Scene
     uses eax, ebx, ecx, edx, edi, esi
 
     call init
@@ -56,7 +51,7 @@ ifndef NASM
 endif
     ;; Once gui is over we start the raytracer
 
-    call log_str, offset start_str
+    call log_str, offset load_str
     call gettime_millis
     mov [@@begin_time], eax
  
@@ -70,7 +65,9 @@ endif
     ;; Build the scene BVH
     call scene_build_bvh, ebx
     
+
     ;; And run the renderer
+    call log_str, offset start_str
     call renderer_init
     call renderer_render, ebx
     
@@ -106,24 +103,10 @@ endp main
 STACK 5000h
 
 DATASEG
+    load_str db "Loading scene started", 0
     start_str db "Ray tracer started", 0
     finished_str db "Ray tracer finished in ", 0
     finished_str2 db " milliseconds", 0
     bmpout db "test.bmp", 0
-
-    test_str db "Hello world!!", 0
-    
-    football_texture db "IMAGES/FOOTBALL.BMP", 0
-    cube_path db "OBJS/MONKEY.OBJ"
-
-    sphere2_radius dd 100.0
-    sphere2_y dd -100.5
-
-    float_10            dd 10.0
-    float_minus_0_25    dd -0.25
-    float_minus_2       dd -2.0
-    float_0_80          dd 0.80
-    float_0_60          dd 0.60
-    float_1_50          dd 1.50
 
 END main
