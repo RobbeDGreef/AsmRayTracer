@@ -1113,6 +1113,7 @@ DATASEG
     cam_pos_x_field dd 0
     cam_pos_y_field dd 0
     cam_pos_z_field dd 0
+    scene_file_field dd 0
 
     video_width_string_buffer db 16 dup (?)
     video_height_string_buffer db 16 dup (?)
