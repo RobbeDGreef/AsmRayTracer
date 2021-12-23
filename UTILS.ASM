@@ -521,6 +521,16 @@ endif
     ret
 endp lseek_file
 
+proc wait_for_keypress
+    uses eax
+ifndef NASM
+	mov ax, 01h
+	int 16h
+endif
+    ret
+endp wait_for_keypress
+
+
 ;; =============================================================================
 ;; C standard library functions
 ;; =============================================================================

@@ -34,6 +34,7 @@ GLOBAL read_file:PROC           ;; dword read_file(dword file_handle, char* buff
 GLOBAL write_str:PROC           ;; void write_str(dword file_handle, char* str)
 GLOBAL lseek_file:PROC          ;; dword write_lseek(dword file_handle, dword offset, dword origin)
 GLOBAL read_line_from_file:PROC ;; void read_line_from_file(dword file_handle, char* buffer, dword max_bytes)
+GLOBAL wait_for_keypress:PROC   ;; void wait_for_keypress()
 
 LSEEK_ORIGIN_START      equ 0
 LSEEK_ORIGIN_CUR        equ 1

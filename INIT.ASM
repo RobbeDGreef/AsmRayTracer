@@ -27,7 +27,6 @@ ifndef NASM
 
     ;; Initialize the FPU for floating point operations
     finit
-    call keyboard_install_handler
 endif
 
     ;; Set rounding control to 0
@@ -42,12 +41,5 @@ endif
 
     ret
 endp init
-
-proc destruct 
-ifndef NASM
-    call keyboard_uninstall_handler
-endif
-    ret
-endp destruct 
 
 END

@@ -48,6 +48,11 @@ proc main
     ;; Gui aspect should only run in dosbox
 ifndef NASM
     call gui_start
+    ;; gui_destruct HAS TO BE CALLED before the program finishes, it will 
+    ;; disable the mouse and if we don't do that dos will try to dispatch
+    ;; mouse events to a program that doesn't exist anymore resulting in 
+    ;; crashes.
+    call gui_destruct
 endif
     ;; Once gui is over we start the raytracer
 
@@ -71,15 +76,11 @@ endif
     call renderer_init
     call renderer_render, ebx
     
+
 ifndef NASM
     call renderer_show_img
-    call sleep_millis, 6000
+    call wait_for_keypress
     
-    ;; gui_destruct HAS TO BE CALLED before the program finishes, it will 
-    ;; disable the mouse and if we don't do that dos will try to dispatch
-    ;; mouse events to a program that doesn't exist anymore resulting in 
-    ;; crashes.
-    call gui_destruct
     call video_set_mode, VIDEO_MODE_TEXT
 else
     ;; On linux we just output the BMP
@@ -93,8 +94,6 @@ endif
     call print_int, eax
     call print_str, offset finished_str2
     call print_newline
-
-    call destruct
 
     call exit, 0
     ret

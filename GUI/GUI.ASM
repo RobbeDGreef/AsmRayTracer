@@ -35,11 +35,14 @@ proc gui_init
     call read_file, ebx, offset cursor_array, CURSORFILE_SIZE
     call close_file, ebx
 
+    call keyboard_install_handler
+
     ret
 endp gui_init
 
 proc gui_destruct
     call mouse_uninstall
+    call keyboard_uninstall_handler
     ret
 endp gui_destruct
 
