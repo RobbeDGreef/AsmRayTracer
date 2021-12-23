@@ -1,6 +1,7 @@
 import sys
 import os
 import traceback
+import re
 
 infile = sys.argv[1]
 outfile = sys.argv[2]
@@ -165,11 +166,16 @@ class Converter:
 
 
         if self.current_segment == "data":
-            parts = line.split(' ')
+            parts = line.split()
+
+            # Dirty hacky solution but it works
+            if parts[0] in self.typetable:
+                parts.insert(0, ' ')
+                
             if line.find(" dup ") != -1:
                 newparts = [parts[0]]
                 newparts.append('times')
-                newparts.append('(' + parts[2] + ")*" + str(self.get_type_size(parts[1])))
+                newparts.append('((' + parts[2] + ")*" + str(self.get_type_size(parts[1])) + ')')
                 newparts.append('db 0')
 
                 return " ".join(newparts)
@@ -359,8 +365,16 @@ class Converter:
             self.stackframesize = 0
             tmp = []
             for local in locs:
-                name, ltype = local.split(':')
+                localparts = local.split(':')
+                name = localparts[0]
+                ltype = localparts[1]
+            
                 size = self.get_type_size(ltype)
+
+                # Amount was specified
+                if len(localparts) == 3:
+                    size *= int(localparts[2])
+
                 tmp.append((name.strip(), (size, self.stackframesize)))
                 if size % 4:
                     size += 4 - (size % 4)
@@ -374,7 +388,7 @@ class Converter:
 
         if lineparts[0] == "call":
             args = " ".join(lineparts[1:])
-            args = args.split(',')
+            args = re.split(r"(?<='.'),|(?<!'),", args)
             fname = args[0]
             args = args[1:]
             out = []
