@@ -10,6 +10,7 @@ GLOBAL print_hex_multiple:PROC  ;; void print_hex_multiple(dword amount, ...)
 GLOBAL print_hexdump:PROC       ;; void print_hexdump(char* loc, dword amount)
 
 GLOBAL log_str:PROC
+GLOBAL log_char:PROC
 GLOBAL log_int:PROC
 GLOBAL log_hex:PROC
 GLOBAL log_char:PROC
@@ -33,6 +34,7 @@ GLOBAL read_file:PROC           ;; dword read_file(dword file_handle, char* buff
 GLOBAL write_str:PROC           ;; void write_str(dword file_handle, char* str)
 GLOBAL lseek_file:PROC          ;; dword write_lseek(dword file_handle, dword offset, dword origin)
 GLOBAL read_line_from_file:PROC ;; void read_line_from_file(dword file_handle, char* buffer, dword max_bytes)
+GLOBAL wait_for_keypress:PROC   ;; void wait_for_keypress()
 
 LSEEK_ORIGIN_START      equ 0
 LSEEK_ORIGIN_CUR        equ 1
@@ -44,6 +46,7 @@ GLOBAL sleep_millis:PROC        ;; void sleep_millis(dword millis)
 
 ;; Standard library fakes
 GLOBAL strlen:PROC              ;; dword strlen(char* str)
+GLOBAL strend:PROC              ;; char* stren(char* str)
 GLOBAL itoa:PROC                ;; void itoa(dword value, char* buffer, dword base)
 GLOBAL strrev:PROC              ;; void strrev(char* str)
 GLOBAL strchr:PROC              ;; char* strchr(char* str, dword c)
@@ -80,6 +83,7 @@ GLOBAL float_minus_1:DWORD
 GLOBAL float_minus_0_75:DWORD
 GLOBAL float_2:DWORD
 GLOBAL float_4:DWORD
+GLOBAL float_1000000:DWORD
 GLOBAL float_max_char:DWORD
 GLOBAL float_pos_inf:DWORD
 GLOBAL float_neg_inf:DWORD

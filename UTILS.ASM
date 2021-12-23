@@ -240,6 +240,14 @@ proc log_str
     ret
 endp log_str
 
+proc log_char
+    arg @@char:dword
+    call log_prefix
+    call print_char, [@@char]
+    call print_newline
+    ret
+endp log_char
+
 proc log_int
     arg @@value:dword
     call log_prefix
@@ -255,14 +263,6 @@ proc log_hex
     call print_newline
     ret
 endp log_hex
-
-proc log_char
-    arg @@char:dword
-    call log_prefix
-    call print_char, [@@char]
-    call print_newline
-    ret
-endp log_char
 
 ;; Exits the program with the given statuscode 
 proc exit
@@ -433,10 +433,18 @@ proc read_line_from_file
     ;; wheras linux has LF. To make sure the files we use work on both we will 
     ;; check for both.
     cmp al, 13 ;; carriage return (cr)
-    je @@end
+    je @@cr_newline
     cmp al, 10 ;; newline (lf)
     je @@end
 
+    ;; When we have a CRLF we want don't want to include the CR in our line so
+    ;; we decrement ecx with one to make sure we overwrite it with a null byte
+    ;; in the next iteration
+    jmp @@continue
+@@cr_newline:
+    dec ecx
+
+@@continue:
     inc ecx
     jmp @@read_loop
 
@@ -512,6 +520,16 @@ endif
 
     ret
 endp lseek_file
+
+proc wait_for_keypress
+    uses eax
+ifndef NASM
+	mov ax, 01h
+	int 16h
+endif
+    ret
+endp wait_for_keypress
+
 
 ;; =============================================================================
 ;; C standard library functions
@@ -610,6 +628,21 @@ proc strchr
 @@end:
     ret
 endp strchr
+
+;; Returns a pointer to the nullbyte of the string
+proc strend
+    arg @@str:PTR byte
+
+    mov eax, [@@str]
+@@search_loop:
+    cmp [byte ptr eax], 0
+    je @@end
+
+    inc eax
+    jmp @@search_loop
+@@end:
+    ret
+endp strend
 
 ;; ASM version of C's itoa() function. Converts an integer value to a 
 ;; null terminated string using the specified base.

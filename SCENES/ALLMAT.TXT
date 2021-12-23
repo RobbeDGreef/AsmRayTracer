@@ -1,0 +1,50 @@
+object
+ model
+  OBJS/MONKEY.OBJ
+  glass
+   solid
+    1.0 1.0 1.0
+   1.5
+object
+ sphere
+  2.0 0.0 0.0
+  0.50
+  emissive
+   1.0 1.0 1.0
+   3.0
+object
+ sphere
+  3.25 0.0 0.0
+  0.50
+  lambertian
+   solid
+    0.80 0.5 0.5
+object
+ sphere
+  -2.0 0.0 0.0
+  0.50
+  metal
+   solid
+    0.65 0.49 0.0
+object
+ sphere
+  -3.25 0.0 0.0
+  0.50
+  unlit
+   0.3 0.8 0.3
+object
+ sphere
+  1.2 -1.2 0.0
+  0.50
+  lambertian
+   image
+    IMAGES/EARTH_L.BMP
+object
+ sphere
+  -1.2 -1.2 0.0
+  0.50
+  metal
+   tiles
+    0.8 0.8 0.8
+    0.2 0.2 0.2
+    10.0

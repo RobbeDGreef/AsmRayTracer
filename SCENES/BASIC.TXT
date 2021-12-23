@@ -1,0 +1,7 @@
+object
+ sphere
+  0.0 0.0 0.0
+  1.0
+  lambertian
+   solid
+    0.8 0.2 0.2

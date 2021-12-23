@@ -1,7 +1,9 @@
 import os
+#import cursor
 import font
 
 fontfile = "FONT.BIN"
+#cursorfile = "CURSOR.BIN"
 
 with open(fontfile, "wb+") as f:
     for i in range(32):

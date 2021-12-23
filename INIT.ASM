@@ -4,6 +4,8 @@ MODEL FLAT, C
 ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "init.inc"
+include "keyb.inc"
+include "utils.inc"
 
 CODESEG
 
@@ -35,6 +37,7 @@ endif
     or ax, 0c00h
     mov [@@temp], ax
     fldcw [@@temp]
+
 
     ret
 endp init

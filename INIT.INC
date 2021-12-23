@@ -1,1 +1,1 @@
-GLOBAL init:PROC ;; void init()
+GLOBAL init:PROC     ;; void init()
