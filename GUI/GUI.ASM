@@ -1144,7 +1144,7 @@ DATASEG
     cam_pos_y_default db "0.0", 0
     cam_pos_z_default db "2.0", 0
     hdri_path_default db "IMAGES/SNOWY.BMP", 0
-    scene_file_default db "SCENES/EX1.TXT", 0 
+    scene_file_default db "SCENES/BASIC.TXT", 0 
 
     ;;                       a      z     e     r   t      y    u      i     o    p
     ;;                       q      s     d     f   g      h    j      k     l    m
