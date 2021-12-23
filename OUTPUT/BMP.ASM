@@ -35,7 +35,7 @@ proc bmp_write
     mov [dword ptr eax+bmp_dip_hdr.img_width], ecx
     mov ecx, [@@height]
     mov [dword ptr eax+bmp_dip_hdr.img_height], ecx
-    mov [word ptr eax+bmp_dip_hdr.places_cnt], BMP_DIB_SIZE
+    mov [word ptr eax+bmp_dip_hdr.places_cnt], 1
     mov [word ptr eax+bmp_dip_hdr.bpp], BMP_DIB_BPP
     mov [dword ptr eax+bmp_dip_hdr.compression_type], BMP_DIB_COMPRESSION_TYPE
     mov [dword ptr eax+bmp_dip_hdr.compression_size], BMP_DIB_COMPRESSION_SIZE
