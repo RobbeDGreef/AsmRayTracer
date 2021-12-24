@@ -39,8 +39,9 @@ WSL 1 is not able to do this you will need WSL 2**.
 linux mode but this bug will soon be fixed*
 
 ## Current state of things
-![Suzanne render](saved/metal_suzanne.bmp?raw=true "Loaded object")
-![Sphere reflections](saved/positional_camera.bmp?raw=true "Reflections")
+![All materials render](saved/allmat_2000_1500_512.png?raw=true "All materials")
+![Glass ball render](Results/raytracer_sphere_primitive.bmp?raw=true "All materials")
+
 
 ## Coding style
 ### Line limit
@@ -56,7 +57,7 @@ Assembly language is case insensitive but try to leave everything lowercase.
 ## Todo
 - [x] utility functions
   - [x] print_float
-- [ ] Implement the vec class
+- [x] Implement the vec class
   - [x] struct implementation
   - [x] getters and setters
   - [x] vec-vec
@@ -67,7 +68,6 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [x] length_squared()
   - [x] dot product
   - [x] vector cross
-  - [ ] unit vector (vec / vec_length)
   - [x] vec_cpy
   - [x] vec_eq
 - [x] Frame buffer class
@@ -91,10 +91,10 @@ Assembly language is case insensitive but try to leave everything lowercase.
     - [ ] Configurable metallic
   - [x] Unlit
   - [x] UV
-  - [ ] Dielectric (maybe)
-- [ ] Scene system
+  - [x] Dielectric (maybe)
+- [x] Scene system
   - [x] Simple linked list
-  - [ ] BVH trees (maybe)
+  - [x] BVH trees (maybe)
 - [x] Objects
   - [x] Spheres
   - [x] Triangles
