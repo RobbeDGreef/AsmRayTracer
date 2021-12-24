@@ -319,7 +319,7 @@ class Converter:
         
         # We do some preprocessor work so we have to include these already
         if lineparts[0] == "include":
-            file_to_parse = line.split('"')[1]
+            file_to_parse = line.split('"')[1].upper()
             with open(file_to_parse, "r") as f:
                 _, f1 = os.path.split(file_to_parse)
                 _, f2 = os.path.split(self.infile_name)

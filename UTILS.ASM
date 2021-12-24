@@ -334,6 +334,7 @@ else
     mov eax, 8                  ;; creat syscall
     mov ebx, [@@file_name]
     mov ecx, [@@access_mode]
+    or ecx, 00440               ;; Set readable
     
     int 80h
 endif
