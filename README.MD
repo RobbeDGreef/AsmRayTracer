@@ -1,5 +1,5 @@
 # RayTracer
-VUB second bachelor assembly programming project.
+Assembly programming project for university.
 
 ## To run the raytracer
 In dosbox execute the following command
