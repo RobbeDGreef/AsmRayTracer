@@ -8,6 +8,8 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 
 include "keyb.inc"
 
+;; Copy pasted from example keyboard driver (with some minor tweaks)
+
 ;-----------------------------------------------------------
 ; CODE
 ;-----------------------------------------------------------

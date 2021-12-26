@@ -20,6 +20,10 @@ proc lambertian_scatter
 
     ;; Lambertian (diffuse) materials always scatter a new ray in a random 
     ;; direction. This gives the diffuse or 'mat' effect. 
+    ;; A good explanation of scattering of different materials can be found here
+    ;; https://i.stack.imgur.com/kMAIT.png
+    ;; This also explains the next line, why we want a random in a half 
+    ;; sphere (half of a sphere is called a hemisphere)
 
     ;; target = random_in_unit_vector(normal)
     mov ecx, [@@hit]
@@ -28,7 +32,7 @@ proc lambertian_scatter
     call vec_random_in_hemisphere, ebx, ecx
     
     ;; Catch null vectors. These will give us a hard time in calculations so we
-    ;; will just get rid of them entirely.
+    ;; will just get rid of them entirely. (Color acne etc)
     call vec_eq, ebx, offset nullvec
     cmp eax, 1
     jne @@not_null

@@ -15,18 +15,27 @@ CODESEG
 
 MAX_LINE_LEN equ 128
 
+;; This file implements Wavefront (triangulated) OBJ loading. However it isn't
+;; fullproof. It breaks easily if you try to load models that are structured 
+;; correctly according to spec but not in the way you would expect. For example.
+;; if you were to add two spaces between vertices instead of one, our loader 
+;; would fail. However, we are aiming to support models created by blender and
+;; that works fine since blender doesn't do such annoying things.
+
+;; This function interprets a facet (triangle) and adds it to the scene.
+;; It looks the vertex locations up in our vertex table
 proc interpret_face
     arg @@scene:PTR Scene, @@mat:PTR Mat
     local @@x:dword, @@y:dword, @@z:dword
     uses eax, ebx, ecx, edx, edi, esi
+    ;; A facet line has the format 'f x/xt/xv y/yt/yv z/zt/zv'
 
     mov ebx, offset line_buf
     
     ;; Skip over 'f '
     add ebx, 2
 
-    ;; Now faces have the format 'f x/xt/xv y/yt/yv z/zt/zv'
-    ;; Problem is, the xt and xv are optional. We will once again not use them
+    ;; Problem is, the xt and xv are optional. We will not use them
     ;; (at least for now, but I don't think we have time to implement texture 
     ;; coordinates etc)
 
@@ -40,7 +49,7 @@ proc interpret_face
     call strchr, ebx, ' '
     mov ebx, eax
     
-    ;; skip over the space
+    ;; skip over that space so we end up at the next int value
     inc ebx
 
     call atoi, ebx
@@ -80,6 +89,7 @@ proc interpret_face
     add eax, [vertex_table]
     mov edx, eax
 
+    ;; Finally now that we have all the face info we can add it to the scene
     call triangle_set, ebx, ecx, edi, edx, [@@mat]
     call scene_add, [@@scene], ebx
     
@@ -89,15 +99,14 @@ endp interpret_face
 proc interpret_vec
     local @@x:dword, @@y:dword, @@z:dword
     uses eax, ebx
+    ;; Vertexes are in the format 'v x y z [w]' with an optional w
+    ;; but we will not use the optional w (i've also never actually seen it
+    ;; being used so I don't know what it means)
 
     mov ebx, offset line_buf
     
     ;; skip over characters 'v '
     add ebx, 2
-
-    ;; Vertexes are in the format 'v x y z [w]' with an optional w
-    ;; but we will not use the optional w (i've also never actually seen it
-    ;; being used so I don't know what it means)
 
     call atof, ebx
     mov [@@x], eax
@@ -133,6 +142,12 @@ proc interpret_vec
     inc [vertex_table_size]
 
 ifdef NASM
+    ;; See the comment below. We can't do this for linux since here we have an
+    ;; actual proper memory manager. So what we *can* do is reallocate the 
+    ;; vertex table. Now this works but this is INCREDIBLY inefficient. And 
+    ;; the inefficiency is notable. Loading a model on linux takes a significant
+    ;; amount of time. However we are not focussing on optimizing for linux
+    ;; so for now this hack will do.
     mov eax, VEC_SIZE
     mul [vertex_table_size]
     call realloc, [vertex_table], eax
@@ -147,6 +162,7 @@ else
     call alloc, VEC_SIZE
 endif
 
+    ;; Finally add the vertex to the vertex buffer
     mov eax, VEC_SIZE
     mul [vertex_table_size]
     sub eax, VEC_SIZE
@@ -158,7 +174,9 @@ endif
 endp interpret_vec
 
 ;; This function loads an object from file in wavefront OBJ file format and 
-;; adds it to the scene. It doesn't support transformations
+;; adds it to the scene. It doesn't support transformations and objects HAVE to
+;; be triangulated. If they are not, only one triangle of your facet will be 
+;; visible and the model will have holes in it.
 proc obj_load
     arg @@scene:PTR Scene, @@mat:PTR Mat, @@path:PTR byte
     local @@obj_file_handle:dword, @@line:dword
@@ -167,12 +185,16 @@ proc obj_load
     call open_file, [@@path], 0
     mov [@@obj_file_handle], eax    
 
+    ;; We just read one line at a time since OBJ formats are build up like that.
 @@readline:
     call read_line_from_file, [@@obj_file_handle], offset line_buf, MAX_LINE_LEN
     cmp [byte line_buf], 0
     je @@end
     mov [@@line], offset line_buf
 
+    ;; Vertex lines start with a 'v ' (the space is important since there are 
+    ;; other types of objects in this file that start with a v but have multiple
+    ;; letters, for example 'vt' or 'vn')
     cmp [byte line_buf], 'v'
     jne @@add_face
     cmp [byte line_buf+1], ' '
@@ -183,6 +205,8 @@ proc obj_load
     jmp @@skipline
 
 @@add_face:
+    ;; Facet lines start with a 'f '. I don't know of any other objects that 
+    ;; start with an 'f' but it seems good practice to look for the space
     cmp [byte line_buf], 'f'
     jne @@skipline
     cmp [byte line_buf+1], ' '

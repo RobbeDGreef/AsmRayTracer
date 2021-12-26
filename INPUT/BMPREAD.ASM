@@ -23,7 +23,7 @@ proc bmp_read
     ;; bmp dib header
     ;; image data
     ;;
-    ;; So we will first load in the two first structures and then determin
+    ;; So we will first load in the two first structures and then determine
     ;; the image data offset and read the buffer into memory
 
     call open_file, [@@file_name], 0
@@ -37,7 +37,7 @@ proc bmp_read
     lea esi, [@@dib_hdr]
     call read_file, ebx, esi, BMP_DIB_SIZE
 
-    ;; Save the width information
+    ;; Save the width and height information
     mov eax, [@@width_ptr]
     mov ecx, [esi+bmp_dip_hdr.img_width]
     mov [eax], ecx
@@ -48,7 +48,7 @@ proc bmp_read
     ;; We will create a buffer to hold the loaded bitmap in vector format
     ;; meaning we will have to convert the RGBA to (RGB) vector. Essentially
     ;; we will just ignore the alpha component and convert to vectors
-    ;; width * height * vec
+    ;; buffer_size = width * height * vec
     mov eax, [esi+bmp_dip_hdr.img_width]
     mul [esi+bmp_dip_hdr.img_height]
     mov edx, VEC_SIZE
@@ -71,7 +71,6 @@ proc bmp_read
     ;; from back to the front, this way we will never overwrite the RGBA data 
     ;; and don't have to allocate another buffer.
     
-
     ;; vecptr = base + (width * height) * vec_size - vec_size
     ;; rgbptr = base + (width * height) * 4 - 4
     ;;
@@ -101,13 +100,13 @@ proc bmp_read
     ;; ebx contains the vector pointer
     ;; ecx contains the rgba pointer
 
-    call print_hex, ecx
-    call print_newline
-
 @@transform_loop:
     cmp ecx, edi
     jl @@end_loop
 
+    ;; Load the byte onto the fpu stack and divide it by the max_char value 
+    ;; (255). This way we get a value from 0.0 to 1.0. This is the value we then
+    ;; store in our buffer
     movzx eax, [byte ptr ecx+2]
     mov [@@temp], eax
     fild [@@temp]
@@ -123,8 +122,10 @@ proc bmp_read
     fst [@@temp]
     fmul [@@temp]
 
+    ;; Store the calculate color value into the vector
     fstp [dword ptr ebx]
     
+    ;; Just do the exact same for the other two colors
     movzx eax, [byte ptr ecx+1]
     mov [@@temp], eax
     fild [@@temp]

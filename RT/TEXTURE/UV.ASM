@@ -15,6 +15,7 @@ CODESEG
 proc uv_get_color
     arg @@tex:PTR Uv, @@u:dword, @@v:dword, @@dest_color:PTR Color
     
+    ;; (u,v,0.90) is a good way to visualize normals
     call vec_set, [@@dest_color], [@@u], [@@v], [float_0_90]
     mov eax, 1
     ret

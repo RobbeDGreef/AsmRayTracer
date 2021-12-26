@@ -60,7 +60,7 @@ proc compare_axis
     lea ecx, [ecx+Aabb.min]
     call vec_get_idx, ecx, [@@axis]
 
-    ;; Now we comare the two values. eax will equal 1 if left is smaller than
+    ;; Now we compare the two values. eax will equal 1 if left is smaller than
     ;; the right after this function.
     call flt, ebx, eax
     ret

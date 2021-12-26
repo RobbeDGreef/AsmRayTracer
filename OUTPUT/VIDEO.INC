@@ -22,5 +22,5 @@ GLOBAL vesa_lfb:dword
 CURSOR_WIDTH    equ 8
 CURSOR_HEIGHT   equ 16
 CURSOR_SIZE     equ 16
-GLOBAL video_set_mouse_bitmap:PROC
-GLOBAL video_update_mouse:PROC
+GLOBAL video_set_mouse_bitmap:PROC  ;; void video_set_mouse_bitmap(char* bitmap)
+GLOBAL video_update_mouse:PROC      ;; void video_update_mouse(int x, int y, int color)

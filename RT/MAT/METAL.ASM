@@ -23,6 +23,9 @@ proc reflect
     ;; unit_vector(in.direction()) - 2(unit_vector(in.direction) * hit.normal) 
     ;;                                                             * hit.normal
 
+    ;; A good visualization of the different refraction can be seen here:
+    ;; https://i.stack.imgur.com/kMAIT.png
+
     ;; udir - 2 (udir dot normal) * normal
     ;; target = udir
     ;; temp = normal
@@ -59,7 +62,7 @@ proc metal_scatter
     lea ecx, [ecx+Hit.normal]
     
     ;; This perfect metal material will return a ray perfectly bounced mirrored
-    ;; over the normal line, esssentially bouncing it back perfectly.
+    ;; over the normal line, essentially bouncing it back perfectly.
 
     mov eax, [@@in]
     lea eax, [eax+Ray.direction]

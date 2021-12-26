@@ -9,6 +9,8 @@ include "utils.inc"
 
 CODESEG
 
+
+;; Initialization code. To clean up the main file
 proc init
     local @@temp:word
     uses eax
@@ -20,7 +22,7 @@ ifndef NASM
     cld
 
     ;; Set the extra segment to be the same as the data segment
-    ;; This is probably not necessary because everytime we use ES we probably
+    ;; This is probably not necessary because every time we use ES we probably
     ;; explicitly set it to some value but better safe than sorry
     mov ax, ds
     mov es, ax
@@ -29,15 +31,13 @@ ifndef NASM
     finit
 endif
 
-    ;; Set rounding control to 0
-    ;; Don't change this because this was one annoying bug to fix. Thank god I 
-    ;; remembered this is a thing.
+    ;; Set rounding control to 0. This is the same as in C and makes printing
+    ;; floats SO MUCH EASIER. 
     fnstcw [@@temp]
     mov ax, [@@temp]
     or ax, 0c00h
     mov [@@temp], ax
     fldcw [@@temp]
-
 
     ret
 endp init

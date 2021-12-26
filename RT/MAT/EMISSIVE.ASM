@@ -51,7 +51,8 @@ proc emissive_init
     lea eax, [eax+Emissive.color]
     call vec_cpy, eax, [@@color]
     
-    ;; Calculate the emission color * strength once. 
+    ;; Calculate the emission color * strength once and save it, instead of 
+    ;; calculating it each time we hit an emissive material.
     lea eax, [@@mat] 
     lea eax, [eax+Emissive.emission_color]
     call vec_cpy, eax, [@@color]

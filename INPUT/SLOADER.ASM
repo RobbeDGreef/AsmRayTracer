@@ -36,7 +36,7 @@ CODESEG
 ;;  ...
 ;; ...
 ;;
-;; As you can see everytime you add arguments to an entry you increment the
+;; As you can see every time you add arguments to an entry you increment the
 ;; indentation with 1 space.
 ;; Arguments must be in order
 ;; object accepts two arguments: 
@@ -101,6 +101,9 @@ TYPE_VEC        equ 4
 TYPE_FLOAT      equ 5
 TYPE_STRING     equ 6
 
+
+;; There is a lot of code that looks similar but is different enough to be 
+;; copied. It is annoying but a limitation of assembly.
 
 ;; =============================================================================
 ;; Texture interpretation code
@@ -308,6 +311,7 @@ endp interpret_glass
 ;; =============================================================================
 ;; Model interpretation code
 ;; =============================================================================
+;; Create a sphere
 proc interpret_sphere
     arg @@scene:PTR Scene, @@file_handle:dword, @@indent:dword
     local @@vec_buf:Vec, @@radius:dword
@@ -354,7 +358,7 @@ proc interpret_sphere
     ret
 endp interpret_sphere
 
-
+;; Load a wavefront OBJ file.
 proc interpret_model
     arg @@scene:PTR Scene, @@file_handle:dword, @@indent:dword
     local @@vec_buf:Vec, @@radius:dword, @@path_buf:byte:128
@@ -427,7 +431,7 @@ endp check_indent
 
 ;; The type specifies which type of object we are looking for
 ;; The buffer is an optional argument that can get used by some values when
-;; allocating on the stack would be wastefull.
+;; allocating on the stack would be wasteful.
 proc interpret_line
     arg @@scene:PTR Scene, @@file_handle:dword, @@indent:dword, @@type:dword,\
         @@buffer:dword
@@ -452,7 +456,7 @@ proc interpret_line
     mov ebx, offset line_buf
     add ebx, [@@indent]
 
-    ;; Now interpretting lines
+    ;; Now interpreting lines
     ;; -------------------------------------------------------------------------
     ;; Jumptable
     ;; -------------------------------------------------------------------------
@@ -477,9 +481,12 @@ proc interpret_line
     jmp @@end
 
     ;; -------------------------------------------------------------------------
-    ;; Objcets
+    ;; Object 
     ;; -------------------------------------------------------------------------
 @@check_object:
+    ;; Each entry in the file has to start with 'object' (this might change in
+    ;; the future). So we will just immediately recurse and return whatever
+    ;; the new call to interpret_line yields
     call memcmp, ebx, offset str_object, [str_object_len]
     cmp eax, 0
     jne @@expected_object
@@ -492,7 +499,7 @@ proc interpret_line
     jmp @@end
 
     ;; -------------------------------------------------------------------------
-    ;; Models
+    ;; Models (sphere, OBJ model)
     ;; -------------------------------------------------------------------------
 @@check_model:
     call memcmp, ebx, offset str_sphere, [str_sphere_len]

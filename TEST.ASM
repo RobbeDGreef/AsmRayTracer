@@ -242,9 +242,8 @@ test_begin flt
 @@success1:
     call flt, [test_feq_v3], [test_feq_v1]
     cmp al, 0
-    je @@success2
+    je @@completed
     call test_failed, offset test_flt_greater_failed, eax
-
 test_end flt
 
 test_begin vec_eq
@@ -523,7 +522,7 @@ test_begin vec_length
     local @@v1:Vec
 
     lea eax, [@@v1]
-    call vec_set, ecx, [test_vec_dummy_x], [test_vec_dummy_y], \
+    call vec_set, eax, [test_vec_dummy_x], [test_vec_dummy_y], \
                   [test_vec_dummy_z]
     call vec_length, eax
     call feq, eax, [test_vec_length_output]
@@ -702,6 +701,8 @@ DATASEG
     test_feq_near_failed db "feq - near", 0
     test_feq_different_failed db "feq - different", 0
     test_feq_less_than_failed db "flt - less than", 0
+    
+    test_flt_name db"flt", 0
     test_flt_greater_failed db "flt - greather than", 0
 
     test_vec_dummy_x dd 12.123
@@ -760,7 +761,7 @@ DATASEG
 
     test_vec_length_name db "vec_length", 0
     test_vec_length_output dd 41.95983181567819
-    test_vec_length_failed db "vec_length"
+    test_vec_length_failed db "vec_length failed", 0
 
     test_vec_length_squared_name db "vec_length_squared", 0
     test_vec_length_squared_output dd 1760.627486

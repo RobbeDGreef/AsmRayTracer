@@ -12,6 +12,23 @@ include "rt/ray.inc"
 include "utils.inc"
 
 CODESEG
+
+;; The glass material I must admit is largely taken from:
+;; https://raytracing.github.io/books/RayTracingInOneWeekend.html#dielectrics/refraction
+;; or from 
+;; https://github.com/RobbeDGreef/CppPathTracer/blob/main/src/materials.cpp
+;;
+;; That last one is an old codebase of mine. The original source code came 
+;; partially of the first link and some from various locations across the 
+;; internet.
+
+;; This refractive function is basically a fun remix of Snell's law. 
+;; n*sin(Omega) = n'*sin(Omega')
+;;
+;; We can do some fun vector stuff for which I am not going to write down the 
+;; proof here since it is unnecessary to understand this function. 
+;; 
+;; The math and function comes from https://raytracing.github.io/books/RayTracingInOneWeekend.html#dielectrics/refraction
 proc refract
     arg @@out:PTR Vec, @@direction:PTR Vec, @@normal:PTR Vec,\
         @@refract_index:dword, @@cos_theta:dword
@@ -110,22 +127,34 @@ proc glass_scatter
     mov ecx, [@@hit]
     call [ebx+Texture.get_color], ebx, [ecx+Hit.u], [ecx+Hit.v], [@@color]
 
+    ;; Now we calculate the reflective ratio. This is according to snells law
+    ;; again. refraction_index = n / n'. Since air has a refractive 
+    ;; index of 1. We can just say that n' == 1 and so refraction_index = n.
+    ;; (n = IOR)
+    ;; However one interesting property of rays is at play here. If the ray
+    ;; goes in the opposite direction (we hit the outside of the glass. Our n'
+    ;; becomes equal to the IOR value and we have to invert that value 1 / n'
     mov ebx, [@@hit]
     mov ecx, [@@mat]
     cmp [ebx+Hit.hit_front], 1
     je @@hit_front
+
+    ;; refraction_ratio = IOR since we go from dielectric to glass
     mov eax, [ecx+Glass.refraction_index]
     mov [@@refraction_ratio], eax
 
     jmp @@calc_direction
 @@hit_front:
 
+    ;; Invert the IOR value since we go from air to dielectric
     fld1 
     fdiv [ecx+Glass.refraction_index]
     fstp [@@refraction_ratio]
 
 @@calc_direction:
 
+    ;; Now we can calculate the unit vector direction to calculate our refracted
+    ;; (or reflected) ray.
     mov ebx, [@@in]
     lea ebx, [ebx+Ray.direction]
     lea ecx, [@@temp_vec]
@@ -133,6 +162,9 @@ proc glass_scatter
     call vec_length, ecx
     call vec_div_float, ecx, eax
     
+    ;; cos_theta = -unit_direction * normal.
+    ;; however this value cannot be come larger than 1 so we clamp it at 1
+    ;; by using fmin(cos_theta, 1)
     mov ebx, [@@hit]
     lea ebx, [ebx+Hit.normal]
     call vec_mul_float, ecx, [float_minus_1]
@@ -140,6 +172,8 @@ proc glass_scatter
     call fmin, eax, [float_1]
     mov [@@cos_theta], eax
 
+    ;; Basic conversion math:
+    ;; sin_theta = sqrt(1 - cos_theta^2)
     fld1
     fld [@@cos_theta]
     fmul [@@cos_theta]
@@ -155,6 +189,7 @@ proc glass_scatter
     ;; again to flip it back to just the normalized direction
     call vec_mul_float, ecx, [float_minus_1] 
 
+    ;; If the angle is too small we will always reflect
     call flt, [float_1], [@@temp]
     cmp eax, 1
     jne @@refract
@@ -169,6 +204,8 @@ proc glass_scatter
     jmp @@end
 @@refract:
 
+    ;; Sometimes we will randomly reflect. The change of this happening 
+    ;; increases to larger the angle between the ray and the normal becomes
     call reflectance, [@@cos_theta], [@@refraction_ratio]
     mov ebx, eax
     call random_float_ranged, [float_0], [float_0_75]

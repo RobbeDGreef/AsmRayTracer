@@ -8,6 +8,7 @@ include "bmp.inc"
 
 CODESEG
 
+;; Write a raw video buffer to bmp file.
 proc bmp_write
     arg @@file_name:PTR byte, @@buf:PTR byte, @@buf_size:dword, @@width:dword, @@height:dword 
     local @@hdr:bmp_hdr, @@dip_hdr:bmp_dip_hdr
@@ -35,6 +36,8 @@ proc bmp_write
     mov [dword ptr eax+bmp_dip_hdr.img_width], ecx
     mov ecx, [@@height]
     mov [dword ptr eax+bmp_dip_hdr.img_height], ecx
+    ;; For some reason places_cnt has to be 1, otherwise some programs will
+    ;; complain. BMP is a weird format
     mov [word ptr eax+bmp_dip_hdr.places_cnt], 1
     mov [word ptr eax+bmp_dip_hdr.bpp], BMP_DIB_BPP
     mov [dword ptr eax+bmp_dip_hdr.compression_type], BMP_DIB_COMPRESSION_TYPE
@@ -51,7 +54,7 @@ proc bmp_write
     ;; Reused the eax buffer to write the padding bytes.
     call write_file, ebx, eax, 2
 
-    ;; Save ebx because we have too little registers
+    ;; spill ebx because we have too little registers
     push ebx
 
     ;; BMPs store the width lines upside down for some weird reason so we have

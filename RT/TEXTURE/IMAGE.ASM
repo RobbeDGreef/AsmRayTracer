@@ -29,6 +29,10 @@ proc image_get_color
     mov [@@width], ebx
     mov [@@height], ecx
 
+    ;; Simple calculation. U and V are in between 0 and 1. So if we take the
+    ;; width (and height for V) of the image we can multiply them with this
+    ;; U or V and get the action pixel location (in integer values)
+
     ;; Calculate the pixel's height
     fild [@@width]
     fmul [@@u]
@@ -39,6 +43,8 @@ proc image_get_color
     fmul [@@v]
     fistp [@@height]
 
+    ;; Now we just find and copy that pixel out of memory to the ray and we are
+    ;; done 
     mov eax, [@@height]
     inc ebx
     mul ebx

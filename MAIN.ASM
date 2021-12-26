@@ -54,6 +54,7 @@ ifndef NASM
     ;; crashes.
     call gui_destruct
 else
+    ;; Linux has no gui so we still have to set these values
     call strlen, offset render_scene_file
     inc eax
     call memcpy, offset config_render_scene_file, offset render_scene_file, eax
@@ -65,7 +66,7 @@ else
     call log_str, offset config_render_hdri_path
 
 endif
-    ;; Once gui is over we start the raytracer
+    ;; Once gui is over we start the ray tracer
 
     call log_str, offset load_str
     call gettime_millis
@@ -80,7 +81,6 @@ endif
 
     ;; Build the scene BVH
     call scene_build_bvh, ebx
-    
 
     ;; And run the renderer
     call log_str, offset start_str

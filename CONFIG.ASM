@@ -6,6 +6,9 @@ ASSUME cs:_TEXT,ds:FLAT,es:FLAT,fs:FLAT,gs:FLAT
 include "config.inc"
 include "./RT/vec.inc"
 
+;; The main configuration for the raytracer. GUI will change these values
+;; and the raytracer component will use them.
+
 DATASEG
     config_video_img_width              dd 800 ;
     config_video_img_height             dd 600 ;

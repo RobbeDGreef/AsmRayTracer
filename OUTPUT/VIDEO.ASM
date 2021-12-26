@@ -12,6 +12,10 @@ VESA_BANK_SWITCHES  equ (VIDEO_FB_SIZE/VESA_BANK_SIZE)+1
 
 CODESEG
 
+;; Small VESA video driver for our project. It handles all the interactions with
+;; the VESA video buffer (because we don't have a real vesa LFB). It also
+;; handles mouse pointer drawing.
+
 ;; Plots a pixel directly into the vesa video memory
 proc video_vesa_plot_pixel
     arg @@x_coord:dword, @@y_coord:dword, @@color:dword
@@ -34,6 +38,8 @@ proc video_vesa_plot_pixel
 endp video_vesa_plot_pixel
 
 ;; Copies a rectangle from the vesa_lfb to the vesa video memory
+;; This can be used to over write video memory with something that should be
+;; there according to the vesa lfb (e.i. undraw mouse pointer)
 proc video_vesa_copy_rect
     arg @@x_coord:dword, @@y_coord:dword, @@width:dword, @@height:dword
     uses eax, ebx, ecx, edx
@@ -56,6 +62,10 @@ proc video_vesa_copy_rect
         cmp ebx, [@@width]
         je @@width_loop_end
 
+        ;; The video_vesa_plot_pixel handles bank switching for us. Thanks 
+        ;; video_vesa_plot_pixel!! 
+        ;; Recalculating the location in that function is not terribly efficient
+        ;; but its fast enough
         mov eax, [edx+ebx*4]
         call video_vesa_plot_pixel, [@@x_coord], [@@y_coord], eax
 
@@ -89,10 +99,12 @@ proc video_update_mouse
     arg @@x_coord:dword, @@y_coord:dword, @@color:dword
     uses eax
     ;; Remove previous mouse pointer by redrawing from the vesa_lfb
-    call video_vesa_copy_rect, [video_mouse_x], [video_mouse_y], CURSOR_WIDTH, CURSOR_HEIGHT
+    call video_vesa_copy_rect, [video_mouse_x], [video_mouse_y], CURSOR_WIDTH, \
+                               CURSOR_HEIGHT
     
     ;; Draw new pointer
-    call video_draw_mouse_bitmap, [video_mouse_bitmap], [@@x_coord], [@@y_coord], [@@color]
+    call video_draw_mouse_bitmap, [video_mouse_bitmap], [@@x_coord], \
+                                  [@@y_coord], [@@color]
     
     ;; Set previous coords so we can undraw the mouse when it gets updated
     mov eax, [@@x_coord]
@@ -102,9 +114,10 @@ proc video_update_mouse
     ret
 endp video_update_mouse
 
-;; The actual mouse drawing function
+;; The actual mouse drawing function. Simple loop over the bitmap.
 proc video_draw_mouse_bitmap
-    arg @@cursor_bitmap:PTR byte, @@x_coord:dword, @@y_coord:dword, @@color:dword
+    arg @@cursor_bitmap:PTR byte, @@x_coord:dword, @@y_coord:dword, \
+        @@color:dword
     uses eax, ecx, edx
 
     xor eax, eax
@@ -119,6 +132,10 @@ proc video_draw_mouse_bitmap
     @@width_loop:
         cmp ecx, 0
         jl @@end_width_loop
+
+        ;; The BITmap is BIT encoded. Shocking, I know. So we have to shift
+        ;; right a couple of times and 'and' with 1 to get the bit we want to
+        ;; draw (or not draw)
 
         movzx eax, [byte ptr edi]
         shr eax, cl
@@ -148,7 +165,7 @@ endp video_draw_mouse_bitmap
 proc video_set_mode
     arg @@mode:dword
     uses eax, ebx
-    ;; We use the bios to set the video mode
+    ;; Ask the bios vesa driver nicely to change the video mode
     mov eax, 4f02h
     mov ebx, [@@mode]
 

@@ -34,7 +34,7 @@ proc renderer_to_bmp
     ret
 endp renderer_to_bmp
 
-;; 
+;; Copies the vector color render buffer to the RGB buffer 
 proc renderer_to_rgbbuffer
     call renderer_to_buffer, [img_rgbbuf], [config_video_img_width], [config_video_img_height]
     ret
@@ -64,7 +64,6 @@ proc fclamp_0_to_1
 
     ret
 endp fclamp_0_to_1
-
 
 proc renderer_to_buffer
     arg @@buffer:dword, @@buf_width:dword, @@buf_height:dword
@@ -167,8 +166,6 @@ proc renderer_to_buffer
 endp renderer_to_buffer
 
 ;; Writes the current video framebuffer contents to the screen
-;; WARNING: This is a slow function becaue it needs to convert all the RGB float
-;; values to integers.
 proc renderer_show_img
 
     lea eax, [vesa_lfb]
@@ -177,27 +174,6 @@ proc renderer_show_img
 
     ret
 endp renderer_show_img
-
-proc shade_normals
-    arg @@ray:PTR Ray, @@hit:PTR Hit, @@dest_color:PTR Vec
-    local @@temp_vec:Vec
-    uses ebx, ecx, edx
-
-    ;; Shading our normals. This is good for debugging
-    ;; (normal + (1, 1, 1)) * 0.5
-    
-    mov ebx, [@@dest_color]
-    mov ecx, [@@hit]
-    lea ecx, [ecx+Hit.normal]
-
-    call vec_cpy, ebx, ecx
-    lea ecx, [@@temp_vec]
-    call vec_set, ecx, [float_1], [float_1], [float_1]
-    call vec_add, ebx, ebx, ecx
-    call vec_mul_float, ebx, [float_0_50]
-
-    ret
-endp shade_normals
 
 proc cast_ray
     arg @@ray:PTR Ray, @@dest_color:PTR Color, @@bounces:dword, @@scene:PTR Scene
@@ -219,30 +195,9 @@ proc cast_ray
     cmp eax, 0
     je @@background
 
-    cmp [@@bounces], 49
-    jne @@c
-    call log_char, 'b'
-    call print_float, [ecx+Hit.t]
-    call print_newline
-@@c:
-
     call flt, [float_0], [ecx+Hit.t]
     cmp eax, 1
     jne @@background
-
-
-    ;; Usefull for debugging
-    ;; will display face orientation
-;    cmp [ecx+Hit.hit_front], 1
-;    jne @@hit_back
-;
-;    call vec_set, [@@dest_color], [float_1],[float_0],[float_0]
-;
-;    jmp @@end
-;
-;@@hit_back:
-;    call vec_set, [@@dest_color], [float_0],[float_0],[float_1]
-;    jmp @@end
 
     mov edx, [ecx+Hit.hit_mat]
     lea edi, [@@bounced]
@@ -288,7 +243,6 @@ proc cast_ray
 
     call sphere_calc_coords, edi, ebx, ecx
     call image_get_color, [img_hdri_texture], [ebx], [ecx], [@@dest_color]
-    ;call vec_mul_float, [@@dest_color], [float_2]
 
 @@end:
     ret
@@ -463,8 +417,7 @@ endp renderer_denoise
 
 proc renderer_init
     uses eax, ebx, ecx
-    mov ecx, 16
-    not ecx
+
 
     mov eax, [config_video_img_height]
     mov ebx, [config_video_img_width]
@@ -487,6 +440,12 @@ proc renderer_init
 
     mov [img_framebuffer], eax
     add eax, [img_framebuffer_size]
+    
+    ;; Not with 15, all bits will be set except the lower 4
+    mov ecx, 15
+    not ecx
+
+    ;; Here we align at 16 bytes
     and eax, ecx
     add eax, 16
     mov [img_rgbbuf], eax

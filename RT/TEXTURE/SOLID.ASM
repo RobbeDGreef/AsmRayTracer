@@ -15,6 +15,8 @@ CODESEG
 proc get_color
     arg @@tex:PTR Solid, @@u:dword, @@v:dword, @@dest_color:PTR Color
     
+    ;; Simple: return the color
+
     mov eax, [@@tex]
     lea eax, [eax+Solid.color]
     call vec_cpy, [@@dest_color], eax
