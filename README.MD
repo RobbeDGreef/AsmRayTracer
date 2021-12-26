@@ -6,9 +6,9 @@ In dosbox execute the following command
 
     RUN.BAT
 
-Since the concept of a raytracer is inherently slow, it is adivced to hold 
+Since the concept of a raytracer is inherently slow, it is adivsed to
 increase dosbos' cyles. This can be done by pressing CTRL+F12 multiple times
-or set it in the dosbox.conf file. Setting it to about 3GHz (3000000 cycles)
+or set it in the dosbox.conf file. Setting it to about 1MHz (1000000 cycles)
 should be enough to speed up the raytracer significantly.
 
 ## To run the unit tests
@@ -22,7 +22,7 @@ are more or less the same. We can use a different compiler (NASM) to compile the
 actual instructions. The only problem is all the TASM specific syntax. For this
 I wrote a small transpiler in python that converts the TASM code to NASM. This
 together with NASMs "tasm compatability mode" (very very minimal compatability
-but usefull none the less). We can build the code for linux. Ofcourse DOS
+but useful none the less). We can build the code for linux. Of course DOS
 specific syscalls had to be replaced with their alternatives but this is not a 
 big problem, we can just use `ifdef NASM <nasm code> else <tasm code> endif`
 macros.
@@ -99,6 +99,11 @@ Assembly language is case insensitive but try to leave everything lowercase.
   - [x] Spheres
   - [x] Triangles
   - [x] Loading wavefront OBJ files
+
+## Future improvements
+- [ ] Point lights
+- [ ] Glossy material
+- [ ] One large BSDF material
 
 ## License
 This project contains no license file for a good reason, this is not a mistake. 
