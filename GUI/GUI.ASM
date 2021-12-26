@@ -22,6 +22,8 @@ CODESEG
 ;;                  INITIALISATION AND DESTRUCTION
 ;; ---------------------------------------------------------------
 
+;; This will load all required data from files and initialise 
+;; all required handles. It will load the font and the cursor into memory
 proc gui_init
     uses eax, ebx
 
@@ -40,12 +42,15 @@ proc gui_init
     ret
 endp gui_init
 
+;; Uninstalls all installed handlers that are needed for the GUI
 proc gui_destruct
     call mouse_uninstall
     call keyboard_uninstall_handler
     ret
 endp gui_destruct
 
+;; Draws the initial state of the GUI to the screen
+;; When adding a new option, it should be drawn here
 proc gui_start
     call fill_background, 0F2C67h
     call text_plot, 10, 5, offset title_name_string, 0CD1818h 
@@ -63,10 +68,12 @@ proc gui_start
     call draw_cam_pos_y, 100, 310
     call draw_cam_pos_z, 100, 340
 
+    ;; Draw buffer
     call video_buffer_flip
 
     call mouse_init
 
+    ;; Start main loop
     call main_loop
     
     ret
@@ -76,6 +83,9 @@ endp gui_start
 ;;                        MAIN FUNCTIONALITY
 ;; ---------------------------------------------------------------
 
+;; Converts all configured values (currently strings)
+;; To their correct values: integers or floats
+;; And write them to config.asm. The values can then be used in the ray tracer
 proc set_config_values
     uses eax
 
@@ -114,6 +124,9 @@ proc set_config_values
     ret
 endp set_config_values
 
+;; Main GUI loop
+;; Handles keyboard presses to change the value
+;; of the selected fields.
 proc main_loop
 
     @@run:
@@ -126,7 +139,7 @@ proc main_loop
     cmp bl, 0
     je @@skipkeyhandle
 
-    cmp [key_reset], 1
+    cmp [key_reset], 1 ;; Makes sure the press only gets registered once
     jne @@run
 
     movzx ebx, [byte keyb_raw_scan_code]
@@ -140,9 +153,9 @@ proc main_loop
     je @@nofieldselected
 
     mov ecx, [ebx + Field.value] ;; value pointer
-    call append, ecx, eax
-    call draw_field, ebx, 0F4E185h 
-    call video_buffer_flip
+    call append, ecx, eax ;; Update the value
+    call draw_field, ebx, 0F4E185h ;; Draw it to the buffer
+    call video_buffer_flip ;; Draw the buffer
 
 @@nofieldselected:
 
@@ -160,7 +173,7 @@ proc main_loop
     je @@nofieldselected
 
     mov ecx, [ebx + Field.value]
-    call shorten, ecx
+    call shorten, ecx ;; Remove last character from value
     call draw_field, ebx, 0F4E185h
     call video_buffer_flip
     jmp @@nofieldselected 
@@ -171,6 +184,9 @@ proc main_loop
 ret
 endp main_loop
 
+;; Handles a button click
+;; Loops over all buttons to see if they were clicked
+;; If so, run their action
 proc handle_click
     arg @@x_coord:dword, @@y_coord:dword
     uses eax, ebx, ecx, edx, esi, edi
@@ -215,14 +231,13 @@ proc handle_click
     ret
 endp handle_click
 
+;; Handles all mouse actions. This includes movement and clicks
+;; redraws the cursor on its new position
 proc mouse_handler
     uses eax, ebx, ecx, edx
 
     movzx edx, dx		; get mouse height 
-	
-    ;; This isn't true as far as i can tell ??
-    ;sar cx, 1			; horizontal cursor position is doubled in input 
-    movzx ecx, cx
+    movzx ecx, cx       ; get mouse width
 
     lea edi, [last_cursor_position]
     
@@ -247,6 +262,7 @@ proc mouse_handler
     ret
 endp mouse_handler
 
+;; Calls procedures necessary for mouse functionality
 proc mouse_init 
     uses eax 
     call mouse_install, offset mouse_handler, VIDEO_FB_WIDTH, VIDEO_FB_HEIGHT
@@ -258,6 +274,9 @@ endp mouse_init
 ;;                        FIELD DRAWING
 ;; ---------------------------------------------------------------
 
+;; Creates a button at the right loction with a certain action
+;; Creates a field with the same minimum and maximum coordinates
+;; Register them both at the correct locations
 proc register_field_data
     uses eax, ebx, ecx, edx, esi, edi
     arg @@x:dword, @@y:dword, @@value:dword, @@action:dword, @@field:dword
@@ -283,6 +302,7 @@ proc register_field_data
     ret
 endp register_field_data
 
+;; Draws the fov field to the screen and registers its data
 proc draw_fov
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx
@@ -303,6 +323,7 @@ proc draw_fov
     ret
 endp draw_fov
 
+;; Draws the video height field to the screen and registers its data
 proc draw_video_height
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -321,6 +342,7 @@ proc draw_video_height
 ret
 endp draw_video_height
 
+;; Draws the video width field to the screen and registers its data
 proc draw_video_width
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -339,6 +361,7 @@ proc draw_video_width
 ret
 endp draw_video_width
 
+;; Draws the sample count field to the screen and registers its data
 proc draw_sample_count
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -357,6 +380,7 @@ proc draw_sample_count
 ret
 endp draw_sample_count
 
+;; Draws the max bounces field to the screen and registers its data
 proc draw_max_bounces
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -376,6 +400,7 @@ proc draw_max_bounces
 ret
 endp draw_max_bounces
 
+;; Draws the hdri path field to the screen and registers its data
 proc draw_hdri_path
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -395,6 +420,7 @@ proc draw_hdri_path
 ret
 endp draw_hdri_path
 
+;; Draws the scene file field to the screen and registers its data
 proc draw_scene_file
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -415,6 +441,7 @@ proc draw_scene_file
 ret
 endp draw_scene_file
 
+;; Draws the camera x position field to the screen and registers its data
 proc draw_cam_pos_x
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -435,6 +462,7 @@ proc draw_cam_pos_x
 ret
 endp draw_cam_pos_x
 
+;; Draws the camera y position field to the screen and registers its data
 proc draw_cam_pos_y
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -455,6 +483,7 @@ proc draw_cam_pos_y
 ret
 endp draw_cam_pos_y
 
+;; Draws the camera z position field to the screen and registers its data
 proc draw_cam_pos_z
     arg @@x:dword, @@y:dword
     uses eax, ebx, ecx 
@@ -467,7 +496,6 @@ proc draw_cam_pos_z
     call text_plot, ebx, ecx, offset cam_pos_z_string, 0CD1818h
     add ebx, 300
 
-    ;call itoa, [config_render_cam_pos + 8], offset cam_pos_z_string_buffer, 10
     call text_plot, ebx, ecx, offset cam_pos_z_string_buffer, 0CD1818h
 
     call register_field_data, [@@x], [@@y], offset cam_pos_z_string_buffer, offset handle_cam_pos_z_click, offset cam_pos_z_field
@@ -479,12 +507,12 @@ endp draw_cam_pos_z
 ;;                        FIELD UTILITY
 ;; ---------------------------------------------------------------
 
+;; Creates a field struct and returns a pointer to it in eax
 proc create_field
     uses ebx, esi
     arg @@x1:dword, @@y1:dword, @@x2:dword, @@y2:dword, @@value:dword
-    ;; upperleft, bottomright, value -> Field
-
-    call alloc, size Field
+    
+    call alloc, size Field ;; pointer to field in eax
     mov esi, eax
 
     mov eax, [@@value]
@@ -492,7 +520,7 @@ proc create_field
 
     call alloc, size Coordinate
 
-    mov [esi + Field.upperleft], eax
+    mov [esi + Field.upperleft], eax ;; Set the coordinate
 
     mov ebx, [@@x1]
     mov [eax + Coordinate.x], ebx
@@ -501,7 +529,7 @@ proc create_field
 
     call alloc, size Coordinate
 
-    mov [esi + Field.bottomright], eax
+    mov [esi + Field.bottomright], eax ;; Set other coordinate
 
     mov ebx, [@@x2]
     mov [eax + Coordinate.x], ebx
@@ -540,6 +568,7 @@ endp append
 ;;                        BUTTON ACTIONS
 ;; ---------------------------------------------------------------
 
+;; Draws a certain field with the background color of @@color
 proc draw_field
     uses eax, ebx, ecx, edx, esi, edi
     arg @@field:dword, @@color:dword
@@ -554,20 +583,21 @@ proc draw_field
     mov esi, [ebx + Coordinate.x] ;; x2
     mov edi, [ebx + Coordinate.y] ;; y2
 
-    call draw_rect, ecx, edx, esi, edi, [@@color] 
+    call draw_rect, ecx, edx, esi, edi, [@@color] ;; Draw the background
     
     mov ebx, [eax + Field.value] ;; pointer to string
 
     add ecx, 30
     sub edx, 4
 
-    call text_plot, ecx, edx, ebx, 0CD1818h 
+    call text_plot, ecx, edx, ebx, 0CD1818h ;; Draw the value in the field
 
     call video_buffer_flip
 
     ret
 endp draw_field
 
+;; Remove highlighted background from the current field
 proc deselect_current
     uses eax
 
@@ -576,12 +606,13 @@ proc deselect_current
     cmp eax, 0
     je @@end
 
-    call draw_field, eax, 0F2C67h 
+    call draw_field, eax, 0F2C67h ;; Draw using background color
 
     @@end:
     ret
 endp deselect_current
 
+;; Exit out of the main loop when run gets clicked
 proc handle_run_click
     ;; Exit out of main loop after setting config values
     mov [running_main_loop], 0
@@ -589,6 +620,7 @@ proc handle_run_click
     ret
 endp handle_run_click
 
+;; Handles the click on the fov_field
 proc handle_fov_click
     uses eax
 
@@ -603,6 +635,7 @@ proc handle_fov_click
     ret
 endp handle_fov_click
 
+;; Handles the click on the video height field
 proc handle_video_height_click
     uses eax
 
@@ -617,6 +650,7 @@ proc handle_video_height_click
     ret
 endp handle_video_height_click
 
+;; Handles the click on the video width
 proc handle_video_width_click
     uses eax
 
@@ -631,6 +665,7 @@ proc handle_video_width_click
     ret
 endp handle_video_width_click
 
+;; Handles the click on the sample count field
 proc handle_sample_count_click
     uses eax
 
@@ -645,6 +680,7 @@ proc handle_sample_count_click
     ret
 endp handle_sample_count_click
 
+;; Handles the click on the max bounces field
 proc handle_max_bounces_click
     uses eax
 
@@ -659,6 +695,7 @@ proc handle_max_bounces_click
     ret
 endp handle_max_bounces_click
 
+;; Handles the click on the hdri path field
 proc handle_hdri_path_click
     uses eax
 
@@ -673,6 +710,7 @@ proc handle_hdri_path_click
     ret
 endp handle_hdri_path_click
 
+;; Handles the click on the scene file field
 proc handle_scene_file_click
     uses eax
 
@@ -687,6 +725,7 @@ proc handle_scene_file_click
     ret
 endp handle_scene_file_click
 
+;; Handles the click on the cam pos x field
 proc handle_cam_pos_x_click
     uses eax
 
@@ -701,6 +740,7 @@ proc handle_cam_pos_x_click
     ret
 endp handle_cam_pos_x_click
 
+;; Handles the click on the cam pos y field
 proc handle_cam_pos_y_click
     uses eax
 
@@ -715,6 +755,7 @@ proc handle_cam_pos_y_click
     ret
 endp handle_cam_pos_y_click
 
+;; Handles the click on the cam pos z field
 proc handle_cam_pos_z_click
     uses eax
 
@@ -729,6 +770,7 @@ proc handle_cam_pos_z_click
     ret
 endp handle_cam_pos_z_click
 
+;; Draws the start button 
 proc draw_start_button  
     arg @@x:dword, @@y:dword
     
@@ -737,6 +779,7 @@ proc draw_start_button
 ret
 endp draw_start_button
 
+;; Writes a button to the button array at the next free position
 proc register_button
     uses eax, ebx 
     arg @@button:dword  
@@ -755,6 +798,8 @@ proc register_button
     ret
 endp register_button
 
+;; Creates a button with the correct attributes and returns
+;; a pointer to it in eax
 proc create_button
     uses esi, ebx
     arg @@x1:dword, @@y1:dword, @@x2:dword, @@y2:dword, @@action:dword
@@ -791,6 +836,7 @@ proc create_button
     ret
 endp create_button
 
+;; Draws a button to the screen using the parameter values
 proc draw_button
     arg @@x1:dword, @@y1:dword, @@width:dword, @@text:dword, @@backgroundcolor:dword, @@action:dword
     uses eax, ebx, ecx, edi
@@ -825,6 +871,7 @@ endp draw_button
 ;;                        DRAWING PROCEDURES
 ;; ---------------------------------------------------------------
 
+;; Fills the background with a certain color
 proc fill_background
     arg @@color:dword
     uses eax, ecx, edi
@@ -838,7 +885,7 @@ proc fill_background
     ret
 endp fill_background
 
-;; todo: optimize, remove registers pushes and just trash some registers, essentially making it an inline function 
+;; Draws one pixel at a certain coordinate in the @@color color
 proc pixel_plot
     arg @@x_coord:dword, @@y_coord:dword, @@color:dword
     uses eax, ebx, edx
@@ -853,6 +900,7 @@ proc pixel_plot
     ret
 endp
 
+;; Draws an horizontal line at the given height between 2 points
 proc draw_horizontal_line
     arg @@x1:dword, @@x2:dword, @@y:dword, @@color:dword
     uses eax, ebx
@@ -871,6 +919,7 @@ proc draw_horizontal_line
     ret
 endp draw_horizontal_line
 
+;; Draws a vertical line at a given width between 2 points
 proc draw_vertical_line
     arg @@x:dword, @@y1:dword, @@y2:dword, @@color:dword
     uses eax, ebx
@@ -888,6 +937,7 @@ proc draw_vertical_line
     ret
 endp draw_vertical_line    
 
+;; Draws a rectangle in a certain color using the parameter values
 proc draw_rect
     arg @@x1:dword, @@y1:dword, @@x2:dword, @@y2:dword, @@color:dword 
     uses ebx, edx
@@ -906,14 +956,16 @@ proc draw_rect
     ret
 endp draw_rect  
 
+;; Plots a character (with doubled size) to the screen
 proc char_plot_double
     arg @@x_coord:dword, @@y_coord:dword, @@char:dword, @@color:dword
     uses eax, ebx, ecx, edx, edi
 
     mov eax, FONTCHAR_SIZE
     mul [@@char]
-    lea edi, [font_array + eax]
+    lea edi, [font_array + eax] ;; Get character bitmap
 
+    ;; Start drawing the character using pixel plot
     xor edx, edx
 @@height_loop:
     cmp edx, FONTCHAR_HEIGHT
@@ -956,14 +1008,17 @@ proc char_plot_double
     ret
 endp char_plot_double
 
+;; Plots a character to the screen
 proc char_plot
     arg @@x_coord:dword, @@y_coord:dword, @@char:dword, @@color:dword
     uses eax, ecx, edx, edi
 
     mov eax, FONTCHAR_SIZE
     mul [@@char]
-    lea edi, [font_array + eax]
+    lea edi, [font_array + eax] ;; load character
 
+    ;; Draw character
+    ;; loops over bits and plots when necessary
     xor edx, edx
 @@height_loop:
     cmp edx, FONTCHAR_HEIGHT
@@ -998,6 +1053,7 @@ proc char_plot
     ret
 endp char_plot
 
+;; Plots a float to the screen
 proc float_plot
     arg @@x_coord:dword, @@y_coord:dword, @@float:dword, @@upper:dword, @@lower:dword, @@color:dword
     local @@temp:dword
@@ -1034,14 +1090,13 @@ proc float_plot
     fmul 
     fistp [@@temp]
     add ebx, 16
-    ;call itoa, [@@temp], offset fov_lower_string_buffer, 10
     call itoa, [@@temp], [@@lower], 10
     call text_plot, ebx, [@@y_coord], eax, 0CD1818h
 
     ret
 endp float_plot
     
-
+;; Plots a sequence of character to the screen
 proc text_plot
     arg @@x_coord:dword, @@y_coord:dword, @@text:dword, @@color:dword
     uses eax, ebx
@@ -1062,6 +1117,7 @@ proc text_plot
     ret
 endp text_plot
 
+;; Draw the rendering process in the correct area
 proc gui_progress_notify
     arg @@done:dword, @@total:dword
     uses eax, edx
@@ -1088,14 +1144,14 @@ endif
 endp gui_progress_notify
 
 DATASEG
-    selected_field dd 0
+    selected_field dd 0 ;; Highlighted field
 
-    key_reset dd 1
+    key_reset dd 1 ;; 1 action per press
 
-    running_main_loop dd 1
+    running_main_loop dd 1 ;; continue main loop?
 
-    button_array dd 12 dup (?)
-    button_count dd 0
+    button_array dd 12 dup (?) ;; registered buttons
+    button_count dd 0 ;; amount of registered buttons
 
     last_cursor_position dd 0, 0
 
@@ -1109,6 +1165,7 @@ DATASEG
 
     title_name_string db "Assembly Raytracer", 0
 
+    ;; Input fields with their dimensions and values
     video_width_field dd 0
     video_height_field dd 0
     fov_field dd 0
@@ -1120,6 +1177,7 @@ DATASEG
     cam_pos_z_field dd 0
     scene_file_field dd 0
 
+    ;; Values of the input fields
     video_width_string_buffer db 16 dup (?)
     video_height_string_buffer db 16 dup (?)
     fov_string_buffer db 16 dup (?)
@@ -1129,7 +1187,7 @@ DATASEG
     cam_pos_y_string_buffer db 16 dup (?)
     cam_pos_z_string_buffer db 16 dup (?)
 
-
+    ;; Field names
     start_button_string db "Run", 0
     video_width_string db "Image Width: ", 0
     video_height_string db "Image Height: ", 0
@@ -1142,6 +1200,7 @@ DATASEG
     cam_pos_y_string db "Cam Pos y: ", 0
     cam_pos_z_string db "Cam Pos z: ", 0
 
+    ;; Default values
     fov_default db "90.0", 0
     cam_pos_x_default db "0.0", 0
     cam_pos_y_default db "0.0", 0
@@ -1149,6 +1208,7 @@ DATASEG
     hdri_path_default db "IMAGES/SNOWY.BMP", 0
     scene_file_default db "SCENES/BASIC.TXT", 0 
 
+    ;; Scancode to character mappings
     ;;                       a      z     e     r   t      y    u      i     o    p
     ;;                       q      s     d     f   g      h    j      k     l    m
     ;;                       w      x     c     v   b      n
